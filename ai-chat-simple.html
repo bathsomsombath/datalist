@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Data Chat — Offline</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f0f4f8; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 16px 16px 0; color: #1a1a2e; }
+h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; text-align: center; flex-shrink: 0; }
+.subtitle { font-size: 13px; color: #7a8499; text-align: center; margin-bottom: 16px; flex-shrink: 0; }
+.app { background: #fff; border-radius: 18px 18px 0 0; box-shadow: 0 2px 24px rgba(0,0,0,0.09); width: 100%; max-width: 760px; flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+
+/* TAB BAR */
+.tab-bar { display: flex; border-bottom: 1.5px solid #edf0f7; background: #fafbfd; flex-shrink: 0; }
+.tab-btn { flex: 1; padding: 13px 0; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600; color: #a0a8bb; background: none; border: none; cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -1.5px; transition: color 0.15s, border-color 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.tab-btn:hover { color: #4f8ef7; }
+.tab-btn.active { color: #4f8ef7; border-bottom-color: #4f8ef7; background: #fff; }
+.tab-badge { background: #4f8ef7; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+
+/* PANELS */
+.panel { display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+.panel.active { display: flex; }
+
+/* ── CHAT ── */
+.chat-topbar { padding: 10px 16px; border-bottom: 1px solid #f0f4f8; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.data-indicator { font-size: 11px; color: #7a8499; display: flex; align-items: center; gap: 5px; }
+.data-dot { width: 7px; height: 7px; border-radius: 50%; background: #d0d8e8; }
+.data-dot.on { background: #22c55e; box-shadow: 0 0 0 2px #dcfce7; }
+.clear-btn { font-size: 12px; color: #a0a8bb; cursor: pointer; background: none; border: none; font-family: 'Plus Jakarta Sans', sans-serif; }
+.clear-btn:hover { color: #ef4444; }
+.messages { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.messages::-webkit-scrollbar { width: 4px; }
+.messages::-webkit-scrollbar-thumb { background: #e2e6ef; border-radius: 4px; }
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 40px 0; color: #a0a8bb; font-size: 13px; text-align: center; }
+.empty-state .icon { font-size: 32px; }
+.empty-state a { color: #4f8ef7; cursor: pointer; text-decoration: underline; }
+.msg { display: flex; gap: 10px; animation: fadeUp 0.2s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none} }
+.msg.user { flex-direction: row-reverse; }
+.avatar { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.avatar.ai { background: #eef4ff; }
+.avatar.user { background: #f0fdf4; }
+.bubble { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.65; }
+.msg.user .bubble { background: #4f8ef7; color: #fff; border-bottom-right-radius: 3px; }
+.msg.ai .bubble { background: #f4f6fb; color: #1a1a2e; border-bottom-left-radius: 3px; }
+.source-note { font-size: 11px; color: #4f8ef7; margin-top: 6px; }
+.data-refs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.data-ref-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 7px; font-size: 11px; font-weight: 600; background: #eef4ff; color: #4f8ef7; border: 1px solid #c8deff; cursor: pointer; transition: background 0.15s; font-family: 'Plus Jakarta Sans', sans-serif; }
+.data-ref-chip:hover { background: #dbeeff; }
+.typing { display: flex; align-items: center; gap: 5px; padding: 10px 14px; background: #f4f6fb; border-radius: 12px; border-bottom-left-radius: 3px; width: fit-content; }
+.typing span { width: 6px; height: 6px; background: #a0a8bb; border-radius: 50%; animation: blink 1.2s infinite; }
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.3;transform:scale(1)}40%{opacity:1;transform:scale(1.2)}}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 10px; flex-shrink: 0; }
+.chip { padding: 5px 12px; background: #f0f4f8; border: 1px solid #e2e6ef; border-radius: 20px; font-size: 12px; color: #4f8ef7; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500; transition: all 0.15s; }
+.chip:hover { background: #eef4ff; border-color: #4f8ef7; }
+.input-bar { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid #edf0f7; flex-shrink: 0; }
+.input-bar textarea { flex: 1; min-height: 40px; max-height: 100px; resize: none; padding: 9px 13px; font-size: 14px; border-radius: 10px; border: 1.5px solid #e2e6ef; outline: none; font-family: 'Plus Jakarta Sans', sans-serif; color: #1a1a2e; transition: border-color 0.2s; }
+.input-bar textarea:focus { border-color: #4f8ef7; }
+.send-btn { width: 40px; height: 40px; background: #4f8ef7; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 17px; color: #fff; flex-shrink: 0; transition: background 0.15s,transform 0.1s; align-self: flex-end; }
+.send-btn:hover{background:#3a7df0}.send-btn:active{transform:scale(.95)}.send-btn:disabled{opacity:.4;cursor:not-allowed}
+.bubble a.data-link { display: inline-flex; align-items: center; gap: 4px; color: #4f8ef7; text-decoration: none; font-weight: 600; background: #eef4ff; padding: 2px 8px; border-radius: 6px; font-size: 13px; }
+.bubble a.data-link:hover { background: #dbeeff; text-decoration: underline; }
+
+/* ── SHARED TABLE STYLES ── */
+.section-topbar { padding: 10px 14px; border-bottom: 1px solid #f0f4f8; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+.row-count { font-size: 11px; color: #a0a8bb; }
+.tbar-btns { display: flex; gap: 5px; }
+.tbar-btn { padding: 4px 10px; border-radius: 7px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid transparent; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.15s; }
+.tbar-export{background:#f0f7ff;color:#4f8ef7;border-color:#c8deff}.tbar-export:hover{background:#dbeeff}
+.tbar-import{background:#f0fff7;color:#22c55e;border-color:#bbf7d0}.tbar-import:hover{background:#dcfce7}
+.tbar-clear{background:#fef2f2;color:#ef4444;border-color:#fecaca}.tbar-clear:hover{background:#fee2e2}
+.tbar-dupe{background:#fefce8;color:#ca8a04;border-color:#fde68a}.tbar-dupe:hover{background:#fef9c3}
+.tbar-dupe.active{background:#ca8a04;color:#fff;border-color:#ca8a04}
+.data-table tbody tr.dupe-row{background:#fefce8}
+.data-table tbody tr.dupe-row:hover{background:#fef9c3}
+.tbar-confirm{background:#ef4444!important;color:#fff!important;border-color:#ef4444!important;animation:pulse .6s infinite alternate}
+@keyframes pulse{from{opacity:.85}to{opacity:1}}
+.table-wrap { overflow-y: auto; overflow-x: auto; flex: 1; min-height: 0; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+.data-table thead tr { background: #f4f7fb; }
+.data-table th { padding: 8px 11px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #a0a8bb; border-bottom: 1.5px solid #e8edf5; white-space: nowrap; }
+.data-table th:first-child{width:32px}.data-table th:last-child{width:38px}
+.data-table th:nth-child(2){width:110px}
+.data-table th:nth-child(3){width:auto}
+.data-table th:nth-child(4){width:28%}
+.data-table td { padding: 0; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
+.data-table tbody tr:hover{background:#fafcff}
+.data-table tbody tr:last-child td{border-bottom:none}
+.row-num { padding: 0 10px; font-size: 11px; color: #c8d0e0; font-family: monospace; text-align: center; user-select: none; }
+.cell-date{width:110px}.cell-date input,.cell-val input,.cell-link input { width:100%;height:38px;border:none;background:transparent;font-family:'Plus Jakarta Sans',sans-serif;outline:none; }
+.cell-date input{padding:0 8px;font-size:12px;color:#7a8499}
+.cell-val input{padding:0 12px;font-size:13px;color:#1a1a2e}
+.cell-link{width:28%}.cell-link input{padding:0 10px;font-size:12px;color:#4f8ef7}
+.cell-date input:focus,.cell-val input:focus,.cell-link input:focus{background:#f7faff}
+.cell-del{width:38px;text-align:center}
+.del-btn{background:none;border:none;cursor:pointer;color:#d0d8e8;font-size:17px;line-height:1;padding:4px;transition:color .15s}
+.del-btn:hover{color:#ef4444}
+.empty-table{text-align:center;padding:36px 20px;color:#c0c8d8;font-size:13px;line-height:1.7}
+.add-row-area{display:flex;gap:7px;padding:10px 12px;border-top:1px solid #edf0f7;flex-shrink:0;align-items:center}
+.new-date-input{width:110px;height:36px;padding:0 8px;border:1.5px solid #e2e6ef;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:#1a1a2e;outline:none;transition:border-color .2s;flex-shrink:0}
+.new-date-input:focus{border-color:#4f8ef7}
+.new-val-input{flex:1;min-width:80px;height:36px;padding:0 12px;border:1.5px solid #e2e6ef;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:#1a1a2e;outline:none;transition:border-color .2s}
+.new-val-input:focus{border-color:#4f8ef7}
+.new-url-input{width:28%;min-width:80px;height:36px;padding:0 12px;border:1.5px solid #e2e6ef;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:#4f8ef7;outline:none;transition:border-color .2s;flex-shrink:0}
+.new-url-input:focus{border-color:#4f8ef7}
+.add-btn{height:36px;padding:0 16px;background:#4f8ef7;color:#fff;border:none;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s}
+.add-btn:hover{background:#3a7df0}
+
+/* modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:14px;padding:22px;width:90%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,0.15)}
+/* Row detail modal */
+.detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300;align-items:flex-end;justify-content:center;padding:0}
+.detail-overlay.open{display:flex}
+.detail-box{background:#fff;border-radius:18px 18px 0 0;padding:0;width:100%;max-width:760px;box-shadow:0 -4px 40px rgba(0,0,0,0.15);max-height:80vh;display:flex;flex-direction:column;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+.detail-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid #edf0f7;flex-shrink:0}
+.detail-header-left{display:flex;align-items:center;gap:8px}
+.detail-row-num{font-size:12px;font-weight:700;color:#fff;background:#4f8ef7;padding:2px 8px;border-radius:6px;min-width:28px;text-align:center}
+.detail-title{font-size:15px;font-weight:700;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px}
+.detail-close{background:none;border:none;cursor:pointer;font-size:22px;color:#a0a8bb;padding:4px;line-height:1;transition:color .15s}
+.detail-close:hover{color:#1a1a2e}
+.detail-body{padding:16px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px}
+.detail-field{display:flex;flex-direction:column;gap:4px}
+.detail-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#a0a8bb}
+.detail-input{width:100%;height:40px;padding:0 12px;border:1.5px solid #e2e6ef;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:#1a1a2e;outline:none;transition:border-color .2s}
+.detail-input:focus{border-color:#4f8ef7}
+.detail-textarea{width:100%;min-height:80px;padding:10px 12px;border:1.5px solid #e2e6ef;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:#1a1a2e;outline:none;resize:vertical;transition:border-color .2s;line-height:1.6}
+.detail-textarea:focus{border-color:#4f8ef7}
+.detail-url-input{color:#4f8ef7}
+.detail-footer{display:flex;gap:8px;padding:14px 20px;border-top:1px solid #edf0f7;flex-shrink:0}
+.detail-save-btn{flex:1;padding:11px;background:#4f8ef7;color:#fff;border:none;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s}
+.detail-save-btn:hover{background:#3a7df0}
+.detail-delete-btn{padding:11px 18px;background:#fef2f2;color:#ef4444;border:1px solid #fecaca;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
+.detail-delete-btn:hover{background:#fee2e2}
+.detail-delete-btn.confirm{background:#ef4444;color:#fff;border-color:#ef4444;animation:pulse .6s infinite alternate}
+.detail-created{font-size:11px;color:#c0c8d8;text-align:center;padding-top:4px}
+.data-table tbody tr{cursor:pointer}
+/* Status dropdown */
+.detail-select{width:100%;height:40px;padding:0 10px;border:1.5px solid #e2e6ef;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:#1a1a2e;outline:none;background:#fff;cursor:pointer;transition:border-color .2s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a0a8bb' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+.detail-select:focus{border-color:#4f8ef7}
+.status-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.02em;white-space:nowrap;flex-shrink:0}
+.status-badge.s-none{background:#f0f4f8;color:#a0a8bb}
+.status-badge.s-pending{background:#fef3c7;color:#b45309}
+.status-badge.s-in-progress{background:#dbeafe;color:#1d4ed8}
+.status-badge.s-done{background:#dcfce7;color:#15803d}
+.status-badge.s-cancelled{background:#fef2f2;color:#dc2626}
+.status-badge.s-on-hold{background:#f3e8ff;color:#7c3aed}
+.status-badge.s-urgent{background:#fee2e2;color:#dc2626;border:1px solid #fca5a5}
+/* Status manager */
+.status-row{display:flex;align-items:center;gap:6px;padding:3px 0}
+.status-row .sr-color{width:22px;height:22px;border-radius:6px;flex-shrink:0;border:1.5px solid rgba(0,0,0,0.08)}
+.status-row .sr-label{flex:1;font-size:12px;font-weight:600;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status-row .sr-del{background:none;border:none;cursor:pointer;color:#d0d8e8;font-size:14px;padding:2px 4px;line-height:1;transition:color .15s;flex-shrink:0}
+.status-row .sr-del:hover{color:#ef4444}
+.status-add-row{display:flex;align-items:center;gap:5px;margin-top:6px}
+.status-add-row input[type=color]{width:28px;height:28px;border:1.5px solid #e2e6ef;border-radius:6px;padding:1px;cursor:pointer;flex-shrink:0;background:#fff}
+.status-add-row input[type=text]{flex:1;height:28px;padding:0 8px;border:1.5px solid #e2e6ef;border-radius:6px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:#1a1a2e;outline:none}
+.status-add-row input[type=text]:focus{border-color:#4f8ef7}
+.status-add-row button{height:28px;padding:0 10px;background:#4f8ef7;color:#fff;border:none;border-radius:6px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.status-add-row button:hover{background:#3a7df0}
+.status-manage-toggle{font-size:11px;color:#4f8ef7;cursor:pointer;background:none;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;padding:0;margin-left:8px}
+.status-manage-toggle:hover{text-decoration:underline}
+.status-manage-area{margin-top:8px;padding:8px 10px;background:#f8f9fc;border-radius:8px;border:1px solid #edf0f7;display:none}
+.status-manage-area.open{display:block}
+/* Export modal */
+.export-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:400;align-items:center;justify-content:center;padding:16px}
+.export-overlay.open{display:flex}
+.export-box{background:#fff;border-radius:14px;padding:20px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,0.15)}
+.export-box h3{font-size:15px;font-weight:700;margin-bottom:4px;color:#1a1a2e}
+.export-btns{display:flex;gap:8px;margin-top:14px}
+.export-btns button{flex:1;padding:11px;border:none;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+.export-copy-btn{background:#22c55e;color:#fff}.export-copy-btn:hover{background:#16a34a}
+.export-close-btn{background:#f0f4f8;color:#7a8499}.export-close-btn:hover{background:#e2e6ef}
+.modal-title{font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:14px}
+.modal-input{width:100%;height:40px;padding:0 12px;border:1.5px solid #e2e6ef;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:#1a1a2e;outline:none;margin-bottom:12px}
+.modal-input:focus{border-color:#4f8ef7}
+.modal-actions{display:flex;gap:8px}
+.modal-ok{flex:1;padding:9px;background:#4f8ef7;color:#fff;border:none;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.modal-ok:hover{background:#3a7df0}
+.modal-cancel{padding:9px 14px;background:#f0f4f8;color:#7a8499;border:none;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:9px 18px;border-radius:10px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999}
+.toast.show{opacity:1}
+/* Sync badge */
+.sync-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;transition:all .2s}
+.sync-off{background:#f0f4f8;color:#7a8499}
+.sync-connecting{background:#fef3c7;color:#b45309;animation:pulse .8s infinite alternate}
+.sync-on{background:#dcfce7;color:#15803d}
+.sync-err{background:#fef2f2;color:#dc2626}
+/* Firebase config modal */
+.fb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center;padding:16px}
+.fb-overlay.open{display:flex}
+.fb-box{background:#fff;border-radius:16px;padding:22px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,0.18)}
+.fb-box h3{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+.fb-box p{font-size:12px;color:#7a8499;margin-bottom:14px;line-height:1.6}
+.fb-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#a0a8bb;margin-bottom:4px;display:block}
+.fb-input{width:100%;height:40px;padding:0 12px;border:1.5px solid #e2e6ef;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:#1a1a2e;outline:none;margin-bottom:10px;transition:border-color .2s}
+.fb-input:focus{border-color:#4f8ef7}
+.fb-actions{display:flex;gap:8px;margin-top:4px}
+.fb-connect-btn{flex:1;padding:10px;background:#4f8ef7;color:#fff;border:none;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.fb-connect-btn:hover{background:#3a7df0}
+.fb-disconnect-btn{padding:10px 14px;background:#fef2f2;color:#ef4444;border:1px solid #fecaca;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+.fb-disconnect-btn:hover{background:#fee2e2}
+.fb-cancel-btn{padding:10px 14px;background:#f0f4f8;color:#7a8499;border:none;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.fb-status-row{display:flex;align-items:center;gap:6px;font-size:12px;color:#7a8499;margin-bottom:12px;min-height:20px}
+.fb-how{background:#f8f9fc;border-radius:8px;padding:10px 12px;font-size:11px;color:#7a8499;line-height:1.7;margin-bottom:12px}
+.fb-how code{background:#edf0f7;padding:1px 5px;border-radius:4px;font-size:11px;color:#4f8ef7}
+/* Add-to-list buttons in chat */
+.add-to-list-area{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.add-to-list-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;font-size:11px;font-weight:600;background:#f0fff7;color:#22c55e;border:1px solid #bbf7d0;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s}
+.add-to-list-btn:hover{background:#dcfce7;border-color:#86efac}
+.add-to-list-btn.added{background:#f4f6fb;color:#a0a8bb;border-color:#e2e6ef;cursor:default;pointer-events:none}
+.existing-item-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;font-size:11px;font-weight:600;background:#eef4ff;color:#4f8ef7;border:1px solid #c8deff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s}
+.existing-item-chip:hover{background:#dbeeff}
+/* Search box */
+.search-bar{display:flex;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid #f0f4f8;flex-shrink:0}
+.search-bar input{flex:1;height:34px;padding:0 10px 0 30px;border:1.5px solid #e2e6ef;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:#1a1a2e;outline:none;transition:border-color .2s;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%23a0a8bb' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E") no-repeat 9px center}
+.search-bar input:focus{border-color:#4f8ef7}
+.search-bar .search-count{font-size:11px;color:#a0a8bb;white-space:nowrap}
+.search-bar .search-clear{background:none;border:none;cursor:pointer;color:#a0a8bb;font-size:16px;padding:2px 4px;line-height:1;font-family:'Plus Jakarta Sans',sans-serif}
+.search-bar .search-clear:hover{color:#ef4444}
+.data-table tbody tr.search-hide{display:none}
+/* Status filter */
+.status-filter{height:34px;padding:0 28px 0 8px;border:1.5px solid #e2e6ef;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;color:#1a1a2e;outline:none;background:#fff;cursor:pointer;transition:border-color .2s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' fill='%23a0a8bb' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;flex-shrink:0;max-width:130px}
+.status-filter:focus{border-color:#4f8ef7}
+/* File attach in chat */
+.attach-btn{width:40px;height:40px;background:#f0f4f8;border:1.5px solid #e2e6ef;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:all .15s;align-self:flex-end;color:#7a8499}
+.attach-btn:hover{background:#eef4ff;border-color:#4f8ef7;color:#4f8ef7}
+.file-preview{display:flex;align-items:center;gap:8px;padding:6px 12px;margin:0 14px 4px;background:#f8f9fc;border:1px solid #e2e6ef;border-radius:9px;font-size:12px;color:#1a1a2e;flex-shrink:0;animation:fadeUp .2s ease}
+.file-preview .fp-icon{font-size:16px;flex-shrink:0}
+.file-preview .fp-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.file-preview .fp-size{color:#a0a8bb;font-size:11px;flex-shrink:0}
+.file-preview .fp-remove{background:none;border:none;cursor:pointer;color:#a0a8bb;font-size:16px;padding:2px 4px;line-height:1;transition:color .15s}
+.file-preview .fp-remove:hover{color:#ef4444}
+.file-extract-area{margin-top:10px;padding:10px;background:#f8faf8;border:1px solid #d4edda;border-radius:9px}
+.file-extract-title{font-size:11px;font-weight:700;color:#22c55e;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.file-extract-items{display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto}
+.file-extract-item{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:6px;font-size:12px;background:#fff;border:1px solid #e8edf5;transition:all .15s}
+.file-extract-item:hover{background:#f0f7ff}
+.file-extract-item .fei-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1a1a2e}
+.file-extract-item .fei-add{padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;background:#f0fff7;color:#22c55e;border:1px solid #bbf7d0;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;transition:all .15s}
+.file-extract-item .fei-add:hover{background:#dcfce7}
+.file-extract-item .fei-add.added{background:#f4f6fb;color:#a0a8bb;border-color:#e2e6ef;cursor:default;pointer-events:none}
+.file-add-all-btn{margin-top:6px;padding:6px 14px;border-radius:7px;font-size:11px;font-weight:700;background:#22c55e;color:#fff;border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s}
+.file-add-all-btn:hover{background:#16a34a}
+.file-add-all-btn.added{background:#a0a8bb;cursor:default;pointer-events:none}
+.fp-thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid #e2e6ef}
+.img-preview-bubble{max-width:200px;max-height:150px;border-radius:8px;border:1px solid #e2e6ef;margin-top:6px}
+.file-reading-status{font-size:11px;color:#7a8499;margin-top:4px;font-style:italic}
+</style>
+</head>
+<body>
+<div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;margin-bottom:4px">
+  <h1 style="margin:0">⚡ My Data Chat</h1>
+  <button id="syncConfigBtn" onclick="openSyncConfig()" title="Sync settings" style="background:none;border:none;cursor:pointer;font-size:18px;padding:2px 4px;line-height:1">⚙️</button>
+  <span id="syncBadge" class="sync-badge sync-off" title="Not synced">🔴 Local</span>
+</div>
+<p class="subtitle" id="subtitleEl">Offline — search & manage your data list, attach files to extract</p>
+
+<div class="app">
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-chat-btn" onclick="switchTab('chat')">💬 Chat</button>
+    <button class="tab-btn" id="tab-list-btn" onclick="switchTab('list')">
+      📋 Data List <span class="tab-badge" id="listBadge" style="display:none">0</span>
+    </button>
+  </div>
+
+  <!-- ── CHAT PANEL ── -->
+  <div class="panel active" id="panel-chat">
+    <div class="chat-topbar">
+      <div class="data-indicator">
+        <div class="data-dot" id="dataDot"></div>
+        <span id="dataIndicatorText">No data loaded</span>
+      </div>
+      <button class="clear-btn" onclick="clearChat()">Clear Chat</button>
+    </div>
+    <div class="messages" id="messages">
+      <div class="empty-state" id="emptyState">
+        <div class="icon">💡</div>
+        <div>Add items in <a onclick="switchTab('list')">📋 Data List</a> or <a onclick="switchTab('src')">📂 Sources</a>,<br/>then ask questions here</div>
+      </div>
+    </div>
+    <div class="chips" id="chips">
+      <div class="chip" onclick="useChip(this)">Show all items</div>
+      <div class="chip" onclick="useChip(this)">How many items?</div>
+      <div class="chip" onclick="useChip(this)">Find duplicates</div>
+      <div class="chip" onclick="useChip(this)">Statistics</div>
+    </div>
+    <div class="file-preview" id="filePreview" style="display:none">
+      <span class="fp-icon">📎</span>
+      <span class="fp-name" id="fpName"></span>
+      <span class="fp-size" id="fpSize"></span>
+      <button class="fp-remove" onclick="removeAttachedFile()">×</button>
+    </div>
+    <div class="input-bar">
+      <button class="attach-btn" onclick="document.getElementById('chatFileInput').click()" title="Attach file">📎</button>
+      <textarea id="userInput" rows="1" placeholder="Ask about your data..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+
+  <!-- ── DATA LIST PANEL ── -->
+  <div class="panel" id="panel-list">
+    <div class="section-topbar">
+      <span class="row-count" id="listRowCount">0 rows</span>
+      <div class="tbar-btns">
+        <button class="tbar-btn tbar-dupe" id="dupeBtn" onclick="listFindDupes()">🔍 Duplicates</button>
+        <button class="tbar-btn tbar-clear" id="clearAllBtn" data-confirm="0" onclick="listClearAll()">🗑 Clear All</button>
+        <button class="tbar-btn tbar-export" onclick="listExport()">📤 Export</button>
+        <button class="tbar-btn tbar-import" onclick="document.getElementById('listImportInput').click()">📥 Import</button>
+      </div>
+    </div>
+    <div class="search-bar">
+      <input id="listSearchInput" type="text" placeholder="Search data list..." oninput="listSearch(this.value)" />
+      <select class="status-filter" id="statusFilterSelect" onchange="listStatusFilter(this.value)">
+        <option value="">All Status</option>
+      </select>
+      <span class="search-count" id="searchCount"></span>
+      <button class="search-clear" id="searchClearBtn" onclick="listSearchClear()" style="display:none">×</button>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Date</th><th>Label / Text</th><th>Link (URL)</th><th></th></tr></thead>
+        <tbody id="listTableBody"></tbody>
+      </table>
+      <div id="listEmptyTable" class="empty-table">No rows yet — type below and press Enter ↓</div>
+    </div>
+    <div class="add-row-area">
+      <input id="listDateInput" class="new-date-input" type="date" />
+      <input id="listValInput" class="new-val-input" placeholder="Label / Text..." onkeydown="if(event.key==='Enter')listAddRow()" />
+      <input id="listUrlInput" class="new-url-input" placeholder="URL (optional)..." onkeydown="if(event.key==='Enter')listAddRow()" />
+      <button class="add-btn" onclick="listAddRow()">+ Add</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<input type="file" id="listImportInput" accept=".xlsx,.xls,.csv,.tsv,.txt" style="display:none" onchange="listHandleImport(this)" />
+<input type="file" id="chatFileInput" accept=".txt,.csv,.xlsx,.xls,.json,.md,.html,.log,.tsv,.pdf,.png,.jpg,.jpeg,.gif,.webp" style="display:none" onchange="handleChatFileAttach(this)" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-box">
+    <div class="detail-header">
+      <div class="detail-header-left">
+        <span class="detail-row-num" id="detailRowNum">#1</span>
+        <span class="detail-title" id="detailTitle">Item</span>
+      </div>
+      <button class="detail-close" onclick="closeDetail()">×</button>
+    </div>
+    <div class="detail-body">
+      <div class="detail-field">
+        <label class="detail-label">📅 Date</label>
+        <input type="date" class="detail-input" id="detailDate" />
+      </div>
+      <div class="detail-field">
+        <label class="detail-label">📝 Label / Text</label>
+        <textarea class="detail-textarea" id="detailVal" placeholder="Enter label or description..."></textarea>
+      </div>
+      <div class="detail-field">
+        <div style="display:flex;align-items:center">
+          <label class="detail-label" style="margin:0">📌 Status</label>
+          <button class="status-manage-toggle" id="statusManageBtn" onclick="toggleStatusManager()">⚙ Manage</button>
+        </div>
+        <select class="detail-select" id="detailStatus"></select>
+        <div class="status-manage-area" id="statusManageArea">
+          <div id="statusListManage"></div>
+          <div class="status-add-row">
+            <input type="color" id="newStatusColor" value="#4f8ef7" title="Pick color" />
+            <input type="text" id="newStatusName" placeholder="New status name..." maxlength="30" onkeydown="if(event.key==='Enter')addCustomStatus()" />
+            <button onclick="addCustomStatus()">+ Add</button>
+          </div>
+        </div>
+      </div>
+      <div class="detail-field">
+        <label class="detail-label">🔗 Link (URL)</label>
+        <input type="url" class="detail-input detail-url-input" id="detailUrl" placeholder="https://..." />
+      </div>
+      <div class="detail-field">
+        <label class="detail-label">📎 Notes</label>
+        <textarea class="detail-textarea" id="detailNotes" placeholder="Additional notes (optional)..." style="min-height:60px"></textarea>
+      </div>
+    </div>
+    <div class="detail-footer">
+      <button class="detail-delete-btn" id="detailDeleteBtn" onclick="detailDelete()">🗑 Delete</button>
+      <button class="detail-save-btn" onclick="detailSave()">💾 Save</button>
+    </div>
+  </div>
+</div>
+<div class="export-overlay" id="exportOverlay" onclick="if(event.target===this)closeExport()">
+  <div class="export-box" style="max-width:520px;max-height:85vh;display:flex;flex-direction:column">
+    <h3>📤 Export Data List</h3>
+    <div id="exportInfo" style="font-size:13px;color:#1a1a2e;margin-bottom:10px;line-height:1.6"></div>
+    <div id="exportPreview" style="flex:1;min-height:0;overflow:auto;border:1.5px solid #e2e6ef;border-radius:9px;margin-bottom:10px;font-size:11px"></div>
+    <div class="export-btns" style="flex-wrap:wrap">
+      <button class="export-close-btn" onclick="closeExport()">Close</button>
+      <button class="export-copy-btn" style="background:#4f8ef7" onclick="copyExportClipboard()">📋 Copy Table</button>
+      <button class="export-copy-btn" onclick="saveExportFile()">💾 Save File</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- Firebase Config Modal -->
+<div class="fb-overlay" id="fbOverlay" onclick="if(event.target===this)closeSyncConfig()">
+  <div class="fb-box">
+    <h3>🔥 Firebase Sync</h3>
+    <p>Sync your data list in real-time across all devices. Paste your Firebase Realtime Database URL and choose a room name.</p>
+    <div class="fb-how">
+      <b>How to get your DB URL:</b><br>
+      1. Go to <a href="https://console.firebase.google.com" target="_blank" style="color:#4f8ef7">console.firebase.google.com</a><br>
+      2. Create / open a project → <b>Realtime Database</b><br>
+      3. Click <b>Create database</b> (test mode is fine)<br>
+      4. Copy the URL — looks like: <code>https://your-app.firebaseio.com</code>
+    </div>
+    <label class="fb-label">Firebase Database URL</label>
+    <input class="fb-input" id="fbUrlInput" type="url" placeholder="https://your-app-default-rtdb.firebaseio.com" />
+    <label class="fb-label">Room / Collection name</label>
+    <input class="fb-input" id="fbRoomInput" type="text" placeholder="my-data-list" maxlength="60" />
+    <div class="fb-status-row" id="fbStatusRow"></div>
+    <div class="fb-actions">
+      <button class="fb-cancel-btn" onclick="closeSyncConfig()">Cancel</button>
+      <button class="fb-disconnect-btn" id="fbDisconnectBtn" onclick="firebaseDisconnect()" style="display:none">Disconnect</button>
+      <button class="fb-connect-btn" id="fbConnectBtn" onclick="firebaseConnect()">🔗 Connect & Sync</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let listRows   = [];
+let listNextId = 1;
+let history    = [];
+
+const LIST_KEY = 'ai-chat-data-v1';
+const STATUS_KEY = 'ai-chat-statuses-v1';
+
+// ── XLSX Reader (no CDN) ──
+function colToNum(col){var n=0;for(var i=0;i<col.length;i++){n=n*26+(col.charCodeAt(i)-64);}return n-1;}
+
+async function readXLSXAsync(uint8){
+  var entries=await parseZipEntriesAsync(uint8);
+  var sst=entries.find(function(e){return e.name.indexOf('sharedStrings')>=0;});
+  var strings=[];
+  if(sst){
+    var xml=new TextDecoder().decode(sst.data);
+    var tRe=new RegExp('<t[^>]*>([^<]*)<'+'/t>','g');var m;
+    while((m=tRe.exec(xml))!==null) strings.push(m[1].replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"'));
+  }
+  var sheet=entries.find(function(e){return /worksheets\/sheet\d*\.xml$/i.test(e.name);});
+  if(!sheet) throw new Error('No worksheet found');
+  var sxml=new TextDecoder().decode(sheet.data);
+  var rows=[];
+  var rowRe=new RegExp('<row[^>]*>([\\s\\S]*?)<'+'/row>','g');var rm;
+  while((rm=rowRe.exec(sxml))!==null){
+    var cells=[];
+    var cRe=new RegExp('<c\\s+r="([A-Z]+)\\d+"[^>]*?(?:t="([^"]*)")?[^>]*?>(?:[\\s\\S]*?<v>([^<]*)<'+'/v>)?(?:[\\s\\S]*?<is><t>([^<]*)<'+'/t><'+'/is>)?[\\s\\S]*?<'+'/c>','g');
+    var cm;
+    while((cm=cRe.exec(rm[1]))!==null){
+      var col=cm[1];var colIdx=colToNum(col);
+      var val='';
+      if(cm[4]!==undefined) val=cm[4];
+      else if(cm[2]==='s'&&cm[3]!==undefined) val=strings[parseInt(cm[3])]||'';
+      else if(cm[3]!==undefined) val=cm[3];
+      val=val.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"');
+      while(cells.length<=colIdx) cells.push('');
+      cells[colIdx]=val;
+    }
+    rows.push(cells);
+  }
+  return rows;
+}
+
+async function parseZipEntriesAsync(buf){
+  var entries=[];var dv=new DataView(buf.buffer,buf.byteOffset,buf.byteLength);
+  var i=0;
+  while(i<buf.length-4){
+    if(dv.getUint32(i,true)===0x04034b50){
+      var cMethod=dv.getUint16(i+8,true);
+      var cSize=dv.getUint32(i+18,true);var uSize=dv.getUint32(i+22,true);
+      var nameLen=dv.getUint16(i+26,true);var extraLen=dv.getUint16(i+28,true);
+      var name=new TextDecoder().decode(buf.slice(i+30,i+30+nameLen));
+      var dataStart=i+30+nameLen+extraLen;
+      var data;
+      if(cMethod===0){
+        data=buf.slice(dataStart,dataStart+uSize);
+      }else{
+        try{
+          var compressed=buf.slice(dataStart,dataStart+cSize);
+          var ds=new DecompressionStream('deflate-raw');
+          var writer=ds.writable.getWriter();
+          var reader=ds.readable.getReader();
+          writer.write(compressed);writer.close();
+          var chunks=[];
+          while(true){var rr=await reader.read();if(rr.done)break;chunks.push(rr.value);}
+          var total=chunks.reduce(function(s,c){return s+c.length;},0);
+          data=new Uint8Array(total);var off=0;
+          chunks.forEach(function(c){data.set(c,off);off+=c.length;});
+        }catch(e){data=new Uint8Array(0);}
+      }
+      entries.push({name:name,data:data});
+      i=dataStart+(cMethod===0?uSize:cSize);
+    }else{i++;}
+  }
+  return entries;
+}
+
+// Default statuses
+const DEFAULT_STATUSES = [
+  {id:'pending',label:'Pending',color:'#f59e0b',icon:'🟡'},
+  {id:'in-progress',label:'In Progress',color:'#3b82f6',icon:'🔵'},
+  {id:'done',label:'Done',color:'#22c55e',icon:'🟢'},
+  {id:'on-hold',label:'On Hold',color:'#8b5cf6',icon:'🟣'},
+  {id:'urgent',label:'Urgent',color:'#ef4444',icon:'🔴'},
+  {id:'cancelled',label:'Cancelled',color:'#6b7280',icon:'⚫'}
+];
+
+let customStatuses = [];
+
+function loadStatuses(){
+  try{
+    const s=localStorage.getItem(STATUS_KEY);
+    if(s) customStatuses=JSON.parse(s);
+    else customStatuses=[...DEFAULT_STATUSES];
+  }catch(e){ customStatuses=[...DEFAULT_STATUSES]; }
+}
+function getStatusById(id){
+  return customStatuses.find(s=>s.id===id)||null;
+}
+
+function renderStatusSelect(selectedVal){
+  const sel=document.getElementById('detailStatus');
+  sel.innerHTML='<option value="">— No status —<\/option>'+
+    customStatuses.map(s=>`<option value="${esc(s.id)}" ${s.id===selectedVal?'selected':''}>${s.icon||'●'} ${esc(s.label)}<\/option>`).join('');
+}
+
+function renderStatusFilter(){
+  const sel=document.getElementById('statusFilterSelect');
+  if(!sel) return;
+  const prev=sel.value;
+  // Count rows per status
+  const counts={};
+  listRows.forEach(r=>{ const k=r.status||''; counts[k]=(counts[k]||0)+1; });
+  const usedStatuses=customStatuses.filter(s=>counts[s.id]);
+  const hasNone=counts['']>0;
+  sel.innerHTML='<option value="">All Status'+(listRows.length?' ('+listRows.length+')':'')+'<\/option>'+
+    (hasNone?`<option value="__none__">⬜ No Status (${counts['']})<\/option>`:'') +
+    usedStatuses.map(s=>`<option value="${esc(s.id)}" ${s.id===prev?'selected':''}>${s.icon||'●'} ${esc(s.label)} (${counts[s.id]||0})<\/option>`).join('');
+  // Restore previous selection if still valid
+  if(prev && prev!=='__none__' && usedStatuses.find(s=>s.id===prev)) sel.value=prev;
+  else if(prev==='__none__' && hasNone) sel.value='__none__';
+  else { sel.value=''; statusFilterTerm=''; }
+}
+
+function renderStatusManager(){
+  const wrap=document.getElementById('statusListManage');
+  if(!customStatuses.length){
+    wrap.innerHTML='<div style="font-size:11px;color:#a0a8bb;padding:4px 0">No statuses yet. Add one below.<\/div>';
+    return;
+  }
+  wrap.innerHTML=customStatuses.map(s=>`
+    <div class="status-row">
+      <span class="sr-color" style="background:${s.color}"><\/span>
+      <span class="sr-label">${s.icon||''} ${esc(s.label)}<\/span>
+      <button class="sr-del" onclick="deleteStatus('${esc(s.id)}')" title="Delete status">×<\/button>
+    <\/div>
+  `).join('');
+}
+
+function toggleStatusManager(){
+  const area=document.getElementById('statusManageArea');
+  area.classList.toggle('open');
+  if(area.classList.contains('open')) renderStatusManager();
+}
+
+function addCustomStatus(){
+  const nameInput=document.getElementById('newStatusName');
+  const colorInput=document.getElementById('newStatusColor');
+  const label=nameInput.value.trim();
+  if(!label){showToast('⚠️ Enter a status name');return;}
+  if(label.length>30){showToast('⚠️ Max 30 characters');return;}
+  // Generate id from label
+  const id=label.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||('s'+Date.now());
+  if(customStatuses.find(s=>s.id===id)){showToast('⚠️ Status already exists');return;}
+  // Pick icon based on color brightness
+  const color=colorInput.value;
+  const icon=colorToIcon(color);
+  customStatuses.push({id,label,color,icon});
+  saveStatuses();
+  renderStatusManager();
+  renderStatusSelect(document.getElementById('detailStatus').value);
+  nameInput.value='';
+  colorInput.value=randomColor();
+  showToast('✅ Status "'+label+'" added');
+}
+
+function deleteStatus(id){
+  const s=customStatuses.find(x=>x.id===id);
+  if(!s)return;
+  // Check how many rows use this status
+  const used=listRows.filter(r=>r.status===id).length;
+  if(used>0 && !confirm('Delete "'+s.label+'" status?\n\n'+used+' item(s) use this status — they will be set to no status.')){
+    return;
+  }
+  customStatuses=customStatuses.filter(x=>x.id!==id);
+  // Clear status from rows
+  listRows.forEach(r=>{ if(r.status===id) r.status=''; });
+  saveStatuses(); saveList(); renderListTable();
+  renderStatusManager();
+  renderStatusSelect(document.getElementById('detailStatus').value);
+  renderStatusFilter();
+  showToast('🗑 Status "'+s.label+'" deleted');
+}
+
+function colorToIcon(hex){
+  // Simple hue-based icon
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  const max=Math.max(r,g,b),min=Math.min(r,g,b);
+  if(max-min<30) return max>128?'⚪':'⚫';
+  let h=0;
+  if(max===r) h=60*((g-b)/(max-min));
+  else if(max===g) h=60*(2+(b-r)/(max-min));
+  else h=60*(4+(r-g)/(max-min));
+  if(h<0) h+=360;
+  if(h<30) return '🔴';
+  if(h<70) return '🟠';
+  if(h<90) return '🟡';
+  if(h<160) return '🟢';
+  if(h<250) return '🔵';
+  if(h<300) return '🟣';
+  return '🔴';
+}
+
+function randomColor(){
+  const colors=['#ef4444','#f59e0b','#22c55e','#3b82f6','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+  return colors[Math.floor(Math.random()*colors.length)];
+}
+
+// ── Utils ──
+function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/\x3c/g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+// ── Persist (local fallback) ──
+function saveListLocal(){
+  try{ localStorage.setItem(LIST_KEY, JSON.stringify({rows:listRows, nextId:listNextId})); }catch(e){}
+}
+function loadListLocal(){
+  try{ const s=localStorage.getItem(LIST_KEY); if(s){const d=JSON.parse(s);listRows=d.rows||[];listNextId=d.nextId||1;} }catch(e){}
+}
+function saveStatusesLocal(){
+  try{ localStorage.setItem(STATUS_KEY,JSON.stringify(customStatuses)); }catch(e){}
+}
+
+// ── Firebase Sync ──
+const FB_CONFIG_KEY = 'ai-chat-fb-config-v1';
+let fbApp = null;
+let fbDb  = null;
+let fbRef = null;
+let fbListener = null;
+let fbConnected = false;
+let fbSyncing = false;
+
+function loadFbConfig(){
+  try{ return JSON.parse(localStorage.getItem(FB_CONFIG_KEY)||'null'); }catch(e){ return null; }
+}
+function saveFbConfig(cfg){
+  try{ localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(cfg)); }catch(e){}
+}
+
+function setSyncBadge(state, text){
+  const b = document.getElementById('syncBadge');
+  const sub = document.getElementById('subtitleEl');
+  b.className = 'sync-badge sync-'+state;
+  b.textContent = text;
+  if(state==='on') sub.textContent = '🔥 Firebase sync ON — changes sync across all devices';
+  else sub.textContent = 'Offline — search & manage your data list, attach files to extract';
+}
+
+function openSyncConfig(){
+  const cfg = loadFbConfig();
+  document.getElementById('fbUrlInput').value  = cfg?.url  || '';
+  document.getElementById('fbRoomInput').value = cfg?.room || 'my-data-list';
+  const row = document.getElementById('fbStatusRow');
+  if(fbConnected){
+    row.innerHTML = '🟢 Connected — syncing with room <b>'+esc(cfg?.room||'')+'</b>';
+    document.getElementById('fbDisconnectBtn').style.display='';
+  } else {
+    row.innerHTML = '';
+    document.getElementById('fbDisconnectBtn').style.display='none';
+  }
+  document.getElementById('fbOverlay').classList.add('open');
+}
+function closeSyncConfig(){
+  document.getElementById('fbOverlay').classList.remove('open');
+}
+
+async function firebaseConnect(){
+  const url  = document.getElementById('fbUrlInput').value.trim();
+  const room = document.getElementById('fbRoomInput').value.trim() || 'my-data-list';
+  const row  = document.getElementById('fbStatusRow');
+  const btn  = document.getElementById('fbConnectBtn');
+
+  if(!url){ row.innerHTML='⚠️ Please enter your Firebase Database URL'; return; }
+  if(!/^https?:\/\/.+\.firebaseio\.com\/?$/.test(url) && !/^https?:\/\/.+\.firebasedatabase\.app\/?$/.test(url)){
+    row.innerHTML='⚠️ URL should end with <b>.firebaseio.com</b> or <b>.firebasedatabase.app</b>';
+    return;
+  }
+
+  row.innerHTML = '⏳ Connecting...';
+  btn.disabled = true;
+  setSyncBadge('connecting','🟡 Connecting…');
+
+  // Disconnect any existing
+  firebaseDetach();
+
+  try{
+    // Init or reuse Firebase app
+    try{
+      fbApp = firebase.app('datalist');
+    }catch(e){
+      fbApp = firebase.initializeApp({ databaseURL: url }, 'datalist');
+    }
+    fbDb  = firebase.database(fbApp);
+    fbRef = fbDb.ref('rooms/'+room);
+
+    // Test write & read
+    await fbRef.child('_ping').set(Date.now());
+    const snap = await fbRef.child('_ping').get();
+    if(!snap.exists()) throw new Error('Cannot read back from DB');
+
+    saveFbConfig({url, room});
+    fbConnected = true;
+    setSyncBadge('on','🟢 Synced');
+    row.innerHTML = '🟢 Connected! Loading data…';
+    document.getElementById('fbDisconnectBtn').style.display='';
+
+    // Push local data if remote is empty, otherwise pull remote
+    const dataSnap = await fbRef.child('list').get();
+    if(dataSnap.exists()){
+      const d = dataSnap.val();
+      listRows   = d.rows    || [];
+      listNextId = d.nextId  || 1;
+      if(d.statuses) { customStatuses = d.statuses; }
+      renderListTable(); updateIndicator(); renderStatusFilter();
+      row.innerHTML = '🟢 Synced — loaded '+listRows.length+' rows from Firebase';
+    } else {
+      // Push local to Firebase
+      await fbRef.child('list').set({rows:listRows, nextId:listNextId, statuses:customStatuses});
+      row.innerHTML = '🟢 Connected — pushed '+listRows.length+' local rows to Firebase';
+    }
+
+    // Start real-time listener
+    fbListener = fbRef.child('list').on('value', snap=>{
+      if(fbSyncing) return; // ignore our own writes
+      if(!snap.exists()) return;
+      const d = snap.val();
+      listRows   = d.rows    || [];
+      listNextId = d.nextId  || 1;
+      if(d.statuses) customStatuses = d.statuses;
+      saveListLocal();
+      renderListTable(); updateIndicator(); renderStatusFilter(); updateSearchCount();
+      setSyncBadge('on','🟢 Synced');
+    });
+
+    showToast('🔥 Firebase sync enabled!');
+    setTimeout(closeSyncConfig, 1200);
+  } catch(err){
+    row.innerHTML = '🔴 Error: '+esc(err.message);
+    setSyncBadge('err','🔴 Error');
+    fbConnected = false;
+  }
+  btn.disabled = false;
+}
+
+function firebaseDetach(){
+  if(fbRef && fbListener !== null){
+    fbRef.child('list').off('value', fbListener);
+    fbListener = null;
+  }
+  fbConnected = false;
+}
+
+function firebaseDisconnect(){
+  firebaseDetach();
+  localStorage.removeItem(FB_CONFIG_KEY);
+  setSyncBadge('off','🔴 Local');
+  document.getElementById('fbDisconnectBtn').style.display='none';
+  document.getElementById('fbStatusRow').innerHTML = '⚫ Disconnected — data stays local';
+  showToast('Disconnected from Firebase');
+  setTimeout(closeSyncConfig, 1200);
+}
+
+async function saveList(){
+  saveListLocal();
+  if(!fbConnected || !fbRef) return;
+  fbSyncing = true;
+  try{
+    await fbRef.child('list').set({rows:listRows, nextId:listNextId, statuses:customStatuses});
+    setSyncBadge('on','🟢 Synced');
+  }catch(e){
+    setSyncBadge('err','🔴 Sync error');
+  }
+  fbSyncing = false;
+}
+
+function saveStatuses(){
+  saveStatusesLocal();
+  // Statuses are bundled into saveList calls — fire one now
+  saveList();
+}
+
+function loadList(){
+  loadListLocal();
+}
+
+// Auto-reconnect on load
+async function autoReconnectFirebase(){
+  const cfg = loadFbConfig();
+  if(!cfg?.url || !cfg?.room) return;
+  setSyncBadge('connecting','🟡 Connecting…');
+  document.getElementById('fbUrlInput').value  = cfg.url;
+  document.getElementById('fbRoomInput').value = cfg.room;
+  // Simulate connect
+  document.getElementById('fbStatusRow').innerHTML='';
+  await firebaseConnect();
+}
+// ── Tabs ──
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name+'-btn').classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='list') setTimeout(()=>document.getElementById('listValInput').focus(),80);
+}
+
+// ════════════════════════════════════════
+// DATA LIST
+// ════════════════════════════════════════
+function isDateStr(s){
+  // Match: 2025-03-21, 21/03/2025, 03/21/2025, 2025/03/21, 21-03-2025, etc.
+  if(/^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/.test(s))return true;
+  if(/^\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}$/.test(s))return true;
+  return false;
+}
+function toISODate(s){
+  // Try to parse into YYYY-MM-DD
+  const d=new Date(s.replace(/\//g,'-'));
+  if(!isNaN(d.getTime()))return d.toISOString().slice(0,10);
+  return s;
+}
+function isUrl(s){ return /^https?:\/\//i.test(s)||/^www\./i.test(s); }
+
+function listAddRow(){
+  let val=document.getElementById('listValInput').value.trim();
+  let url=document.getElementById('listUrlInput').value.trim();
+  let date=document.getElementById('listDateInput').value||todayStr();
+  // Smart detect: date in val field → move to date
+  if(val && isDateStr(val)){
+    date=toISODate(val);
+    val='';
+  }
+  // Smart detect: non-URL text in url field → move to val
+  if(url && !isUrl(url)){
+    if(!val){val=url;url='';}
+    else{val=val+' '+url;url='';}
+  }
+  if(!val){showToast('⚠️ Enter a label first');return;}
+  listRows.push({id:listNextId++,val,url,date});
+  document.getElementById('listValInput').value='';
+  document.getElementById('listUrlInput').value='';
+  document.getElementById('listDateInput').value=todayStr();
+  document.getElementById('listValInput').focus();
+  renderListTable(); updateIndicator(); saveList();
+}
+function listDeleteRow(id){
+  listRows=listRows.filter(r=>r.id!==id);
+  renderListTable(); updateIndicator(); saveList(); showToast('🗑 Row deleted');
+}
+function listClearAll(){
+  if(!listRows.length){showToast('⚠️ Already empty');return;}
+  const btn=document.getElementById('clearAllBtn');
+  if(btn.dataset.confirm==='1'){
+    // Second click = confirmed
+    listRows=[];listNextId=1;
+    renderListTable(); updateIndicator(); saveList();
+    btn.textContent='🗑 Clear All';btn.dataset.confirm='0';
+    btn.classList.remove('tbar-confirm');
+    showToast('🗑 All rows cleared');
+  }else{
+    // First click = ask confirm
+    btn.textContent='⚠️ Tap again to confirm';
+    btn.dataset.confirm='1';
+    btn.classList.add('tbar-confirm');
+    setTimeout(()=>{btn.textContent='🗑 Clear All';btn.dataset.confirm='0';btn.classList.remove('tbar-confirm');},3000);
+  }
+}
+function listUpdateVal(id,val){
+  const r=listRows.find(x=>x.id===id);if(!r)return;
+  // If user typed a date in val field, move to date
+  if(isDateStr(val.trim())){
+    r.date=toISODate(val.trim());
+    r.val='';
+    renderListTable(); saveList();
+    showToast('📅 Moved to Date column');
+    return;
+  }
+  r.val=val;saveList();
+}
+function listUpdateUrl(id,url){
+  const r=listRows.find(x=>x.id===id);if(!r)return;
+  // If user typed non-URL text in url field, move to val
+  if(url.trim() && !isUrl(url.trim())){
+    r.val=r.val?(r.val+' '+url.trim()):url.trim();
+    r.url='';
+    renderListTable(); saveList();
+    showToast('📝 Moved to Label column');
+    return;
+  }
+  r.url=url;saveList();
+}
+function listUpdateDate(id,date){const r=listRows.find(x=>x.id===id);if(r){r.date=date;saveList();}}
+
+function statusBadge(s){
+  if(!s) return '';
+  const st=getStatusById(s);
+  if(!st) return `<span class="status-badge s-none">${esc(s)}<\/span>`;
+  return `<span class="status-badge" style="background:${st.color}18;color:${st.color};border:1px solid ${st.color}40">${st.icon||'●'} ${esc(st.label)}<\/span>`;
+}
+
+function renderListTable(){
+  const tbody=document.getElementById('listTableBody');
+  const empty=document.getElementById('listEmptyTable');
+  const count=document.getElementById('listRowCount');
+  const badge=document.getElementById('listBadge');
+  count.textContent=listRows.length+' row'+(listRows.length!==1?'s':'');
+  badge.textContent=listRows.length; badge.style.display=listRows.length?'inline-block':'none';
+  if(!listRows.length){tbody.innerHTML='';empty.style.display='block';renderStatusFilter();return;}
+  empty.style.display='none';
+  renderStatusFilter();
+  const filtered=listRows.filter(r=>{
+    const matchSearch=!listSearchTerm||(r.val+' '+r.date+' '+r.url+' '+(r.status||'')+' '+(r.notes||'')).toLowerCase().includes(listSearchTerm);
+    const matchStatus=!statusFilterTerm
+      ||(statusFilterTerm==='__none__'&&!(r.status||''))
+      ||(statusFilterTerm!=='__none__'&&(r.status||'')===statusFilterTerm);
+    return matchSearch&&matchStatus;
+  });
+  if(!filtered.length){tbody.innerHTML='';empty.style.display='block';empty.textContent='No matching rows';return;}
+  empty.style.display='none';
+  tbody.innerHTML=filtered.map((r)=>{
+    const idx=listRows.indexOf(r)+1;
+    const dc=dupeMode&&dupeIds.has(r.id)?' dupe-row':'';
+    const sb=r.status?statusBadge(r.status):'';
+    return `
+    <tr id="lrow-${r.id}" class="${dc}" onclick="openDetail(${r.id})" title="Click to edit">
+      <td class="row-num">${idx}<\/td>
+      <td class="cell-date"><input type="date" value="${esc(r.date||'')}" onchange="listUpdateDate(${r.id},this.value)" onclick="event.stopPropagation()"/><\/td>
+      <td class="cell-val"><div style="display:flex;align-items:center;gap:5px;padding:0 8px;height:38px;overflow:hidden"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px">${esc(r.val)}<\/span>${sb}<\/div><\/td>
+      <td class="cell-link"><input value="${esc(r.url||'')}" onchange="listUpdateUrl(${r.id},this.value)" onblur="listUpdateUrl(${r.id},this.value)" placeholder="https://..." onclick="event.stopPropagation()"/><\/td>
+      <td class="cell-del"><button class="del-btn" onclick="event.stopPropagation();listDeleteRow(${r.id})">×<\/button><\/td>
+    <\/tr>`;
+  }).join('');
+}
+
+function csvEscape(v){
+  v=String(v||'');
+  if(v.includes(',')||v.includes('"')||v.includes('\n')) return '"'+v.replace(/"/g,'""')+'"';
+  return v;
+}
+
+function listExport(){
+  if(!listRows.length){showToast('⚠️ No data');return;}
+  var withStatus=listRows.filter(function(r){return r.status;}).length;
+  var info='<b>'+listRows.length+' item'+(listRows.length!==1?'s':'')+'<\/b>';
+  if(withStatus) info+=' ('+withStatus+' with status)';
+  info+=' — preview below';
+  document.getElementById('exportInfo').innerHTML=info;
+
+  // Build preview table
+  var t='\x3ctable style="width:100%;border-collapse:collapse;font-size:11px;font-family:Arial">';
+  t+='\x3ctr style="background:#4472C4;color:#fff">';
+  t+='\x3cth style="padding:4px 6px;border:1px solid #ccc;text-align:left">No.\x3c/th>';
+  t+='\x3cth style="padding:4px 6px;border:1px solid #ccc;text-align:left">Date\x3c/th>';
+  t+='\x3cth style="padding:4px 6px;border:1px solid #ccc;text-align:left">Label\x3c/th>';
+  t+='\x3cth style="padding:4px 6px;border:1px solid #ccc;text-align:left">Status\x3c/th>';
+  t+='\x3cth style="padding:4px 6px;border:1px solid #ccc;text-align:left">URL\x3c/th>';
+  t+='\x3cth style="padding:4px 6px;border:1px solid #ccc;text-align:left">Notes\x3c/th>';
+  t+='\x3c/tr>';
+  listRows.forEach(function(r,i){
+    var st=getStatusById(r.status);
+    var bg=i%2===0?'#fff':'#D9E2F3';
+    t+='\x3ctr style="background:'+bg+'">';
+    t+='\x3ctd style="padding:3px 6px;border:1px solid #ddd">'+(i+1)+'\x3c/td>';
+    t+='\x3ctd style="padding:3px 6px;border:1px solid #ddd">'+(r.date||'')+'\x3c/td>';
+    t+='\x3ctd style="padding:3px 6px;border:1px solid #ddd">'+escHtml(r.val)+'\x3c/td>';
+    t+='\x3ctd style="padding:3px 6px;border:1px solid #ddd">'+(st?escHtml(st.label):'')+'\x3c/td>';
+    t+='\x3ctd style="padding:3px 6px;border:1px solid #ddd">'+escHtml(r.url||'')+'\x3c/td>';
+    t+='\x3ctd style="padding:3px 6px;border:1px solid #ddd">'+escHtml(r.notes||'')+'\x3c/td>';
+    t+='\x3c/tr>';
+  });
+  t+='\x3c/table>';
+  document.getElementById('exportPreview').innerHTML=t;
+  document.getElementById('exportOverlay').classList.add('open');
+}
+
+function buildTSV(){
+  var lines=['No.\tDate\tLabel\tStatus\tURL\tNotes'];
+  listRows.forEach(function(r,i){
+    var st=getStatusById(r.status);
+    lines.push((i+1)+'\t'+(r.date||'')+'\t'+r.val+'\t'+(st?st.label:'')+'\t'+(r.url||'')+'\t'+(r.notes||''));
+  });
+  return lines.join('\n');
+}
+
+async function copyExportClipboard(){
+  try{
+    var tsv=buildTSV();
+    await navigator.clipboard.writeText(tsv);
+    showToast('📋 Copied! Open Excel \u2192 Ctrl+V to paste');
+  }catch(e){
+    // Fallback: select all in preview for manual copy
+    var range=document.createRange();
+    range.selectNodeContents(document.getElementById('exportPreview'));
+    var sel=window.getSelection();
+    sel.removeAllRanges();sel.addRange(range);
+    document.execCommand('copy');
+    showToast('📋 Copied table! Paste in Excel');
+  }
+}
+
+async function saveExportFile(){
+  // Method 1: showSaveFilePicker (Chrome/Edge — folder picker)
+  if(window.showSaveFilePicker){
+    try{
+      var handle=await window.showSaveFilePicker({
+        suggestedName:'data-list.csv',
+        types:[
+          {description:'CSV (Excel)',accept:{'text/csv':['.csv']}},
+          {description:'Text',accept:{'text/plain':['.txt']}}
+        ]
+      });
+      var writable=await handle.createWritable();
+      var csv='\uFEFF'+'No.,Date,Label,Status,URL,Notes\n';
+      listRows.forEach(function(r,i){
+        var st=getStatusById(r.status);
+        csv+=[i+1,r.date||'',r.val,st?st.label:'',r.url||'',r.notes||''].map(csvEscape).join(',')+'\n';
+      });
+      await writable.write(csv);
+      await writable.close();
+      showToast('✅ Saved '+handle.name);
+      return;
+    }catch(e){
+      if(e.name==='AbortError') return;
+    }
+  }
+
+  // Method 2: Blob download
+  try{
+    var csv='\uFEFF'+'No.,Date,Label,Status,URL,Notes\n';
+    listRows.forEach(function(r,i){
+      var st=getStatusById(r.status);
+      csv+=[i+1,r.date||'',r.val,st?st.label:'',r.url||'',r.notes||''].map(csvEscape).join(',')+'\n';
+    });
+    var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download='data-list.csv';
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+    showToast('✅ Saved data-list.csv');
+    return;
+  }catch(e){}
+
+  // Method 3: Data URI
+  try{
+    var csv2='\uFEFF'+'No.,Date,Label,Status,URL,Notes\n';
+    listRows.forEach(function(r,i){
+      var st=getStatusById(r.status);
+      csv2+=[i+1,r.date||'',r.val,st?st.label:'',r.url||'',r.notes||''].map(csvEscape).join(',')+'\n';
+    });
+    var a2=document.createElement('a');
+    a2.href='data:text/csv;base64,'+btoa(unescape(encodeURIComponent(csv2)));
+    a2.download='data-list.csv';
+    document.body.appendChild(a2);a2.click();document.body.removeChild(a2);
+    showToast('✅ Saved data-list.csv');
+    return;
+  }catch(e){}
+
+  // Method 4: Clipboard fallback
+  await copyExportClipboard();
+}
+
+function escHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/\x3c/g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function closeExport(){
+  document.getElementById('exportOverlay').classList.remove('open');
+}
+
+function parseCSVRow(line){
+  const cells=[];let cur='';let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(inQ){
+      if(c==='"'&&line[i+1]==='"'){cur+='"';i++;}
+      else if(c==='"'){inQ=false;}
+      else{cur+=c;}
+    }else{
+      if(c==='"'){inQ=true;}
+      else if(c===','||c==='\t'){cells.push(cur);cur='';}
+      else{cur+=c;}
+    }
+  }
+  cells.push(cur);
+  return cells;
+}
+
+function listHandleImport(input){
+  const file=input.files[0]; if(!file)return;
+  const ext=file.name.split('.').pop().toLowerCase();
+
+  if(['xlsx','xls'].includes(ext)){
+    // XLSX import — parse ZIP + XML
+    const reader=new FileReader();
+    reader.onload=async e=>{
+      try{
+        const data=await readXLSXAsync(new Uint8Array(e.target.result));
+        importFromRows(data);
+      }catch(err){showToast('⚠️ Failed to read Excel: '+err.message);}
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    // CSV/TSV/TXT import
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const text=e.target.result;
+        const lines=text.split(/\r?\n/).filter(l=>l.trim());
+        const data=lines.map(l=>parseCSVRow(l));
+        importFromRows(data);
+      }catch(err){showToast('⚠️ Failed to read file: '+err.message);}
+    };
+    reader.readAsText(file);
+  }
+  input.value='';
+}
+
+function importFromRows(data){
+  let count=0;
+  if(!data.length){showToast('⚠️ Empty file');return;}
+
+  // Detect column mapping from header row
+  const hdr=data[0].map(h=>String(h||'').trim().toLowerCase());
+  let colDate=-1,colVal=-1,colUrl=-1,colStatus=-1,colNotes=-1;
+  hdr.forEach((h,i)=>{
+    if(colDate<0&&/^(date|วันที่|ວັນທີ)$/i.test(h))colDate=i;
+    else if(colVal<0&&/^(label|text|item|name|description|ลาเบล|ข้อความ|ລາຍການ)$/i.test(h))colVal=i;
+    else if(colStatus<0&&/^(status|สถานะ|ສະຖານະ)$/i.test(h))colStatus=i;
+    else if(colUrl<0&&/^(url|link|ลิงก์|ລິ້ງ)$/i.test(h))colUrl=i;
+    else if(colNotes<0&&/^(notes?|หมายเหตุ|ໝາຍເຫດ)$/i.test(h))colNotes=i;
+  });
+
+  const hasHeader=colDate>=0||colVal>=0||colUrl>=0||colStatus>=0;
+  if(!hasHeader){
+    colDate=1;colVal=2;colStatus=3;colUrl=4;colNotes=5;
+  }
+
+  const startRow=hasHeader||/^(no\.?|#|\d+)$/i.test(String(data[0][0]||'').trim())?1:0;
+
+  for(let i=startRow;i<data.length;i++){
+    const row=data[i];if(!row||!row.length)continue;
+
+    let date='',val='',url='',status='',notes='';
+
+    if(colDate>=0) date=String(row[colDate]||'').trim();
+    if(colVal>=0)  val=String(row[colVal]||'').trim();
+    if(colStatus>=0) status=String(row[colStatus]||'').trim().toLowerCase().replace(/\s+/g,'-');
+    if(colUrl>=0)  url=String(row[colUrl]||'').trim();
+    if(colNotes>=0) notes=String(row[colNotes]||'').trim();
+
+    if(!date && val && isDateStr(val)){date=toISODate(val);val='';}
+    if(!val){
+      for(let c=0;c<row.length;c++){
+        if(c===colDate||c===colUrl||c===colStatus||c===colNotes)continue;
+        const cell=String(row[c]||'').trim();
+        if(cell && !/^\d+$/.test(cell) && !isDateStr(cell)){val=cell;break;}
+      }
+    }
+    if(url && !isUrl(url)){
+      val=val?(val+' '+url):url;url='';
+    }
+    if(date && isDateStr(date)) date=toISODate(date);
+    // Match status label to id
+    if(status){
+      const match=customStatuses.find(s=>s.id===status||s.label.toLowerCase().replace(/\s+/g,'-')===status);
+      status=match?match.id:'';
+    }
+
+    if(val){listRows.push({id:listNextId++,val,url,date,status,notes});count++;}
+  }
+  renderListTable(); updateIndicator(); saveList();
+  showToast('📥 Imported '+count+' rows');
+}
+
+// ── Search ──
+let listSearchTerm='';
+let statusFilterTerm='';
+let dupeIds=new Set();
+let dupeMode=false;
+
+function listFindDupes(){
+  const btn=document.getElementById('dupeBtn');
+  if(dupeMode){
+    // Toggle off
+    dupeMode=false;dupeIds.clear();
+    btn.classList.remove('active');btn.textContent='🔍 Duplicates';
+    renderListTable();
+    return;
+  }
+  // Find duplicates by label (case-insensitive)
+  const seen={};
+  dupeIds=new Set();
+  listRows.forEach(r=>{
+    const key=r.val.trim().toLowerCase();
+    if(!key)return;
+    if(seen[key]!==undefined){
+      dupeIds.add(seen[key]);
+      dupeIds.add(r.id);
+    }else{
+      seen[key]=r.id;
+    }
+  });
+  if(!dupeIds.size){
+    showToast('✅ No duplicates found');
+    return;
+  }
+  dupeMode=true;
+  btn.classList.add('active');
+  btn.textContent='🔍 '+dupeIds.size+' dupes — tap to clear';
+  showToast('⚠️ Found '+dupeIds.size+' duplicate rows');
+  renderListTable();
+}
+function listSearch(q){
+  listSearchTerm=q.trim().toLowerCase();
+  const clearBtn=document.getElementById('searchClearBtn');
+  const countEl=document.getElementById('searchCount');
+  clearBtn.style.display=listSearchTerm?'block':'none';
+  renderListTable();
+  updateSearchCount();
+}
+function listStatusFilter(val){
+  statusFilterTerm=val;
+  renderListTable();
+  updateSearchCount();
+}
+function updateSearchCount(){
+  const countEl=document.getElementById('searchCount');
+  if(!listSearchTerm&&!statusFilterTerm){countEl.textContent='';return;}
+  const matched=listRows.filter(r=>{
+    const matchSearch=!listSearchTerm||(r.val+' '+r.date+' '+r.url+' '+(r.status||'')+' '+(r.notes||'')).toLowerCase().includes(listSearchTerm);
+    const matchStatus=!statusFilterTerm
+      ||(statusFilterTerm==='__none__'&&!(r.status||''))
+      ||(statusFilterTerm!=='__none__'&&(r.status||'')===statusFilterTerm);
+    return matchSearch&&matchStatus;
+  }).length;
+  countEl.textContent=matched+' of '+listRows.length;
+}
+function listSearchClear(){
+  const input=document.getElementById('listSearchInput');
+  input.value='';listSearch('');input.focus();
+}
+
+// ════════════════════════════════════════
+// CHAT
+// ════════════════════════════════════════
+// ════════════════════════════════════════
+// ROW DETAIL MODAL
+// ════════════════════════════════════════
+let detailRowId=null;
+
+function openDetail(id){
+  const r=listRows.find(x=>x.id===id);if(!r)return;
+  detailRowId=id;
+  const idx=listRows.indexOf(r)+1;
+  document.getElementById('detailRowNum').textContent='#'+idx;
+  document.getElementById('detailTitle').textContent=r.val||'(empty)';
+  document.getElementById('detailDate').value=r.date||'';
+  document.getElementById('detailVal').value=r.val||'';
+  renderStatusSelect(r.status||'');
+  document.getElementById('detailUrl').value=r.url||'';
+  document.getElementById('detailNotes').value=r.notes||'';
+  // Reset status manager
+  document.getElementById('statusManageArea').classList.remove('open');
+  // Reset delete confirm
+  const delBtn=document.getElementById('detailDeleteBtn');
+  delBtn.textContent='🗑 Delete';delBtn.classList.remove('confirm');delBtn.dataset.confirm='0';
+  document.getElementById('detailOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('detailVal').focus(),150);
+}
+
+function closeDetail(){
+  document.getElementById('detailOverlay').classList.remove('open');
+  detailRowId=null;
+}
+
+function detailSave(){
+  if(!detailRowId)return;
+  const r=listRows.find(x=>x.id===detailRowId);if(!r)return;
+  r.date=document.getElementById('detailDate').value;
+  r.val=document.getElementById('detailVal').value.trim();
+  r.status=document.getElementById('detailStatus').value;
+  r.url=document.getElementById('detailUrl').value.trim();
+  r.notes=document.getElementById('detailNotes').value.trim();
+  renderListTable(); updateIndicator(); saveList();
+  closeDetail();
+  showToast('💾 Saved');
+}
+
+function detailDelete(){
+  if(!detailRowId)return;
+  const btn=document.getElementById('detailDeleteBtn');
+  if(btn.dataset.confirm==='1'){
+    listRows=listRows.filter(x=>x.id!==detailRowId);
+    renderListTable(); updateIndicator(); saveList();
+    closeDetail();
+    showToast('🗑 Row deleted');
+  } else {
+    btn.textContent='⚠️ Tap again to delete';
+    btn.classList.add('confirm');
+    btn.dataset.confirm='1';
+    setTimeout(()=>{btn.textContent='🗑 Delete';btn.classList.remove('confirm');btn.dataset.confirm='0';},3000);
+  }
+}
+
+// Handle Escape key to close detail
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && document.getElementById('detailOverlay').classList.contains('open')){
+    closeDetail();
+  }
+});
+
+let attachedFile = null; // {name, size, content}
+
+function handleChatFileAttach(input){
+  const file=input.files[0]; if(!file)return;
+  const ext=file.name.split('.').pop().toLowerCase();
+  const isImage=['png','jpg','jpeg','gif','webp'].includes(ext);
+  const isPdf=ext==='pdf';
+  const maxSize=isImage?5*1024*1024:isPdf?10*1024*1024:2*1024*1024;
+  if(file.size>maxSize){showToast('⚠️ File too large (max '+(maxSize/(1024*1024))+'MB)');input.value='';return;}
+
+  if(isImage){
+    // Read image as base64 for Claude Vision
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const dataUrl=e.target.result;
+      const base64=dataUrl.split(',')[1];
+      const mimeType=file.type||'image/'+ext.replace('jpg','jpeg');
+      setAttachedFile(file.name,file.size,null,{type:'image',base64,mimeType,dataUrl});
+    };
+    reader.onerror=()=>showToast('⚠️ Cannot read image');
+    reader.readAsDataURL(file);
+  } else if(isPdf){
+    // Read PDF with pdf.js
+    const reader=new FileReader();
+    reader.onload=async e=>{
+      try{
+        showToast('📄 Reading PDF...');
+        const pdf=await pdfjsLib.getDocument({data:new Uint8Array(e.target.result)}).promise;
+        let allText='';
+        for(let i=1;i<=pdf.numPages;i++){
+          const page=await pdf.getPage(i);
+          const tc=await page.getTextContent();
+          const pageText=tc.items.map(item=>item.str).join(' ');
+          if(pageText.trim()) allText+=`--- Page ${i} ---\n${pageText.trim()}\n\n`;
+        }
+        if(!allText.trim()){
+          // PDF has no text (scanned) — convert first page to image for vision
+          showToast('🖼 Scanned PDF — using image mode...');
+          const page=await pdf.getPage(1);
+          const scale=1.5;
+          const vp=page.getViewport({scale});
+          const canvas=document.createElement('canvas');
+          canvas.width=vp.width; canvas.height=vp.height;
+          const ctx=canvas.getContext('2d');
+          await page.render({canvasContext:ctx,viewport:vp}).promise;
+          const dataUrl=canvas.toDataURL('image/png');
+          const base64=dataUrl.split(',')[1];
+          setAttachedFile(file.name,file.size,null,{type:'image',base64,mimeType:'image/png',dataUrl,pdfFallback:true});
+        } else {
+          setAttachedFile(file.name,file.size,allText.trim());
+        }
+      }catch(err){showToast('⚠️ Cannot read PDF: '+err.message);}
+    };
+    reader.readAsArrayBuffer(file);
+  } else if(['xlsx','xls'].includes(ext)){
+    const reader=new FileReader();
+    reader.onload=async e=>{
+      try{
+        const rows=await readXLSXAsync(new Uint8Array(e.target.result));
+        let allText=rows.map(r=>r.join(',')).join('\n');
+        if(!allText.trim()){showToast('⚠️ File is empty');return;}
+        setAttachedFile(file.name,file.size,allText.trim());
+      }catch(err){showToast('⚠️ Cannot read file: '+err.message);}
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const text=e.target.result;
+      if(!text||!text.trim()){showToast('⚠️ File is empty');return;}
+      setAttachedFile(file.name,file.size,text.trim());
+    };
+    reader.onerror=()=>showToast('⚠️ Cannot read file');
+    reader.readAsText(file);
+  }
+  input.value='';
+}
+
+function setAttachedFile(name,size,content,media=null){
+  // content = text content, media = {type:'image', base64, mimeType, dataUrl}
+  if(content){
+    const maxChars=8000;
+    if(content.length>maxChars) content=content.substring(0,maxChars)+'\n\n... (truncated)';
+  }
+  attachedFile={name,size,content,media};
+  const preview=document.getElementById('filePreview');
+  preview.style.display='flex';
+  document.getElementById('fpName').textContent=name;
+  document.getElementById('fpSize').textContent=formatFileSize(size);
+  // Show thumbnail for images
+  const existingThumb=preview.querySelector('.fp-thumb');
+  if(existingThumb) existingThumb.remove();
+  if(media && media.dataUrl){
+    const img=document.createElement('img');
+    img.className='fp-thumb';
+    img.src=media.dataUrl;
+    preview.insertBefore(img,preview.querySelector('.fp-icon'));
+    preview.querySelector('.fp-icon').style.display='none';
+  } else {
+    preview.querySelector('.fp-icon').style.display='';
+  }
+  document.getElementById('userInput').placeholder=media?'Ask AI about this image/file...':'Ask AI to extract items from file...';
+}
+
+function removeAttachedFile(){
+  attachedFile=null;
+  const preview=document.getElementById('filePreview');
+  preview.style.display='none';
+  const thumb=preview.querySelector('.fp-thumb');
+  if(thumb) thumb.remove();
+  preview.querySelector('.fp-icon').style.display='';
+  document.getElementById('userInput').placeholder='Ask about your data...';
+}
+
+function formatFileSize(bytes){
+  if(bytes<1024) return bytes+' B';
+  if(bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB';
+  return (bytes/(1024*1024)).toFixed(1)+' MB';
+}
+
+function addFileExtractBubble(items){
+  const msgs=document.getElementById('messages');
+  const div=document.createElement('div'); div.className='msg ai';
+  let itemsHtml=items.map((item,i)=>`
+    <div class="file-extract-item">
+      <span class="fei-text">${esc(item)}<\/span>
+      <button class="fei-add" onclick="addFileItemToList(this,'${esc(item.replace(/'/g,"\\'"))}')">＋ Add<\/button>
+    <\/div>
+  `).join('');
+  const html=`
+    <div class="avatar ai">🤖<\/div>
+    <div class="bubble">
+      <div>Found <strong>${items.length}<\/strong> items from the file. Choose which to add to your Data List:<\/div>
+      <div class="file-extract-area">
+        <div class="file-extract-title">📋 Extracted Items<\/div>
+        <div class="file-extract-items">${itemsHtml}<\/div>
+        <button class="file-add-all-btn" onclick="addAllFileItems(this)">＋ Add All ${items.length} Items<\/button>
+      <\/div>
+    <\/div>`;
+  div.innerHTML=html;
+  msgs.appendChild(div); scrollDown(); return div;
+}
+
+function addFileItemToList(btn,val){
+  if(btn.classList.contains('added'))return;
+  const date=todayStr();
+  listRows.push({id:listNextId++,val,url:'',date});
+  renderListTable(); updateIndicator(); saveList();
+  const num=listRows.length;
+  btn.textContent='✅ #'+num;
+  btn.classList.add('added');
+  showToast('✅ Added #'+num+': '+val.substring(0,40));
+}
+
+function addAllFileItems(btn){
+  if(btn.classList.contains('added'))return;
+  const items=btn.parentElement.querySelectorAll('.fei-add:not(.added)');
+  let count=0;
+  items.forEach(itemBtn=>{
+    const val=itemBtn.parentElement.querySelector('.fei-text').textContent;
+    const date=todayStr();
+    listRows.push({id:listNextId++,val,url:'',date});
+    count++;
+    const num=listRows.length;
+    itemBtn.textContent='✅ #'+num;
+    itemBtn.classList.add('added');
+  });
+  renderListTable(); updateIndicator(); saveList();
+  btn.textContent='✅ Added '+count+' items';
+  btn.classList.add('added');
+  showToast('✅ Added '+count+' items to Data List');
+}
+function updateIndicator(){
+  const dot=document.getElementById('dataDot');
+  const text=document.getElementById('dataIndicatorText');
+  if(listRows.length){
+    dot.classList.add('on');
+    text.textContent='⚡ Offline — '+listRows.length+' row'+(listRows.length!==1?'s':'');
+  }else{
+    dot.classList.remove('on');
+    text.textContent='⚡ Offline — No data';
+  }
+}
+
+// ════════════════════════════════════════
+// OFFLINE LOCAL CHAT ENGINE
+// ════════════════════════════════════════
+
+function normalizeText(t){ return String(t||'').toLowerCase().replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim(); }
+
+function tokenize(t){ return normalizeText(t).split(' ').filter(w=>w.length>1); }
+
+function searchRows(query){
+  const tokens=tokenize(query);
+  if(!tokens.length) return {matches:[],scores:[]};
+  const scored=listRows.map((r,idx)=>{
+    const hay=normalizeText(r.val+' '+r.date+' '+r.url+' '+(r.notes||''));
+    let score=0;
+    for(const tok of tokens){
+      if(hay.includes(tok)){
+        score+=10;
+        // Bonus for exact word match
+        if(hay.split(' ').includes(tok)) score+=5;
+        // Bonus for match in label vs notes
+        if(normalizeText(r.val).includes(tok)) score+=3;
+      }
+    }
+    // Bonus for matching more tokens
+    const matchedTokens=tokens.filter(t=>hay.includes(t)).length;
+    score+=matchedTokens*2;
+    return {row:r,idx:idx+1,score};
+  }).filter(s=>s.score>0).sort((a,b)=>b.score-a.score);
+  return scored;
+}
+
+function detectIntent(q){
+  const ql=q.toLowerCase();
+  if(/how many|count|total|number of|ມີ.*ກີ່|ຈຳນວນ/.test(ql)) return 'count';
+  if(/summar|overview|all items|show all|list all|ສະຫຼຸບ|ທັງໝົດ/.test(ql)) return 'summary';
+  if(/duplicat|dupe|ຊ້ຳ/.test(ql)) return 'duplicates';
+  if(/latest|newest|recent|most recent|ລ່າສຸດ/.test(ql)) return 'latest';
+  if(/oldest|earliest|first|ເກົ່າ/.test(ql)) return 'oldest';
+  if(/find|search|where|which|look|ຊອກ|ຫາ/.test(ql)) return 'search';
+  if(/delete|remove|clear|ລຶບ/.test(ql)) return 'delete_info';
+  if(/date|when|ເມື່ອ|ວັນ/.test(ql)) return 'date_query';
+  if(/link|url|ລິ້ງ/.test(ql)) return 'url_query';
+  if(/note|ໝາຍເຫດ/.test(ql)) return 'notes_query';
+  if(/stat|analys|analyz|ວິເຄາະ/.test(ql)) return 'stats';
+  return 'search';
+}
+
+function generateOfflineReply(userText){
+  if(!listRows.length){
+    return "📭 Your Data List is empty. Add items in the **📋 Data List** tab first, then I can search and answer questions about your data offline.";
+  }
+  const intent=detectIntent(userText);
+  const n=listRows.length;
+
+  switch(intent){
+    case 'count':
+      return `📊 You have **${n}** item${n!==1?'s':''} in your Data List.`+
+        (n>0?`\n\nDate range: ${getDateRange()}`:'');
+
+    case 'summary': {
+      const maxShow=Math.min(n,20);
+      let out=`📋 **Data List Summary** — ${n} item${n!==1?'s':''}\n\n`;
+      for(let i=0;i<maxShow;i++){
+        const r=listRows[i];
+        out+=`${i+1}. ${r.val}${r.date?' ('+r.date+')':''}${r.notes?' — '+r.notes:''}\n`;
+      }
+      if(n>maxShow) out+=`\n... and ${n-maxShow} more items.`;
+      out+=`\n\n${getDateRange()}`;
+      return out;
+    }
+
+    case 'duplicates': {
+      const seen={};const dupes=[];
+      listRows.forEach((r,i)=>{
+        const key=r.val.trim().toLowerCase();
+        if(!key)return;
+        if(seen[key]!==undefined){
+          if(!dupes.find(d=>d.key===key)) dupes.push({key,rows:[seen[key]]});
+          dupes.find(d=>d.key===key).rows.push({row:r,idx:i+1});
+        } else { seen[key]={row:r,idx:i+1}; }
+      });
+      if(!dupes.length) return "✅ No duplicates found in your Data List.";
+      let out=`⚠️ Found **${dupes.length}** duplicate group${dupes.length!==1?'s':''}:\n\n`;
+      dupes.forEach(d=>{
+        out+=`- **${d.rows[0].row.val}** — rows: ${d.rows.map(r=>'#'+r.idx).join(', ')}\n`;
+      });
+      return out;
+    }
+
+    case 'latest': {
+      const sorted=[...listRows].filter(r=>r.date).sort((a,b)=>b.date.localeCompare(a.date));
+      if(!sorted.length) return "⚠️ No dated items found. Add dates to your items for chronological queries.";
+      const top=sorted.slice(0,5);
+      let out=`🕐 **Latest items:**\n\n`;
+      top.forEach((r,i)=>{ out+=`${i+1}. ${r.val} — ${r.date}${r.notes?' ('+r.notes+')':''}\n`; });
+      return out;
+    }
+
+    case 'oldest': {
+      const sorted=[...listRows].filter(r=>r.date).sort((a,b)=>a.date.localeCompare(b.date));
+      if(!sorted.length) return "⚠️ No dated items found.";
+      const top=sorted.slice(0,5);
+      let out=`📅 **Oldest items:**\n\n`;
+      top.forEach((r,i)=>{ out+=`${i+1}. ${r.val} — ${r.date}${r.notes?' ('+r.notes+')':''}\n`; });
+      return out;
+    }
+
+    case 'stats': {
+      const withDate=listRows.filter(r=>r.date).length;
+      const withUrl=listRows.filter(r=>r.url).length;
+      const withNotes=listRows.filter(r=>r.notes).length;
+      const avgLen=Math.round(listRows.reduce((s,r)=>s+r.val.length,0)/n);
+      return `📊 **Data Statistics:**\n\n`+
+        `- Total items: **${n}**\n`+
+        `- With dates: **${withDate}** (${Math.round(withDate/n*100)}%)\n`+
+        `- With URLs: **${withUrl}** (${Math.round(withUrl/n*100)}%)\n`+
+        `- With notes: **${withNotes}** (${Math.round(withNotes/n*100)}%)\n`+
+        `- Avg label length: **${avgLen}** chars\n`+
+        `- ${getDateRange()}`;
+    }
+
+    case 'delete_info':
+      return "ℹ️ To delete items, click a row in the **📋 Data List** tab to open it, then use the **🗑 Delete** button. You can also click the × button in each row.";
+
+    case 'date_query':
+    case 'url_query':
+    case 'notes_query':
+    case 'search':
+    default: {
+      const results=searchRows(userText);
+      if(!results.length){
+        // Try broader search — individual words
+        const tokens=tokenize(userText);
+        let broadResults=[];
+        for(const tok of tokens){
+          const r=searchRows(tok);
+          r.forEach(s=>{
+            if(!broadResults.find(b=>b.row.id===s.row.id)) broadResults.push(s);
+          });
+        }
+        if(!broadResults.length){
+          return `🔍 No matching items found for "**${userText}**" in your ${n} data items.\n\nTry different keywords, or type **"show all"** to see everything.`;
+        }
+        return formatSearchResults(broadResults.slice(0,10),userText,true);
+      }
+      return formatSearchResults(results.slice(0,10),userText,false);
+    }
+  }
+}
+
+function formatSearchResults(results,query,broad){
+  let out=`🔍 Found **${results.length}** ${broad?'related':'matching'} item${results.length!==1?'s':''}`;
+  if(results.length<listRows.length) out+=` (of ${listRows.length} total)`;
+  out+=`:\n\n`;
+  results.forEach((s,i)=>{
+    const r=s.row;
+    out+=`${i+1}. ${r.val}`;
+    if(r.date) out+=` [${r.date}]`;
+    if(r.notes) out+=` — ${r.notes}`;
+    if(r.url) out+=` 🔗`;
+    out+='\n';
+  });
+  return out;
+}
+
+function getDateRange(){
+  const dates=listRows.filter(r=>r.date).map(r=>r.date).sort();
+  if(!dates.length) return 'No dates set.';
+  if(dates.length===1) return `Date: ${dates[0]}`;
+  return `Date range: **${dates[0]}** → **${dates[dates.length-1]}**`;
+}
+
+function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
+function autoResize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+function useChip(el){ document.getElementById('userInput').value=el.textContent; sendMessage(); }
+
+function addStreamBubble(){
+  const msgs=document.getElementById('messages');
+  const div=document.createElement('div'); div.className='msg ai';
+  div.innerHTML=`<div class="avatar ai">🤖<\/div><div class="bubble"><span class="stream-text"><\/span><\/div>`;
+  msgs.appendChild(div); scrollDown();
+  return {el:div, textEl:div.querySelector('.stream-text'), bubbleEl:div.querySelector('.bubble')};
+}
+
+async function sendMessage(){
+  const input=document.getElementById('userInput');
+  let text=input.value.trim();
+  const hasFile=!!attachedFile;
+  if(!text && !hasFile)return;
+  document.getElementById('emptyState')?.remove();
+  document.getElementById('chips').style.display='none';
+
+  // Build display text
+  let displayText=text||'Read this file and extract items';
+  let fileContent=null;
+
+  if(hasFile){
+    const fname=attachedFile.name;
+    displayText=(text?text+'\n':'')+'📎 '+fname;
+    if(attachedFile.content) fileContent=attachedFile.content;
+    if(attachedFile.media && attachedFile.media.type==='image'){
+      // For images offline, we can't read them — tell user
+      removeAttachedFile();
+      addBubble('user',displayText);
+      addBubble('ai',"⚠️ **Image reading requires online AI.** In offline mode, I can only read text-based files (TXT, CSV, Excel, PDF with text).\n\nTo use image reading, you'll need to switch to online mode with an API key.");
+      return;
+    }
+    removeAttachedFile();
+  }
+
+  addBubble('user',displayText);
+  input.value=''; input.style.height='auto';
+  document.getElementById('sendBtn').disabled=true;
+
+  // Small delay for natural feel
+  const thinking=addTyping();
+  await new Promise(r=>setTimeout(r,300));
+  thinking.remove();
+
+  let reply='';
+
+  if(fileContent){
+    // File attached: extract items from file content
+    reply=extractItemsFromFileContent(fileContent,text);
+  } else {
+    // Normal query: search data list
+    reply=generateOfflineReply(text);
+  }
+
+  const stream=addStreamBubble();
+  // Simulate typing effect
+  let displayed='';
+  const chars=reply.split('');
+  const chunkSize=Math.max(1,Math.floor(chars.length/40)); // finish in ~40 steps
+  for(let i=0;i<chars.length;i+=chunkSize){
+    displayed+=chars.slice(i,i+chunkSize).join('');
+    stream.textEl.innerHTML=fmt(displayed);
+    scrollDown();
+    await new Promise(r=>setTimeout(r,15));
+  }
+  stream.textEl.innerHTML=fmt(reply);
+
+  // Add extras
+  let extras='';
+  const allItems=extractAllItems(reply);
+  if(allItems.length){
+    const btns=allItems.map(item=>{
+      if(item.exists){
+        return `<span class="existing-item-chip" onclick="goToListRow(${item.rowId})">📋 #${item.rowNum} ${esc(item.val)}<\/span>`;
+      }else{
+        return `<button class="add-to-list-btn" onclick="addItemFromChat(this,'${esc(item.val.replace(/'/g,"\\'"))}')">＋ ${esc(item.val)}<\/button>`;
+      }
+    }).join('');
+    extras+=`<div class="add-to-list-area">${btns}<\/div>`;
+  }
+  if(listRows.length>0){
+    extras+=`<div class="source-note">⚡ Offline — ${listRows.length} rows in data list<\/div>`;
+  }
+  stream.bubbleEl.innerHTML=fmt(reply)+extras;
+
+  // File extract panel
+  if(hasFile && allItems.length){
+    const newItems=allItems.filter(i=>!i.exists).map(i=>i.val);
+    if(newItems.length) addFileExtractBubble(newItems);
+  }
+
+  document.getElementById('sendBtn').disabled=false;
+  scrollDown();
+}
+
+function extractItemsFromFileContent(content,userText){
+  // Parse lines from file content, extract meaningful items
+  const lines=content.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  const items=[];
+  const skipPatterns=/^(---|sheet:|file |page \d|#|\/\/|\/\*|\*\/|<!|<?|{|}|\[|\]|,\s*$)/i;
+
+  for(const line of lines){
+    if(skipPatterns.test(line)) continue;
+    if(line.length<3||line.length>300) continue;
+
+    // CSV: split by comma and take meaningful cells
+    if(line.includes(',') && !line.includes('\n')){
+      const cells=line.split(',').map(c=>c.trim().replace(/^"|"$/g,''));
+      for(const cell of cells){
+        if(cell.length>=3 && cell.length<=200 && !/^\d+(\.\d+)?$/.test(cell) && !/^(no\.?|#|date|url|link|label|text|name|id)$/i.test(cell)){
+          if(!items.includes(cell)) items.push(cell);
+        }
+      }
+      continue;
+    }
+
+    // Tab-separated
+    if(line.includes('\t')){
+      const cells=line.split('\t').map(c=>c.trim());
+      for(const cell of cells){
+        if(cell.length>=3 && cell.length<=200 && !/^\d+(\.\d+)?$/.test(cell)){
+          if(!items.includes(cell)) items.push(cell);
+        }
+      }
+      continue;
+    }
+
+    // Regular lines — numbered or bulleted
+    const m=line.match(/^(?:\d+[\.\)]\s*|[-•*]\s+)(.+)/);
+    if(m){
+      const val=m[1].trim();
+      if(val.length>=3 && val.length<=200 && !items.includes(val)) items.push(val);
+      continue;
+    }
+
+    // Plain text lines
+    if(line.length>=3 && line.length<=200 && !items.includes(line)){
+      items.push(line);
+    }
+  }
+
+  // Limit
+  const maxItems=50;
+  const finalItems=items.slice(0,maxItems);
+
+  if(!finalItems.length){
+    return "⚠️ Could not extract any items from the file. The file may be empty or contain unsupported content.";
+  }
+
+  let out=`📄 Extracted **${finalItems.length}** items from the file:\n\n`;
+  finalItems.forEach((item,i)=>{
+    out+=`${i+1}. ${item}\n`;
+  });
+  if(items.length>maxItems) out+=`\n... and ${items.length-maxItems} more (showing first ${maxItems}).`;
+  out+=`\n\nClick **＋** to add items to your Data List.`;
+  return out;
+}
+
+function goToListRow(id){
+  switchTab('list');
+  setTimeout(()=>{
+    const el=document.getElementById('lrow-'+id); if(!el)return;
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+    el.style.transition='background 0.3s'; el.style.background='#eef4ff';
+    setTimeout(()=>{el.style.background='';openDetail(id);},400);
+  },120);
+}
+
+function findMentionedRows(text){
+  return listRows.filter(r=>{
+    if(!r.val||r.val.length<2)return false;
+    const e2=r.val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    return new RegExp(e2,'i').test(text);
+  });
+}
+function userWantsItemLinks(t){ return /\b(edit|update|change|fix|go to|find|locate|show me|open|which row|link to)\b/i.test(t); }
+
+function extractAllItems(text){
+  const items=[];
+  const lines=text.split('\n');
+  for(const line of lines){
+    const m=line.match(/^(?:\d+[\.\)]\s*|[-•]\s+)(.+)/);
+    if(m){
+      let val=m[1].replace(/\*\*/g,'').replace(/`/g,'').trim();
+      val=val.replace(/[.:;,]+$/,'').trim();
+      if(val.length<3||val.length>200)continue;
+      // Check if already in data list
+      const existIdx=listRows.findIndex(r=>r.val.toLowerCase()===val.toLowerCase());
+      if(existIdx>=0){
+        items.push({val,exists:true,rowNum:existIdx+1,rowId:listRows[existIdx].id});
+      }else{
+        items.push({val,exists:false});
+      }
+    }
+  }
+  return items;
+}
+
+function addItemFromChat(btn,val){
+  if(btn.classList.contains('added'))return;
+  const date=todayStr();
+  listRows.push({id:listNextId++,val,url:'',date});
+  renderListTable(); updateIndicator(); saveList();
+  const num=listRows.length;
+  btn.innerHTML='✅ #'+num+' Added';
+  btn.classList.add('added');
+  showToast('✅ Added to Data List #'+num+': '+val);
+}
+
+function addBubble(role,text,showSrc=false,userText=''){
+  const msgs=document.getElementById('messages');
+  const div=document.createElement('div'); div.className='msg '+role;
+  let extras='';
+  if(role==='ai'){
+    const allItems=extractAllItems(text);
+    if(allItems.length){
+      const btns=allItems.map(item=>{
+        if(item.exists){
+          return `<span class="existing-item-chip" onclick="goToListRow(${item.rowId})">📋 #${item.rowNum} ${esc(item.val)}<\/span>`;
+        }else{
+          return `<button class="add-to-list-btn" onclick="addItemFromChat(this,'${esc(item.val.replace(/'/g,"\\'"))}')">＋ ${esc(item.val)}<\/button>`;
+        }
+      }).join('');
+      extras+=`<div class="add-to-list-area">${btns}<\/div>`;
+    }
+    if(showSrc){
+      extras+=`<div class="source-note">📋 ${listRows.length} rows in data list<\/div>`;
+    }
+  }
+  div.innerHTML=`<div class="avatar ${role}">${role==='ai'?'🤖':'👤'}<\/div><div class="bubble">${fmt(text)}${extras}<\/div>`;
+  msgs.appendChild(div); scrollDown(); return div;
+}
+function addTyping(){
+  const msgs=document.getElementById('messages');
+  const div=document.createElement('div'); div.className='msg ai';
+  div.innerHTML=`<div class="avatar ai">🤖<\/div><div class="typing"><span><\/span><span><\/span><span><\/span><\/div>`;
+  msgs.appendChild(div); scrollDown(); return div;
+}
+function fmt(t){
+  return t
+    .replace(/&/g,'&amp;').replace(/\x3c/g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1<\/strong>')
+    .replace(/`([^`]+)`/g,'<code style="background:#f0f4f8;padding:1px 5px;border-radius:4px;font-size:12px">$1<\/code>')
+    .replace(/(https?:\/\/[^\s<>"]+)/g,'<a class="data-link" href="$1" target="_blank" rel="noopener">🔗 $1<\/a>')
+    .replace(/\n/g,'<br/>');
+}
+function scrollDown(){ const m=document.getElementById('messages'); m.scrollTop=m.scrollHeight; }
+function clearChat(){
+  history=[];
+  document.getElementById('messages').innerHTML=`<div class="empty-state" id="emptyState"><div class="icon">💡<\/div><div>Add items in the <a onclick="switchTab('list')">📋 Data List<\/a> tab,<br/>then ask questions here<\/div><\/div>`;
+  document.getElementById('chips').style.display='flex';
+}
+
+// ── Init ──
+loadStatuses();
+loadList();
+renderListTable(); updateIndicator();
+document.getElementById('listDateInput').value=todayStr();
+// Auto-reconnect Firebase if previously configured
+autoReconnectFirebase();
+</script>
+</body>
+</html>
