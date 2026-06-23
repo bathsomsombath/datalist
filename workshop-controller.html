@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Workshop Controller</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root{
+  --blue:#4f8ef7; --blue-d:#3a7df0; --ink:#1a1a2e; --muted:#7a8499; --faint:#a0a8bb;
+  --bg:#f0f4f8; --line:#edf0f7; --line2:#e2e6ef; --card:#fff;
+  --green:#22c55e; --amber:#ca8a04; --red:#ef4444; --violet:#7c5cff; --teal:#0ea5a5;
+}
+body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 16px 16px 0; color: var(--ink); }
+h1 { font-size: 22px; font-weight: 800; text-align: center; flex-shrink: 0; display:flex; align-items:center; gap:8px; justify-content:center; }
+.subtitle { font-size: 13px; color: var(--muted); text-align: center; margin: 4px 0 16px; flex-shrink: 0; }
+.app { background: var(--card); border-radius: 18px 18px 0 0; box-shadow: 0 2px 24px rgba(0,0,0,0.09); width: 100%; max-width: 920px; flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+
+/* TAB BAR */
+.tab-bar { display: flex; border-bottom: 1.5px solid var(--line); background: #fafbfd; flex-shrink: 0; }
+.tab-btn { flex: 1; padding: 13px 0; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--faint); background: none; border: none; cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -1.5px; transition: color .15s, border-color .15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.tab-btn:hover { color: var(--blue); }
+.tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); background: #fff; }
+.tab-badge { background: var(--blue); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+
+/* PANELS */
+.panel { display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+.panel.active { display: flex; }
+.scroll { flex:1; min-height:0; overflow-y:auto; }
+.scroll::-webkit-scrollbar{width:5px}.scroll::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+
+/* TOPBAR */
+.section-topbar { padding: 10px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+.section-topbar h2{ font-size:15px; font-weight:700; }
+.row-count { font-size: 11px; color: var(--faint); font-weight:600; }
+.tbar-btns { display: flex; gap: 6px; flex-wrap:wrap; }
+.btn { padding: 7px 13px; border-radius: 9px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1.5px solid transparent; font-family: inherit; transition: all .15s; display:inline-flex; align-items:center; gap:5px; }
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue-d)}
+.btn-ghost{background:#f0f4f8;color:var(--blue);border-color:var(--line2)}.btn-ghost:hover{background:#eef4ff;border-color:var(--blue)}
+.btn-danger{background:#fef2f2;color:var(--red);border-color:#fecaca}.btn-danger:hover{background:#fee2e2}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:7px}
+
+/* SEARCH + FILTER */
+.toolbar{ display:flex; gap:8px; padding:10px 16px 4px; flex-wrap:wrap; align-items:center; flex-shrink:0; }
+.search{ flex:1; min-width:160px; position:relative; }
+.search input{ width:100%; padding:8px 12px 8px 32px; border:1.5px solid var(--line2); border-radius:10px; font-family:inherit; font-size:13px; outline:none; transition:border-color .2s; }
+.search input:focus{ border-color:var(--blue); }
+.search .ic{ position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); font-size:13px; }
+.filters{ display:flex; gap:6px; flex-wrap:wrap; padding:6px 16px 10px; flex-shrink:0; }
+.fpill{ padding:5px 11px; border-radius:20px; font-size:11.5px; font-weight:600; cursor:pointer; border:1.5px solid var(--line2); background:#fff; color:var(--muted); transition:all .15s; display:inline-flex; align-items:center; gap:5px;}
+.fpill:hover{ border-color:var(--blue); color:var(--blue); }
+.fpill.active{ background:var(--blue); color:#fff; border-color:var(--blue); }
+.fpill.active .cnt{ background:rgba(255,255,255,.25); }
+.fpill .cnt{ background:var(--line); color:inherit; border-radius:9px; padding:0 5px; font-size:10px; }
+
+/* TABLE */
+.tbl-wrap{ flex:1; min-height:0; overflow-y:auto; }
+.tbl-wrap::-webkit-scrollbar{width:5px}.tbl-wrap::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table thead tr { background: #f4f7fb; position:sticky; top:0; z-index:1; }
+.data-table th { padding: 9px 14px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); border-bottom: 1.5px solid #e8edf5; white-space: nowrap; }
+.data-table td { padding: 11px 14px; border-bottom: 1px solid var(--bg); vertical-align: middle; }
+.data-table tbody tr{ cursor:pointer; transition:background .1s; }
+.data-table tbody tr:hover{ background:#fafcff; }
+.data-table tbody tr:last-child td{ border-bottom:none; }
+.cell-strong{ font-weight:700; }
+.cell-sub{ font-size:11.5px; color:var(--muted); }
+.mono{ font-variant-numeric:tabular-nums; }
+.right{ text-align:right; }
+
+/* STATUS BADGE */
+.badge{ display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; }
+.badge .dot{ width:7px; height:7px; border-radius:50%; }
+.pri{ display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; }
+
+/* EMPTY */
+.empty{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:60px 20px; color:var(--faint); text-align:center; }
+.empty .ic{ font-size:38px; }
+.empty .t{ font-size:14px; font-weight:600; color:var(--muted); }
+
+/* DASHBOARD */
+.dash{ padding:16px; display:flex; flex-direction:column; gap:16px; }
+.stat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+.stat{ background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:3px; }
+.stat .lab{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--faint); }
+.stat .val{ font-size:26px; font-weight:800; line-height:1.1; }
+.stat .sub{ font-size:11.5px; color:var(--muted); }
+.stat.accent{ background:linear-gradient(135deg,#4f8ef7,#6aa0ff); border-color:transparent; color:#fff; }
+.stat.accent .lab,.stat.accent .sub{ color:rgba(255,255,255,.85); }
+.card-block{ background:#fff; border:1.5px solid var(--line); border-radius:14px; overflow:hidden; }
+.card-head{ padding:11px 16px; border-bottom:1px solid var(--line); font-size:13px; font-weight:700; display:flex; justify-content:space-between; align-items:center; }
+.card-head a{ font-size:11.5px; color:var(--blue); cursor:pointer; font-weight:600; }
+.status-bars{ padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
+.sbar{ display:flex; align-items:center; gap:10px; font-size:12.5px; }
+.sbar .nm{ width:130px; font-weight:600; display:flex; align-items:center; gap:6px; }
+.sbar .track{ flex:1; height:9px; background:var(--bg); border-radius:6px; overflow:hidden; }
+.sbar .fill{ height:100%; border-radius:6px; transition:width .4s; }
+.sbar .n{ width:26px; text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }
+.mini-row{ padding:11px 16px; border-bottom:1px solid var(--bg); display:flex; align-items:center; gap:10px; cursor:pointer; }
+.mini-row:last-child{ border-bottom:none; }
+.mini-row:hover{ background:#fafcff; }
+.mini-row .grow{ flex:1; min-width:0; }
+.mini-row .t{ font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mini-row .s{ font-size:11.5px; color:var(--muted); }
+
+/* MODAL */
+.overlay{ position:fixed; inset:0; background:rgba(20,26,46,.46); backdrop-filter:blur(2px); display:none; align-items:center; justify-content:center; z-index:100; padding:16px; }
+.overlay.show{ display:flex; }
+.modal{ background:#fff; border-radius:18px; width:100%; max-width:620px; max-height:92vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 18px 60px rgba(0,0,0,.28); animation:pop .18s ease; }
+@keyframes pop{ from{opacity:0;transform:translateY(10px) scale(.98)} to{opacity:1;transform:none} }
+.modal-head{ padding:15px 18px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-shrink:0; }
+.modal-head .title{ font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px; }
+.modal-head .x{ width:30px; height:30px; border-radius:8px; border:none; background:#f0f4f8; color:var(--muted); font-size:18px; cursor:pointer; line-height:1; }
+.modal-head .x:hover{ background:#fee2e2; color:var(--red); }
+.modal-body{ padding:16px 18px; overflow-y:auto; display:flex; flex-direction:column; gap:14px; }
+.modal-body::-webkit-scrollbar{width:5px}.modal-body::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+.modal-foot{ padding:13px 18px; border-top:1px solid var(--line); display:flex; gap:8px; justify-content:space-between; align-items:center; flex-shrink:0; flex-wrap:wrap; }
+
+.field{ display:flex; flex-direction:column; gap:5px; }
+.field label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); }
+.field input, .field select, .field textarea{ padding:9px 12px; border:1.5px solid var(--line2); border-radius:10px; font-family:inherit; font-size:13.5px; outline:none; color:var(--ink); background:#fff; transition:border-color .2s; }
+.field input:focus,.field select:focus,.field textarea:focus{ border-color:var(--blue); }
+.field textarea{ resize:vertical; min-height:60px; }
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.grid3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+@media(max-width:560px){ .grid2,.grid3{ grid-template-columns:1fr; } }
+
+/* LINE ITEMS */
+.li-head{ display:flex; justify-content:space-between; align-items:center; }
+.li-head .lab{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); }
+.li-table{ border:1.5px solid var(--line2); border-radius:12px; overflow:hidden; }
+.li-row{ display:grid; grid-template-columns:1fr 56px 84px 84px 30px; gap:8px; padding:8px 10px; align-items:center; border-bottom:1px solid var(--line); }
+.li-row:last-child{ border-bottom:none; }
+.li-row.head{ background:#f4f7fb; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); }
+.li-row input{ padding:6px 8px; border:1.5px solid var(--line2); border-radius:8px; font-family:inherit; font-size:12.5px; outline:none; width:100%; }
+.li-row input:focus{ border-color:var(--blue); }
+.li-row .del{ border:none; background:none; color:var(--faint); cursor:pointer; font-size:16px; }
+.li-row .del:hover{ color:var(--red); }
+.li-row .amt{ text-align:right; font-weight:700; font-variant-numeric:tabular-nums; font-size:12.5px; }
+.li-empty{ padding:14px; text-align:center; color:var(--faint); font-size:12px; }
+.totals{ display:flex; flex-direction:column; gap:5px; padding:4px 2px; }
+.totals .tr{ display:flex; justify-content:space-between; font-size:13px; }
+.totals .tr.grand{ font-size:16px; font-weight:800; padding-top:6px; border-top:1.5px solid var(--line); margin-top:3px; }
+.muted{ color:var(--muted); }
+
+/* STATUS FLOW in modal */
+.flow{ display:flex; gap:6px; flex-wrap:wrap; }
+.flow .step{ padding:6px 11px; border-radius:20px; font-size:11.5px; font-weight:700; cursor:pointer; border:1.5px solid var(--line2); background:#fff; color:var(--muted); }
+.flow .step:hover{ border-color:var(--blue); }
+.flow .step.on{ color:#fff; border-color:transparent; }
+
+/* SETTINGS */
+.settings{ padding:16px; display:flex; flex-direction:column; gap:16px; max-width:560px; }
+.set-block{ background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+.set-block h3{ font-size:13px; font-weight:800; }
+.tech-list{ display:flex; flex-direction:column; gap:6px; }
+.tech-item{ display:flex; align-items:center; gap:8px; padding:7px 10px; border:1.5px solid var(--line); border-radius:10px; }
+.tech-item .nm{ flex:1; font-weight:600; font-size:13px; }
+.tech-item .rm{ border:none; background:none; color:var(--faint); cursor:pointer; font-size:15px; }
+.tech-item .rm:hover{ color:var(--red); }
+.inline-add{ display:flex; gap:8px; }
+.inline-add input{ flex:1; padding:8px 11px; border:1.5px solid var(--line2); border-radius:10px; font-family:inherit; font-size:13px; outline:none; }
+.inline-add input:focus{ border-color:var(--blue); }
+
+/* TOAST */
+.toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff; padding:11px 20px; border-radius:12px; font-size:13px; font-weight:600; opacity:0; pointer-events:none; transition:all .25s; z-index:200; box-shadow:0 8px 30px rgba(0,0,0,.25); }
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* CONFIRM mini */
+.confirming{ animation:pulse .6s infinite alternate; }
+@keyframes pulse{ from{opacity:.85} to{opacity:1} }
+
+.linkish{ color:var(--blue); cursor:pointer; font-weight:600; }
+.linkish:hover{ text-decoration:underline; }
+.veh-chip{ display:inline-flex; align-items:center; gap:5px; padding:2px 9px; border-radius:7px; font-size:11.5px; font-weight:600; background:#eef4ff; color:var(--blue); margin:2px 3px 0 0; }
+.tag{ font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; background:#f0f4f8; color:var(--muted); }
+</style>
+</head>
+<body>
+<h1>🔧 Workshop Controller</h1>
+<div class="subtitle">Auto-repair job tracking · runs offline · saved in your browser</div>
+
+<div class="app">
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="dash" onclick="switchTab('dash')">📊 Dashboard</button>
+    <button class="tab-btn" data-tab="jobs" onclick="switchTab('jobs')">🗂️ Jobs <span class="tab-badge" id="jobsBadge">0</span></button>
+    <button class="tab-btn" data-tab="customers" onclick="switchTab('customers')">👤 Customers</button>
+    <button class="tab-btn" data-tab="vehicles" onclick="switchTab('vehicles')">🚗 Vehicles</button>
+    <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">⚙️ Settings</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="panel active" id="panel-dash">
+    <div class="scroll"><div class="dash" id="dashContent"></div></div>
+  </div>
+
+  <!-- JOBS -->
+  <div class="panel" id="panel-jobs">
+    <div class="section-topbar">
+      <h2>Job Cards</h2>
+      <div class="tbar-btns">
+        <button class="btn btn-primary btn-sm" onclick="openJob(null)">＋ New Job</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="search"><span class="ic">🔍</span><input id="jobSearch" placeholder="Search jobs, customers, plates…" oninput="renderJobs()"/></div>
+    </div>
+    <div class="filters" id="jobFilters"></div>
+    <div class="tbl-wrap" id="jobsTableWrap"></div>
+  </div>
+
+  <!-- CUSTOMERS -->
+  <div class="panel" id="panel-customers">
+    <div class="section-topbar">
+      <h2>Customers</h2>
+      <div class="tbar-btns"><button class="btn btn-primary btn-sm" onclick="openCustomer(null)">＋ New Customer</button></div>
+    </div>
+    <div class="toolbar">
+      <div class="search"><span class="ic">🔍</span><input id="custSearch" placeholder="Search name, phone, email…" oninput="renderCustomers()"/></div>
+    </div>
+    <div class="tbl-wrap" id="custTableWrap"></div>
+  </div>
+
+  <!-- VEHICLES -->
+  <div class="panel" id="panel-vehicles">
+    <div class="section-topbar">
+      <h2>Vehicles</h2>
+      <div class="tbar-btns"><button class="btn btn-primary btn-sm" onclick="openVehicle(null)">＋ New Vehicle</button></div>
+    </div>
+    <div class="toolbar">
+      <div class="search"><span class="ic">🔍</span><input id="vehSearch" placeholder="Search make, model, plate, VIN…" oninput="renderVehicles()"/></div>
+    </div>
+    <div class="tbl-wrap" id="vehTableWrap"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="panel" id="panel-settings">
+    <div class="scroll">
+      <div class="settings">
+        <div class="set-block">
+          <h3>Shop defaults</h3>
+          <div class="grid2">
+            <div class="field"><label>Default labour rate (per hour)</label><input id="setRate" type="number" min="0" step="1" oninput="onSettingChange()"/></div>
+            <div class="field"><label>Currency symbol</label><input id="setCur" maxlength="3" oninput="onSettingChange()"/></div>
+          </div>
+          <div class="field"><label>Tax rate (%)</label><input id="setTax" type="number" min="0" step="0.5" oninput="onSettingChange()"/></div>
+        </div>
+
+        <div class="set-block">
+          <h3>Technicians</h3>
+          <div class="tech-list" id="techList"></div>
+          <div class="inline-add">
+            <input id="newTech" placeholder="Add technician name…" onkeydown="if(event.key==='Enter')addTech()"/>
+            <button class="btn btn-ghost btn-sm" onclick="addTech()">＋ Add</button>
+          </div>
+        </div>
+
+        <div class="set-block">
+          <h3>Data</h3>
+          <p class="subtitle" style="margin:0;text-align:left">Everything is stored locally in this browser. Back it up or move it with export / import.</p>
+          <div class="tbar-btns">
+            <button class="btn btn-ghost btn-sm" onclick="exportData()">⬇️ Export JSON</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importFile').click()">⬆️ Import JSON</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadSeed()">🌱 Load sample data</button>
+            <button class="btn btn-danger btn-sm" id="wipeBtn" onclick="wipeData()">🗑️ Clear all data</button>
+          </div>
+          <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importData(event)"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JOB MODAL -->
+<div class="overlay" id="jobOverlay" onclick="if(event.target===this)closeModal('jobOverlay')">
+  <div class="modal" style="max-width:660px">
+    <div class="modal-head">
+      <div class="title" id="jobModalTitle">🗂️ New Job</div>
+      <button class="x" onclick="closeModal('jobOverlay')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Status</label>
+        <div class="flow" id="jobFlow"></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Customer</label>
+          <select id="jobCustomer" onchange="onJobCustomerChange()"></select>
+        </div>
+        <div class="field">
+          <label>Vehicle</label>
+          <select id="jobVehicle"></select>
+        </div>
+      </div>
+      <div class="field"><label>Complaint / job title</label><input id="jobTitle" placeholder="e.g. Brake noise + service"/></div>
+      <div class="grid3">
+        <div class="field"><label>Technician</label><select id="jobTech"></select></div>
+        <div class="field"><label>Priority</label>
+          <select id="jobPriority"><option value="low">Low</option><option value="normal" selected>Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select>
+        </div>
+        <div class="field"><label>Odometer (km)</label><input id="jobOdo" type="number" min="0" placeholder="—"/></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Date in</label><input id="jobDateIn" type="date"/></div>
+        <div class="field"><label>Promised / due</label><input id="jobDueDate" type="date"/></div>
+      </div>
+
+      <div class="field">
+        <div class="li-head"><span class="lab">Parts</span><button class="btn btn-ghost btn-sm" onclick="addLine('part')">＋ Part</button></div>
+        <div class="li-table" id="partsTable"></div>
+      </div>
+      <div class="field">
+        <div class="li-head"><span class="lab">Labour</span><button class="btn btn-ghost btn-sm" onclick="addLine('labour')">＋ Labour</button></div>
+        <div class="li-table" id="labourTable"></div>
+      </div>
+
+      <div class="field"><label>Notes</label><textarea id="jobNotes" placeholder="Diagnosis, work done, observations…"></textarea></div>
+
+      <div class="totals" id="jobTotals"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="jobDeleteBtn" onclick="deleteJob()">Delete</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-ghost btn-sm" onclick="printJob()">🖨️ Print</button>
+        <button class="btn btn-primary" onclick="saveJob()">Save Job</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOMER MODAL -->
+<div class="overlay" id="custOverlay" onclick="if(event.target===this)closeModal('custOverlay')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head"><div class="title" id="custModalTitle">👤 New Customer</div><button class="x" onclick="closeModal('custOverlay')">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Name</label><input id="custName" placeholder="Full name or company"/></div>
+      <div class="grid2">
+        <div class="field"><label>Phone</label><input id="custPhone" placeholder="+1 …"/></div>
+        <div class="field"><label>Email</label><input id="custEmail" type="email" placeholder="name@email.com"/></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="custNotes" placeholder="Preferences, account notes…"></textarea></div>
+      <div id="custVehicles"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="custDeleteBtn" onclick="deleteCustomer()">Delete</button>
+      <button class="btn btn-primary" style="margin-left:auto" onclick="saveCustomer()">Save Customer</button>
+    </div>
+  </div>
+</div>
+
+<!-- VEHICLE MODAL -->
+<div class="overlay" id="vehOverlay" onclick="if(event.target===this)closeModal('vehOverlay')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head"><div class="title" id="vehModalTitle">🚗 New Vehicle</div><button class="x" onclick="closeModal('vehOverlay')">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Owner</label><select id="vehCustomer"></select></div>
+      <div class="grid3">
+        <div class="field"><label>Year</label><input id="vehYear" type="number" min="1900" max="2100" placeholder="2020"/></div>
+        <div class="field"><label>Make</label><input id="vehMake" placeholder="Toyota"/></div>
+        <div class="field"><label>Model</label><input id="vehModel" placeholder="Corolla"/></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Plate</label><input id="vehPlate" placeholder="ABC-123"/></div>
+        <div class="field"><label>Colour</label><input id="vehColour" placeholder="Silver"/></div>
+      </div>
+      <div class="field"><label>VIN</label><input id="vehVin" placeholder="17-char VIN"/></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="vehDeleteBtn" onclick="deleteVehicle()">Delete</button>
+      <button class="btn btn-primary" style="margin-left:auto" onclick="saveVehicle()">Save Vehicle</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ───────── STATE ───────── */
+const STORE_KEY = 'workshop_controller_v1';
+const STATUSES = [
+  { id:'booked',   label:'Booked',         color:'#7c5cff' },
+  { id:'progress', label:'In Progress',    color:'#4f8ef7' },
+  { id:'parts',    label:'Awaiting Parts', color:'#ca8a04' },
+  { id:'ready',    label:'Ready',          color:'#0ea5a5' },
+  { id:'done',     label:'Completed',      color:'#22c55e' },
+  { id:'invoiced', label:'Invoiced',       color:'#64748b' },
+];
+const OPEN_STATUSES = ['booked','progress','parts','ready'];
+const PRIORITIES = {
+  low:    {label:'Low',    icon:'○', color:'#a0a8bb'},
+  normal: {label:'Normal', icon:'◔', color:'#4f8ef7'},
+  high:   {label:'High',   icon:'◑', color:'#ca8a04'},
+  urgent: {label:'Urgent', icon:'⬤', color:'#ef4444'},
+};
+let db = { customers:[], vehicles:[], jobs:[], techs:[], settings:{rate:90, currency:'$', tax:0}, seq:1 };
+let jobFilter = 'all';
+let editingJobId=null, editingCustId=null, editingVehId=null;
+let draftParts=[], draftLabour=[], draftStatus='booked';
+
+/* ───────── HELPERS ───────── */
+function esc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function uid(){ return db.seq++; }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function money(n){ const c=db.settings.currency||'$'; const v=(Number(n)||0); return c+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function statusOf(id){ return STATUSES.find(s=>s.id===id)||STATUSES[0]; }
+function byId(arr,id){ return arr.find(x=>x.id===id); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200); }
+
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(db)); }catch(e){ showToast('⚠️ Could not save'); } }
+function load(){
+  try{ const s=localStorage.getItem(STORE_KEY); if(s){ const d=JSON.parse(s); db=Object.assign(db,d); db.settings=Object.assign({rate:90,currency:'$',tax:0},d.settings||{}); } }catch(e){}
+}
+
+/* ───────── JOB COMPUTATIONS ───────── */
+function lineTotal(li){ return (Number(li.qty)||0)*(Number(li.price)||0); }
+function jobParts(j){ return (j.parts||[]).reduce((s,l)=>s+lineTotal(l),0); }
+function jobLabour(j){ return (j.labour||[]).reduce((s,l)=>s+lineTotal(l),0); }
+function jobSubtotal(j){ return jobParts(j)+jobLabour(j); }
+function jobTax(j){ return jobSubtotal(j)*((db.settings.tax||0)/100); }
+function jobTotal(j){ return jobSubtotal(j)+jobTax(j); }
+
+function customerName(id){ const c=byId(db.customers,id); return c?c.name:'—'; }
+function vehicleLabel(id){ const v=byId(db.vehicles,id); if(!v) return '—'; return [v.year,v.make,v.model].filter(Boolean).join(' ')||'Vehicle'; }
+function vehiclePlate(id){ const v=byId(db.vehicles,id); return v&&v.plate?v.plate:''; }
+
+/* ───────── TABS ───────── */
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='dash') renderDash();
+  if(name==='jobs') renderJobs();
+  if(name==='customers') renderCustomers();
+  if(name==='vehicles') renderVehicles();
+  if(name==='settings') renderSettings();
+}
+
+/* ───────── DASHBOARD ───────── */
+function renderDash(){
+  const el=document.getElementById('dashContent');
+  const open=db.jobs.filter(j=>OPEN_STATUSES.includes(j.status));
+  const counts={}; STATUSES.forEach(s=>counts[s.id]=0); db.jobs.forEach(j=>counts[j.status]=(counts[j.status]||0)+1);
+  const openRevenue=open.reduce((s,j)=>s+jobTotal(j),0);
+  const invoiced=db.jobs.filter(j=>j.status==='invoiced').reduce((s,j)=>s+jobTotal(j),0);
+  const overdue=open.filter(j=>j.dueDate && j.dueDate<todayStr());
+  const maxCount=Math.max(1,...STATUSES.map(s=>counts[s.id]));
+
+  let html='';
+  html+=`<div class="stat-grid">
+    <div class="stat accent"><span class="lab">Open jobs</span><span class="val">${open.length}</span><span class="sub">${overdue.length} overdue</span></div>
+    <div class="stat"><span class="lab">In progress</span><span class="val">${counts.progress||0}</span><span class="sub">${counts.parts||0} awaiting parts</span></div>
+    <div class="stat"><span class="lab">Ready for pickup</span><span class="val">${counts.ready||0}</span><span class="sub">${counts.done||0} completed</span></div>
+    <div class="stat"><span class="lab">Open job value</span><span class="val mono">${money(openRevenue)}</span><span class="sub">${money(invoiced)} invoiced</span></div>
+  </div>`;
+
+  // status breakdown
+  html+=`<div class="card-block"><div class="card-head"><span>Jobs by status</span><a onclick="switchTab('jobs')">View all →</a></div><div class="status-bars">`;
+  STATUSES.forEach(s=>{
+    const n=counts[s.id]||0;
+    html+=`<div class="sbar"><div class="nm"><span class="dot" style="width:9px;height:9px;border-radius:50%;background:${s.color}"></span>${s.label}</div>
+      <div class="track"><div class="fill" style="width:${(n/maxCount)*100}%;background:${s.color}"></div></div><div class="n">${n}</div></div>`;
+  });
+  html+=`</div></div>`;
+
+  // active jobs list
+  const active=[...open].sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999')).slice(0,6);
+  html+=`<div class="card-block"><div class="card-head"><span>Active jobs</span><a onclick="openJob(null)">＋ New</a></div>`;
+  if(!active.length){ html+=`<div class="empty" style="padding:34px"><div class="ic">✅</div><div class="t">No open jobs — all clear.</div></div>`; }
+  else active.forEach(j=>{
+    const s=statusOf(j.status); const od=j.dueDate&&j.dueDate<todayStr();
+    html+=`<div class="mini-row" onclick="openJob(${j.id})">
+      <span class="badge" style="background:${s.color}1a;color:${s.color}"><span class="dot" style="background:${s.color}"></span>${s.label}</span>
+      <div class="grow"><div class="t">${esc(j.title||'Untitled job')}</div>
+      <div class="s">${esc(customerName(j.customerId))} · ${esc(vehicleLabel(j.vehicleId))} ${vehiclePlate(j.vehicleId)?'· '+esc(vehiclePlate(j.vehicleId)):''}</div></div>
+      <div style="text-align:right"><div class="mono" style="font-weight:700">${money(jobTotal(j))}</div>
+      <div class="s" style="${od?'color:#ef4444;font-weight:700':''}">${j.dueDate?(od?'Overdue '+j.dueDate:'Due '+j.dueDate):'No due date'}</div></div>
+    </div>`;
+  });
+  html+=`</div>`;
+  el.innerHTML=html;
+  refreshBadges();
+}
+
+/* ───────── JOBS ───────── */
+function renderJobFilters(){
+  const wrap=document.getElementById('jobFilters');
+  const counts={all:db.jobs.length, open:db.jobs.filter(j=>OPEN_STATUSES.includes(j.status)).length};
+  STATUSES.forEach(s=>counts[s.id]=db.jobs.filter(j=>j.status===s.id).length);
+  let html=`<div class="fpill ${jobFilter==='all'?'active':''}" onclick="setJobFilter('all')">All <span class="cnt">${counts.all}</span></div>`;
+  html+=`<div class="fpill ${jobFilter==='open'?'active':''}" onclick="setJobFilter('open')">Open <span class="cnt">${counts.open}</span></div>`;
+  STATUSES.forEach(s=>{ html+=`<div class="fpill ${jobFilter===s.id?'active':''}" onclick="setJobFilter('${s.id}')" style="${jobFilter===s.id?'':'border-color:'+s.color+'40'}">
+    <span class="dot" style="width:7px;height:7px;border-radius:50%;background:${s.color}"></span>${s.label} <span class="cnt">${counts[s.id]}</span></div>`; });
+  wrap.innerHTML=html;
+}
+function setJobFilter(f){ jobFilter=f; renderJobs(); }
+
+function renderJobs(){
+  renderJobFilters();
+  const q=(document.getElementById('jobSearch').value||'').toLowerCase().trim();
+  let rows=db.jobs.slice().sort((a,b)=>b.id-a.id);
+  if(jobFilter==='open') rows=rows.filter(j=>OPEN_STATUSES.includes(j.status));
+  else if(jobFilter!=='all') rows=rows.filter(j=>j.status===jobFilter);
+  if(q) rows=rows.filter(j=>{
+    const hay=[j.title, customerName(j.customerId), vehicleLabel(j.vehicleId), vehiclePlate(j.vehicleId), j.tech].join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+
+  const wrap=document.getElementById('jobsTableWrap');
+  if(!rows.length){ wrap.innerHTML=emptyState('🗂️', db.jobs.length?'No jobs match this filter.':'No jobs yet — create your first job card.','＋ New Job','openJob(null)'); refreshBadges(); return; }
+  let html=`<table class="data-table"><thead><tr><th>#</th><th>Job</th><th>Vehicle</th><th>Tech</th><th>Status</th><th>Due</th><th class="right">Total</th></tr></thead><tbody>`;
+  rows.forEach(j=>{
+    const s=statusOf(j.status); const od=j.dueDate&&j.dueDate<todayStr()&&OPEN_STATUSES.includes(j.status);
+    const p=PRIORITIES[j.priority]||PRIORITIES.normal;
+    html+=`<tr onclick="openJob(${j.id})">
+      <td class="cell-sub mono">#${j.id}</td>
+      <td><div class="cell-strong">${esc(j.title||'Untitled')}</div><div class="cell-sub"><span class="pri" style="color:${p.color}">${p.icon} ${p.label}</span> · ${esc(customerName(j.customerId))}</div></td>
+      <td><div>${esc(vehicleLabel(j.vehicleId))}</div><div class="cell-sub mono">${esc(vehiclePlate(j.vehicleId)||'—')}</div></td>
+      <td>${esc(j.tech||'—')}</td>
+      <td><span class="badge" style="background:${s.color}1a;color:${s.color}"><span class="dot" style="background:${s.color}"></span>${s.label}</span></td>
+      <td class="cell-sub ${od?'':''}" ${od?'style="color:#ef4444;font-weight:700"':''}>${j.dueDate||'—'}</td>
+      <td class="right mono cell-strong">${money(jobTotal(j))}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  wrap.innerHTML=html;
+  refreshBadges();
+}
+
+/* ───────── JOB MODAL ───────── */
+function fillSelect(sel, items, valKey, labelFn, placeholder, selected){
+  let html = placeholder!=null ? `<option value="">${esc(placeholder)}</option>` : '';
+  items.forEach(it=>{ html+=`<option value="${it[valKey]}" ${String(it[valKey])===String(selected)?'selected':''}>${esc(labelFn(it))}</option>`; });
+  sel.innerHTML=html;
+}
+function renderJobFlow(){
+  const el=document.getElementById('jobFlow');
+  el.innerHTML=STATUSES.map(s=>`<div class="step ${draftStatus===s.id?'on':''}" style="${draftStatus===s.id?'background:'+s.color:''}" onclick="setDraftStatus('${s.id}')">${s.label}</div>`).join('');
+}
+function setDraftStatus(id){ draftStatus=id; renderJobFlow(); }
+
+function onJobCustomerChange(){
+  const cid=document.getElementById('jobCustomer').value;
+  const vehs=db.vehicles.filter(v=>String(v.customerId)===String(cid));
+  fillSelect(document.getElementById('jobVehicle'), vehs, 'id', vehicleLabelWithPlate, vehs.length?'Select vehicle…':'No vehicles for customer', '');
+}
+function vehicleLabelWithPlate(v){ return [v.year,v.make,v.model].filter(Boolean).join(' ')+(v.plate?' · '+v.plate:''); }
+
+function openJob(id){
+  editingJobId=id;
+  const j = id!=null ? byId(db.jobs,id) : null;
+  document.getElementById('jobModalTitle').textContent = j ? '🗂️ Job #'+j.id : '🗂️ New Job';
+  document.getElementById('jobDeleteBtn').style.display = j ? '' : 'none';
+
+  fillSelect(document.getElementById('jobCustomer'), db.customers, 'id', c=>c.name, 'Select customer…', j?j.customerId:'');
+  fillSelect(document.getElementById('jobTech'), db.techs.map(t=>({id:t,name:t})), 'id', t=>t.name, 'Unassigned', j?j.tech:'');
+
+  draftStatus = j ? j.status : 'booked';
+  draftParts = j ? JSON.parse(JSON.stringify(j.parts||[])) : [];
+  draftLabour = j ? JSON.parse(JSON.stringify(j.labour||[])) : [];
+
+  document.getElementById('jobTitle').value = j?j.title||'':'';
+  document.getElementById('jobPriority').value = j?j.priority||'normal':'normal';
+  document.getElementById('jobOdo').value = j&&j.odo!=null?j.odo:'';
+  document.getElementById('jobDateIn').value = j?j.dateIn||todayStr():todayStr();
+  document.getElementById('jobDueDate').value = j?j.dueDate||'':'';
+  document.getElementById('jobNotes').value = j?j.notes||'':'';
+
+  renderJobFlow();
+  onJobCustomerChange();
+  if(j) document.getElementById('jobVehicle').value = j.vehicleId||'';
+  renderLines();
+  openModal('jobOverlay');
+}
+
+function renderLines(){
+  document.getElementById('partsTable').innerHTML = lineTableHTML(draftParts,'part');
+  document.getElementById('labourTable').innerHTML = lineTableHTML(draftLabour,'labour');
+  renderJobTotals();
+}
+function lineTableHTML(arr,type){
+  const unit = type==='labour' ? 'hrs' : 'qty';
+  if(!arr.length) return `<div class="li-empty">No ${type==='labour'?'labour':'parts'} added.</div>`;
+  let html=`<div class="li-row head"><div>Description</div><div>${unit}</div><div>Unit</div><div class="amt">Amount</div><div></div></div>`;
+  arr.forEach((li,i)=>{
+    html+=`<div class="li-row">
+      <input value="${esc(li.desc)}" placeholder="${type==='labour'?'Labour description':'Part name / number'}" oninput="updateLine('${type}',${i},'desc',this.value)"/>
+      <input type="number" min="0" step="${type==='labour'?'0.25':'1'}" value="${li.qty}" oninput="updateLine('${type}',${i},'qty',this.value)"/>
+      <input type="number" min="0" step="0.01" value="${li.price}" oninput="updateLine('${type}',${i},'price',this.value)"/>
+      <div class="amt">${money(lineTotal(li))}</div>
+      <button class="del" onclick="removeLine('${type}',${i})" title="Remove">×</button>
+    </div>`;
+  });
+  return html;
+}
+function addLine(type){
+  if(type==='labour') draftLabour.push({desc:'', qty:1, price:db.settings.rate||0});
+  else draftParts.push({desc:'', qty:1, price:0});
+  renderLines();
+}
+function updateLine(type,i,field,val){
+  const arr = type==='labour'?draftLabour:draftParts;
+  if(!arr[i]) return;
+  arr[i][field] = field==='desc' ? val : (val===''?'':Number(val));
+  // update just totals (avoid losing focus by not re-rendering inputs)
+  renderJobTotals();
+  // refresh the amount cell for this row
+  const tableId = type==='labour'?'labourTable':'partsTable';
+  const rows = document.getElementById(tableId).querySelectorAll('.li-row:not(.head)');
+  if(rows[i]) rows[i].querySelector('.amt').textContent = money(lineTotal(arr[i]));
+}
+function removeLine(type,i){ const arr=type==='labour'?draftLabour:draftParts; arr.splice(i,1); renderLines(); }
+
+function renderJobTotals(){
+  const tmp={parts:draftParts, labour:draftLabour};
+  const sub=jobSubtotal(tmp), tax=jobTax(tmp), tot=jobTotal(tmp);
+  let html=`<div class="tr"><span class="muted">Parts</span><span class="mono">${money(jobParts(tmp))}</span></div>
+    <div class="tr"><span class="muted">Labour</span><span class="mono">${money(jobLabour(tmp))}</span></div>
+    <div class="tr"><span class="muted">Subtotal</span><span class="mono">${money(sub)}</span></div>`;
+  if(db.settings.tax) html+=`<div class="tr"><span class="muted">Tax (${db.settings.tax}%)</span><span class="mono">${money(tax)}</span></div>`;
+  html+=`<div class="tr grand"><span>Total</span><span class="mono">${money(tot)}</span></div>`;
+  document.getElementById('jobTotals').innerHTML=html;
+}
+
+function saveJob(){
+  const customerId = document.getElementById('jobCustomer').value;
+  const title = document.getElementById('jobTitle').value.trim();
+  if(!customerId){ showToast('⚠️ Pick a customer'); return; }
+  if(!title){ showToast('⚠️ Add a complaint / job title'); return; }
+  const cleanLines = arr => arr.filter(l=>l.desc.trim()||Number(l.qty)||Number(l.price)).map(l=>({desc:l.desc.trim(), qty:Number(l.qty)||0, price:Number(l.price)||0}));
+  const data={
+    customerId: isNaN(+customerId)?customerId:+customerId,
+    vehicleId: document.getElementById('jobVehicle').value ? +document.getElementById('jobVehicle').value : null,
+    title,
+    status: draftStatus,
+    tech: document.getElementById('jobTech').value,
+    priority: document.getElementById('jobPriority').value,
+    odo: document.getElementById('jobOdo').value!==''?Number(document.getElementById('jobOdo').value):null,
+    dateIn: document.getElementById('jobDateIn').value,
+    dueDate: document.getElementById('jobDueDate').value,
+    notes: document.getElementById('jobNotes').value.trim(),
+    parts: cleanLines(draftParts),
+    labour: cleanLines(draftLabour),
+  };
+  if(editingJobId!=null){ Object.assign(byId(db.jobs,editingJobId), data); showToast('✅ Job updated'); }
+  else { data.id=uid(); db.jobs.push(data); showToast('✅ Job #'+data.id+' created'); }
+  save(); closeModal('jobOverlay'); renderJobs(); refreshBadges();
+}
+let jobDelArm=false;
+function deleteJob(){
+  const btn=document.getElementById('jobDeleteBtn');
+  if(!jobDelArm){ jobDelArm=true; btn.textContent='Confirm delete?'; btn.classList.add('confirming'); setTimeout(()=>{jobDelArm=false;btn.textContent='Delete';btn.classList.remove('confirming');},2500); return; }
+  db.jobs=db.jobs.filter(j=>j.id!==editingJobId); save(); closeModal('jobOverlay'); renderJobs(); showToast('🗑️ Job deleted'); jobDelArm=false; btn.textContent='Delete'; btn.classList.remove('confirming');
+}
+
+function printJob(){
+  const j={customerId:+document.getElementById('jobCustomer').value||document.getElementById('jobCustomer').value,
+    vehicleId:+document.getElementById('jobVehicle').value||null, title:document.getElementById('jobTitle').value,
+    parts:draftParts, labour:draftLabour, notes:document.getElementById('jobNotes').value, tech:document.getElementById('jobTech').value,
+    dateIn:document.getElementById('jobDateIn').value, status:draftStatus};
+  const c=byId(db.customers,j.customerId)||{}; const v=byId(db.vehicles,j.vehicleId)||{};
+  const liRows = (arr,unit)=>arr.filter(l=>l.desc).map(l=>`<tr><td>${esc(l.desc)}</td><td style="text-align:right">${l.qty} ${unit}</td><td style="text-align:right">${money(l.price)}</td><td style="text-align:right">${money(lineTotal(l))}</td></tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>Job ${editingJobId?'#'+editingJobId:''} — ${esc(c.name||'')}</title>
+  <style>body{font-family:Arial,sans-serif;color:#1a1a2e;padding:30px;max-width:720px;margin:auto}h1{font-size:20px}h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:#7a8499;border-bottom:1px solid #ddd;padding-bottom:4px;margin-top:24px}table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}td,th{padding:6px 4px;border-bottom:1px solid #eee;text-align:left}.tot{font-size:16px;font-weight:bold;text-align:right;margin-top:10px}.meta{font-size:13px;line-height:1.7}</style></head><body>
+  <h1>🔧 Workshop Job Card ${editingJobId?'#'+editingJobId:''}</h1>
+  <div class="meta"><b>Customer:</b> ${esc(c.name||'—')} &nbsp; ${esc(c.phone||'')}<br/>
+  <b>Vehicle:</b> ${esc(vehicleLabel(j.vehicleId))} ${v.plate?'· '+esc(v.plate):''}<br/>
+  <b>Job:</b> ${esc(j.title||'—')}<br/><b>Technician:</b> ${esc(j.tech||'—')} &nbsp; <b>Date in:</b> ${esc(j.dateIn||'—')} &nbsp; <b>Status:</b> ${statusOf(j.status).label}</div>
+  <h2>Parts</h2><table><tr><th>Description</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Amount</th></tr>${liRows(j.parts,'')||'<tr><td colspan=4>None</td></tr>'}</table>
+  <h2>Labour</h2><table><tr><th>Description</th><th style="text-align:right">Hrs</th><th style="text-align:right">Rate</th><th style="text-align:right">Amount</th></tr>${liRows(j.labour,'hrs')||'<tr><td colspan=4>None</td></tr>'}</table>
+  ${j.notes?`<h2>Notes</h2><div class="meta">${esc(j.notes).replace(/\\n/g,'<br/>')}</div>`:''}
+  <div class="tot">Subtotal: ${money(jobSubtotal(j))}<br/>${db.settings.tax?`Tax (${db.settings.tax}%): ${money(jobTax(j))}<br/>`:''}Total: ${money(jobTotal(j))}</div>
+  </body></html>`);
+  w.document.close(); w.focus(); setTimeout(()=>w.print(),250);
+}
+
+/* ───────── CUSTOMERS ───────── */
+function renderCustomers(){
+  const q=(document.getElementById('custSearch').value||'').toLowerCase().trim();
+  let rows=db.customers.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  if(q) rows=rows.filter(c=>[c.name,c.phone,c.email].join(' ').toLowerCase().includes(q));
+  const wrap=document.getElementById('custTableWrap');
+  if(!rows.length){ wrap.innerHTML=emptyState('👤', db.customers.length?'No customers match.':'No customers yet.','＋ New Customer','openCustomer(null)'); return; }
+  let html=`<table class="data-table"><thead><tr><th>Name</th><th>Contact</th><th>Vehicles</th><th class="right">Jobs</th></tr></thead><tbody>`;
+  rows.forEach(c=>{
+    const vehs=db.vehicles.filter(v=>v.customerId===c.id);
+    const jobs=db.jobs.filter(j=>j.customerId===c.id);
+    const openJobs=jobs.filter(j=>OPEN_STATUSES.includes(j.status)).length;
+    html+=`<tr onclick="openCustomer(${c.id})">
+      <td class="cell-strong">${esc(c.name)}</td>
+      <td class="cell-sub">${esc(c.phone||'')}${c.phone&&c.email?'<br/>':''}${esc(c.email||'')||(c.phone?'':'—')}</td>
+      <td class="cell-sub">${vehs.length?vehs.map(v=>`<span class="veh-chip">🚗 ${esc(v.plate||vehicleLabel(v.id))}</span>`).join(''):'—'}</td>
+      <td class="right"><span class="cell-strong">${jobs.length}</span>${openJobs?` <span class="tag" style="background:#eef4ff;color:#4f8ef7">${openJobs} open</span>`:''}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  wrap.innerHTML=html;
+}
+function openCustomer(id){
+  editingCustId=id;
+  const c=id!=null?byId(db.customers,id):null;
+  document.getElementById('custModalTitle').textContent=c?'👤 '+c.name:'👤 New Customer';
+  document.getElementById('custDeleteBtn').style.display=c?'':'none';
+  document.getElementById('custName').value=c?c.name:'';
+  document.getElementById('custPhone').value=c?c.phone||'':'';
+  document.getElementById('custEmail').value=c?c.email||'':'';
+  document.getElementById('custNotes').value=c?c.notes||'':'';
+  const vb=document.getElementById('custVehicles');
+  if(c){ const vehs=db.vehicles.filter(v=>v.customerId===c.id);
+    vb.innerHTML=`<div class="field"><label>Vehicles (${vehs.length})</label><div>${vehs.length?vehs.map(v=>`<span class="veh-chip">🚗 ${esc(vehicleLabelWithPlate(v))}</span>`).join(''):'<span class="muted" style="font-size:12px">None yet — add from the Vehicles tab.</span>'}</div></div>`;
+  } else vb.innerHTML='';
+  openModal('custOverlay');
+}
+function saveCustomer(){
+  const name=document.getElementById('custName').value.trim();
+  if(!name){ showToast('⚠️ Name required'); return; }
+  const data={ name, phone:document.getElementById('custPhone').value.trim(), email:document.getElementById('custEmail').value.trim(), notes:document.getElementById('custNotes').value.trim() };
+  if(editingCustId!=null){ Object.assign(byId(db.customers,editingCustId),data); showToast('✅ Customer updated'); }
+  else { data.id=uid(); db.customers.push(data); showToast('✅ Customer added'); }
+  save(); closeModal('custOverlay'); renderCustomers();
+}
+let custDelArm=false;
+function deleteCustomer(){
+  const btn=document.getElementById('custDeleteBtn');
+  const linkedJobs=db.jobs.filter(j=>j.customerId===editingCustId).length;
+  const linkedVeh=db.vehicles.filter(v=>v.customerId===editingCustId).length;
+  if(!custDelArm){ custDelArm=true; btn.textContent=(linkedJobs||linkedVeh)?`Delete + ${linkedVeh} veh / ${linkedJobs} jobs?`:'Confirm delete?'; btn.classList.add('confirming'); setTimeout(()=>{custDelArm=false;btn.textContent='Delete';btn.classList.remove('confirming');},2800); return; }
+  db.customers=db.customers.filter(c=>c.id!==editingCustId);
+  db.vehicles=db.vehicles.filter(v=>v.customerId!==editingCustId);
+  db.jobs=db.jobs.filter(j=>j.customerId!==editingCustId);
+  save(); closeModal('custOverlay'); renderCustomers(); showToast('🗑️ Customer removed'); custDelArm=false; btn.textContent='Delete'; btn.classList.remove('confirming');
+}
+
+/* ───────── VEHICLES ───────── */
+function renderVehicles(){
+  const q=(document.getElementById('vehSearch').value||'').toLowerCase().trim();
+  let rows=db.vehicles.slice().sort((a,b)=>(a.make||'').localeCompare(b.make||''));
+  if(q) rows=rows.filter(v=>[v.make,v.model,v.plate,v.vin,v.year,customerName(v.customerId)].join(' ').toLowerCase().includes(q));
+  const wrap=document.getElementById('vehTableWrap');
+  if(!rows.length){ wrap.innerHTML=emptyState('🚗', db.vehicles.length?'No vehicles match.':'No vehicles yet.','＋ New Vehicle','openVehicle(null)'); return; }
+  let html=`<table class="data-table"><thead><tr><th>Vehicle</th><th>Plate</th><th>Owner</th><th>VIN</th><th class="right">Jobs</th></tr></thead><tbody>`;
+  rows.forEach(v=>{
+    const jobs=db.jobs.filter(j=>j.vehicleId===v.id).length;
+    html+=`<tr onclick="openVehicle(${v.id})">
+      <td><div class="cell-strong">${esc([v.year,v.make,v.model].filter(Boolean).join(' ')||'Vehicle')}</div><div class="cell-sub">${esc(v.colour||'')}</div></td>
+      <td class="mono cell-strong">${esc(v.plate||'—')}</td>
+      <td class="cell-sub">${esc(customerName(v.customerId))}</td>
+      <td class="cell-sub mono">${esc(v.vin||'—')}</td>
+      <td class="right cell-strong">${jobs}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  wrap.innerHTML=html;
+}
+function openVehicle(id){
+  editingVehId=id;
+  if(!db.customers.length && id==null){ showToast('⚠️ Add a customer first'); return; }
+  const v=id!=null?byId(db.vehicles,id):null;
+  document.getElementById('vehModalTitle').textContent=v?'🚗 '+([v.year,v.make,v.model].filter(Boolean).join(' ')):'🚗 New Vehicle';
+  document.getElementById('vehDeleteBtn').style.display=v?'':'none';
+  fillSelect(document.getElementById('vehCustomer'), db.customers, 'id', c=>c.name, 'Select owner…', v?v.customerId:'');
+  document.getElementById('vehYear').value=v?v.year||'':'';
+  document.getElementById('vehMake').value=v?v.make||'':'';
+  document.getElementById('vehModel').value=v?v.model||'':'';
+  document.getElementById('vehPlate').value=v?v.plate||'':'';
+  document.getElementById('vehColour').value=v?v.colour||'':'';
+  document.getElementById('vehVin').value=v?v.vin||'':'';
+  openModal('vehOverlay');
+}
+function saveVehicle(){
+  const customerId=document.getElementById('vehCustomer').value;
+  if(!customerId){ showToast('⚠️ Pick an owner'); return; }
+  const make=document.getElementById('vehMake').value.trim();
+  const model=document.getElementById('vehModel').value.trim();
+  if(!make&&!model){ showToast('⚠️ Add make or model'); return; }
+  const data={ customerId:+customerId, year:document.getElementById('vehYear').value, make, model,
+    plate:document.getElementById('vehPlate').value.trim().toUpperCase(), colour:document.getElementById('vehColour').value.trim(), vin:document.getElementById('vehVin').value.trim().toUpperCase() };
+  if(editingVehId!=null){ Object.assign(byId(db.vehicles,editingVehId),data); showToast('✅ Vehicle updated'); }
+  else { data.id=uid(); db.vehicles.push(data); showToast('✅ Vehicle added'); }
+  save(); closeModal('vehOverlay'); renderVehicles();
+}
+let vehDelArm=false;
+function deleteVehicle(){
+  const btn=document.getElementById('vehDeleteBtn');
+  const linked=db.jobs.filter(j=>j.vehicleId===editingVehId).length;
+  if(!vehDelArm){ vehDelArm=true; btn.textContent=linked?`Unlink ${linked} jobs?`:'Confirm delete?'; btn.classList.add('confirming'); setTimeout(()=>{vehDelArm=false;btn.textContent='Delete';btn.classList.remove('confirming');},2600); return; }
+  db.vehicles=db.vehicles.filter(v=>v.id!==editingVehId);
+  db.jobs.forEach(j=>{ if(j.vehicleId===editingVehId) j.vehicleId=null; });
+  save(); closeModal('vehOverlay'); renderVehicles(); showToast('🗑️ Vehicle removed'); vehDelArm=false; btn.textContent='Delete'; btn.classList.remove('confirming');
+}
+
+/* ───────── SETTINGS ───────── */
+function renderSettings(){
+  document.getElementById('setRate').value=db.settings.rate;
+  document.getElementById('setCur').value=db.settings.currency;
+  document.getElementById('setTax').value=db.settings.tax;
+  renderTechs();
+}
+function onSettingChange(){
+  db.settings.rate=Number(document.getElementById('setRate').value)||0;
+  db.settings.currency=document.getElementById('setCur').value||'$';
+  db.settings.tax=Number(document.getElementById('setTax').value)||0;
+  save();
+}
+function renderTechs(){
+  const el=document.getElementById('techList');
+  if(!db.techs.length){ el.innerHTML='<div class="muted" style="font-size:12px">No technicians yet.</div>'; return; }
+  el.innerHTML=db.techs.map((t,i)=>`<div class="tech-item"><span class="nm">🧑‍🔧 ${esc(t)}</span><button class="rm" onclick="removeTech(${i})" title="Remove">×</button></div>`).join('');
+}
+function addTech(){
+  const inp=document.getElementById('newTech'); const name=inp.value.trim();
+  if(!name) return;
+  if(db.techs.includes(name)){ showToast('Already added'); return; }
+  db.techs.push(name); inp.value=''; save(); renderTechs(); showToast('✅ Technician added');
+}
+function removeTech(i){ db.techs.splice(i,1); save(); renderTechs(); }
+
+/* ───────── DATA IO ───────── */
+function exportData(){
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='workshop-'+todayStr()+'.json'; a.click(); URL.revokeObjectURL(a.href);
+  showToast('⬇️ Exported');
+}
+function importData(e){
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ const d=JSON.parse(r.result);
+    if(!d.jobs&&!d.customers) throw 0;
+    db=Object.assign({customers:[],vehicles:[],jobs:[],techs:[],settings:{rate:90,currency:'$',tax:0},seq:1}, d);
+    db.settings=Object.assign({rate:90,currency:'$',tax:0},d.settings||{});
+    if(!db.seq){ const ids=[...db.customers,...db.vehicles,...db.jobs].map(x=>x.id||0); db.seq=(Math.max(0,...ids)||0)+1; }
+    save(); switchTab('dash'); showToast('✅ Data imported');
+  }catch(err){ showToast('⚠️ Invalid file'); } };
+  r.readAsText(file); e.target.value='';
+}
+let wipeArm=false;
+function wipeData(){
+  const btn=document.getElementById('wipeBtn');
+  if(!wipeArm){ wipeArm=true; btn.textContent='⚠️ Confirm wipe everything'; btn.classList.add('confirming'); setTimeout(()=>{wipeArm=false;btn.textContent='🗑️ Clear all data';btn.classList.remove('confirming');},3000); return; }
+  db={ customers:[], vehicles:[], jobs:[], techs:[], settings:{rate:90,currency:'$',tax:0}, seq:1 };
+  save(); wipeArm=false; btn.textContent='🗑️ Clear all data'; btn.classList.remove('confirming');
+  renderSettings(); switchTab('dash'); showToast('🗑️ All data cleared');
+}
+
+/* ───────── SEED ───────── */
+function loadSeed(){
+  if(db.jobs.length||db.customers.length){ showToast('Clear data first to load samples'); return; }
+  db.techs=['Sam Rivera','Dana Cole','Mike Tran'];
+  db.settings={rate:95,currency:'$',tax:8};
+  const c1={id:1,name:'Alice Johnson',phone:'+1 555 0101',email:'alice@example.com',notes:'Prefers SMS reminders.'};
+  const c2={id:2,name:'Bob Martinez',phone:'+1 555 0142',email:'bob.m@example.com',notes:''};
+  const c3={id:3,name:'Fleet Co. (Account)',phone:'+1 555 0199',email:'ops@fleetco.com',notes:'Net-30 billing.'};
+  db.customers=[c1,c2,c3];
+  const v1={id:4,customerId:1,year:'2019',make:'Toyota',model:'Corolla',plate:'JKL-204',colour:'Silver',vin:'JTDBR32E930012345'};
+  const v2={id:5,customerId:2,year:'2016',make:'Ford',model:'F-150',plate:'TRK-880',colour:'Blue',vin:'1FTFW1EF6GFA12345'};
+  const v3={id:6,customerId:3,year:'2021',make:'Mercedes',model:'Sprinter',plate:'FLT-012',colour:'White',vin:'WD3PE8CD5K1234567'};
+  db.vehicles=[v1,v2,v3];
+  db.jobs=[
+    {id:7,customerId:1,vehicleId:4,title:'Brake noise + 60k service',status:'progress',tech:'Sam Rivera',priority:'high',odo:61200,dateIn:todayStr(),dueDate:todayStr(),notes:'Front pads worn to 2mm. Rotors within spec.',
+      parts:[{desc:'Front brake pad set',qty:1,price:78},{desc:'Oil filter',qty:1,price:12},{desc:'Engine oil 5W-30',qty:5,price:9}],
+      labour:[{desc:'Brake pad replacement',qty:1.5,price:95},{desc:'Major service',qty:1,price:95}]},
+    {id:8,customerId:2,vehicleId:5,title:'Check engine light — misfire',status:'parts',tech:'Dana Cole',priority:'urgent',odo:98450,dateIn:todayStr(),dueDate:'',notes:'Cyl 3 misfire. Coil pack on order.',
+      parts:[{desc:'Ignition coil',qty:1,price:64},{desc:'Spark plug set',qty:1,price:42}],
+      labour:[{desc:'Diagnostics',qty:1,price:95}]},
+    {id:9,customerId:3,vehicleId:6,title:'Fleet inspection + tyre rotation',status:'booked',tech:'',priority:'normal',odo:34500,dateIn:todayStr(),dueDate:'',notes:'',
+      parts:[], labour:[{desc:'Safety inspection',qty:1,price:95},{desc:'Tyre rotation',qty:0.5,price:95}]},
+    {id:10,customerId:1,vehicleId:4,title:'AC not cooling',status:'ready',tech:'Mike Tran',priority:'normal',odo:60900,dateIn:todayStr(),dueDate:todayStr(),notes:'Recharged refrigerant, leak test passed.',
+      parts:[{desc:'R-134a refrigerant',qty:1,price:35}], labour:[{desc:'AC service',qty:1,price:95}]},
+  ];
+  db.seq=11;
+  save(); switchTab('dash'); showToast('🌱 Sample data loaded');
+}
+
+/* ───────── SHARED UI ───────── */
+function emptyState(ic,text,btnLabel,btnAction){
+  return `<div class="empty"><div class="ic">${ic}</div><div class="t">${esc(text)}</div>${btnLabel?`<button class="btn btn-primary btn-sm" onclick="${btnAction}">${btnLabel}</button>`:''}</div>`;
+}
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+function refreshBadges(){
+  const open=db.jobs.filter(j=>OPEN_STATUSES.includes(j.status)).length;
+  document.getElementById('jobsBadge').textContent=open;
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.overlay.show').forEach(o=>o.classList.remove('show')); });
+
+/* ───────── BOOT ───────── */
+load();
+renderDash();
+refreshBadges();
+</script>
+</body>
+</html>
