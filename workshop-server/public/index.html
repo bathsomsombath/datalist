@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Workshop Controller</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<h1>🔧 Workshop Controller</h1>
+<div class="subtitle"><span class="conn" id="conn"></span><span id="connLabel">Connecting…</span> · auto-repair job tracking</div>
+
+<div class="app">
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="dash" onclick="switchTab('dash')">📊 Dashboard</button>
+    <button class="tab-btn" data-tab="jobs" onclick="switchTab('jobs')">🗂️ Jobs <span class="tab-badge" id="jobsBadge">0</span></button>
+    <button class="tab-btn" data-tab="customers" onclick="switchTab('customers')">👤 Customers</button>
+    <button class="tab-btn" data-tab="vehicles" onclick="switchTab('vehicles')">🚗 Vehicles</button>
+    <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">⚙️ Settings</button>
+  </div>
+
+  <div class="panel active" id="panel-dash">
+    <div class="scroll"><div class="dash" id="dashContent"></div></div>
+  </div>
+
+  <div class="panel" id="panel-jobs">
+    <div class="section-topbar">
+      <h2>Job Cards</h2>
+      <div class="tbar-btns"><button class="btn btn-primary btn-sm" onclick="openJob(null)">＋ New Job</button></div>
+    </div>
+    <div class="toolbar">
+      <div class="search"><span class="ic">🔍</span><input id="jobSearch" placeholder="Search jobs, customers, plates…" oninput="renderJobs()"/></div>
+    </div>
+    <div class="filters" id="jobFilters"></div>
+    <div class="tbl-wrap" id="jobsTableWrap"></div>
+  </div>
+
+  <div class="panel" id="panel-customers">
+    <div class="section-topbar">
+      <h2>Customers</h2>
+      <div class="tbar-btns"><button class="btn btn-primary btn-sm" onclick="openCustomer(null)">＋ New Customer</button></div>
+    </div>
+    <div class="toolbar">
+      <div class="search"><span class="ic">🔍</span><input id="custSearch" placeholder="Search name, phone, email…" oninput="renderCustomers()"/></div>
+    </div>
+    <div class="tbl-wrap" id="custTableWrap"></div>
+  </div>
+
+  <div class="panel" id="panel-vehicles">
+    <div class="section-topbar">
+      <h2>Vehicles</h2>
+      <div class="tbar-btns"><button class="btn btn-primary btn-sm" onclick="openVehicle(null)">＋ New Vehicle</button></div>
+    </div>
+    <div class="toolbar">
+      <div class="search"><span class="ic">🔍</span><input id="vehSearch" placeholder="Search make, model, plate, VIN…" oninput="renderVehicles()"/></div>
+    </div>
+    <div class="tbl-wrap" id="vehTableWrap"></div>
+  </div>
+
+  <div class="panel" id="panel-settings">
+    <div class="scroll">
+      <div class="settings">
+        <div class="set-block">
+          <h3>Shop defaults</h3>
+          <div class="grid2">
+            <div class="field"><label>Default labour rate (per hour)</label><input id="setRate" type="number" min="0" step="1" onchange="saveSettings()"/></div>
+            <div class="field"><label>Currency symbol</label><input id="setCur" maxlength="3" onchange="saveSettings()"/></div>
+          </div>
+          <div class="field"><label>Tax rate (%)</label><input id="setTax" type="number" min="0" step="0.5" onchange="saveSettings()"/></div>
+        </div>
+        <div class="set-block">
+          <h3>Technicians</h3>
+          <div class="tech-list" id="techList"></div>
+          <div class="inline-add">
+            <input id="newTech" placeholder="Add technician name…" onkeydown="if(event.key==='Enter')addTech()"/>
+            <button class="btn btn-ghost btn-sm" onclick="addTech()">＋ Add</button>
+          </div>
+        </div>
+        <div class="set-block">
+          <h3>About</h3>
+          <p class="subtitle" style="margin:0;text-align:left">Data is stored in a SQLite database on the server (<code>data/workshop.db</code>). Run <code>npm run seed</code> to load sample data.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JOB MODAL -->
+<div class="overlay" id="jobOverlay" onclick="if(event.target===this)closeModal('jobOverlay')">
+  <div class="modal" style="max-width:660px">
+    <div class="modal-head"><div class="title" id="jobModalTitle">🗂️ New Job</div><button class="x" onclick="closeModal('jobOverlay')">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Status</label><div class="flow" id="jobFlow"></div></div>
+      <div class="grid2">
+        <div class="field"><label>Customer</label><select id="jobCustomer" onchange="onJobCustomerChange()"></select></div>
+        <div class="field"><label>Vehicle</label><select id="jobVehicle"></select></div>
+      </div>
+      <div class="field"><label>Complaint / job title</label><input id="jobTitle" placeholder="e.g. Brake noise + service"/></div>
+      <div class="grid3">
+        <div class="field"><label>Technician</label><select id="jobTech"></select></div>
+        <div class="field"><label>Priority</label>
+          <select id="jobPriority"><option value="low">Low</option><option value="normal" selected>Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select>
+        </div>
+        <div class="field"><label>Odometer (km)</label><input id="jobOdo" type="number" min="0" placeholder="—"/></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Date in</label><input id="jobDateIn" type="date"/></div>
+        <div class="field"><label>Promised / due</label><input id="jobDueDate" type="date"/></div>
+      </div>
+      <div class="field">
+        <div class="li-head"><span class="lab">Parts</span><button class="btn btn-ghost btn-sm" onclick="addLine('part')">＋ Part</button></div>
+        <div class="li-table" id="partsTable"></div>
+      </div>
+      <div class="field">
+        <div class="li-head"><span class="lab">Labour</span><button class="btn btn-ghost btn-sm" onclick="addLine('labour')">＋ Labour</button></div>
+        <div class="li-table" id="labourTable"></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="jobNotes" placeholder="Diagnosis, work done, observations…"></textarea></div>
+      <div class="totals" id="jobTotals"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="jobDeleteBtn" onclick="deleteJob()">Delete</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-ghost btn-sm" onclick="printJob()">🖨️ Print</button>
+        <button class="btn btn-primary" onclick="saveJob()">Save Job</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOMER MODAL -->
+<div class="overlay" id="custOverlay" onclick="if(event.target===this)closeModal('custOverlay')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head"><div class="title" id="custModalTitle">👤 New Customer</div><button class="x" onclick="closeModal('custOverlay')">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Name</label><input id="custName" placeholder="Full name or company"/></div>
+      <div class="grid2">
+        <div class="field"><label>Phone</label><input id="custPhone" placeholder="+1 …"/></div>
+        <div class="field"><label>Email</label><input id="custEmail" type="email" placeholder="name@email.com"/></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="custNotes" placeholder="Preferences, account notes…"></textarea></div>
+      <div id="custVehicles"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="custDeleteBtn" onclick="deleteCustomer()">Delete</button>
+      <button class="btn btn-primary" style="margin-left:auto" onclick="saveCustomer()">Save Customer</button>
+    </div>
+  </div>
+</div>
+
+<!-- VEHICLE MODAL -->
+<div class="overlay" id="vehOverlay" onclick="if(event.target===this)closeModal('vehOverlay')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head"><div class="title" id="vehModalTitle">🚗 New Vehicle</div><button class="x" onclick="closeModal('vehOverlay')">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Owner</label><select id="vehCustomer"></select></div>
+      <div class="grid3">
+        <div class="field"><label>Year</label><input id="vehYear" type="number" min="1900" max="2100" placeholder="2020"/></div>
+        <div class="field"><label>Make</label><input id="vehMake" placeholder="Toyota"/></div>
+        <div class="field"><label>Model</label><input id="vehModel" placeholder="Corolla"/></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Plate</label><input id="vehPlate" placeholder="ABC-123"/></div>
+        <div class="field"><label>Colour</label><input id="vehColour" placeholder="Silver"/></div>
+      </div>
+      <div class="field"><label>VIN</label><input id="vehVin" placeholder="17-char VIN"/></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="vehDeleteBtn" onclick="deleteVehicle()">Delete</button>
+      <button class="btn btn-primary" style="margin-left:auto" onclick="saveVehicle()">Save Vehicle</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>

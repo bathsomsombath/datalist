@@ -1,0 +1,18 @@
+{
+  "name": "workshop-controller-server",
+  "version": "1.0.0",
+  "description": "Auto-repair garage workshop controller — Express API + SQLite database",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "dev": "node --watch --disable-warning=ExperimentalWarning server.js",
+    "seed": "node --disable-warning=ExperimentalWarning seed.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
