@@ -251,6 +251,40 @@ h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; text-align: center; 
 .fp-thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid #e2e6ef}
 .img-preview-bubble{max-width:200px;max-height:150px;border-radius:8px;border:1px solid #e2e6ef;margin-top:6px}
 .file-reading-status{font-size:11px;color:#7a8499;margin-top:4px;font-style:italic}
+
+/* ── Beerlao AR ── */
+.ar-intake{padding:12px 16px;border-bottom:1.5px solid #edf0f7;background:#fafbfd;flex-shrink:0}
+.ar-intake-row{display:flex;gap:8px}
+.ar-select{flex:0 0 auto;padding:8px 10px;border:1.5px solid #e2e6ef;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;background:#fff;cursor:pointer;color:#1a1a2e}
+.ar-scan-btn{flex:1;padding:9px 12px;border:none;border-radius:8px;background:#4f8ef7;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.ar-scan-btn:hover{background:#3d7de6}
+.ar-hint{font-size:11px;color:#a0a8bb;margin-top:8px;line-height:1.5}
+.ar-progress{margin-top:10px;display:flex;align-items:center;gap:8px}
+.ar-progress-bar{flex:1;height:6px;background:#e8edf5;border-radius:6px;overflow:hidden}
+.ar-progress-fill{height:100%;width:0;background:#4f8ef7;transition:width .2s}
+.ar-progress-txt{font-size:11px;color:#7a8499;white-space:nowrap}
+.ar-form{margin-top:10px}
+.ar-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ar-fields label{display:flex;flex-direction:column;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#a0a8bb;gap:3px}
+.ar-fields input,.ar-fields select{padding:7px 9px;border:1.5px solid #e2e6ef;border-radius:7px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:#1a1a2e;text-transform:none;letter-spacing:normal;font-weight:500}
+.ar-fields input:focus,.ar-fields select:focus{outline:none;border-color:#4f8ef7}
+.ar-raw{margin-top:8px}
+.ar-raw summary{font-size:11px;color:#7a8499;cursor:pointer;user-select:none}
+.ar-raw textarea{width:100%;margin-top:6px;padding:8px;border:1.5px solid #e2e6ef;border-radius:7px;font-family:ui-monospace,monospace;font-size:11px;line-height:1.5;resize:vertical}
+.ar-form-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.ar-cancel,.ar-save{padding:8px 16px;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none}
+.ar-cancel{background:#f0f4f8;color:#7a8499}
+.ar-save{background:#22c55e;color:#fff}
+.ar-save:hover{background:#16a34a}
+.ar-table td{padding:9px 11px;font-size:12px}
+.ar-table tbody tr{cursor:pointer}
+.ar-stage{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap}
+.ar-stage.qt{background:#fef9c3;color:#a16207}
+.ar-stage.po{background:#dbeafe;color:#1d4ed8}
+.ar-stage.inv{background:#fce7f3;color:#be185d}
+.ar-stage.paid{background:#dcfce7;color:#15803d}
+.ar-notion-btn{background:none;border:1px solid #c8deff;color:#4f8ef7;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif}
+.ar-notion-btn:hover{background:#eef4ff}
 </style>
 </head>
 <body>
@@ -267,6 +301,9 @@ h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; text-align: center; 
     <button class="tab-btn active" id="tab-chat-btn" onclick="switchTab('chat')">💬 Chat</button>
     <button class="tab-btn" id="tab-list-btn" onclick="switchTab('list')">
       📋 Data List <span class="tab-badge" id="listBadge" style="display:none">0</span>
+    </button>
+    <button class="tab-btn" id="tab-ar-btn" onclick="switchTab('ar')">
+      🍺 Beerlao AR <span class="tab-badge" id="arBadge" style="display:none">0</span>
     </button>
   </div>
 
@@ -338,6 +375,85 @@ h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; text-align: center; 
     </div>
   </div>
 
+  <!-- ── BEERLAO AR PANEL ── -->
+  <div class="panel" id="panel-ar">
+    <div class="section-topbar">
+      <span class="row-count" id="arRowCount">0 records</span>
+      <div class="tbar-btns">
+        <button class="tbar-btn tbar-export" onclick="arExport()">📤 Export</button>
+        <button class="tbar-btn tbar-clear" id="arClearBtn" data-confirm="0" onclick="arClearAll()">🗑 Clear All</button>
+      </div>
+    </div>
+
+    <!-- OCR intake card -->
+    <div class="ar-intake">
+      <div class="ar-intake-row">
+        <select id="arDocType" class="ar-select">
+          <option value="qt">📄 QT / Quotation</option>
+          <option value="po">🧾 PO (Purchase Order)</option>
+          <option value="invoice">💵 Invoice</option>
+        </select>
+        <button class="ar-scan-btn" onclick="document.getElementById('arFileInput').click()">📷 Scan / Upload → OCR</button>
+      </div>
+      <div class="ar-progress" id="arProgress" style="display:none">
+        <div class="ar-progress-bar"><div class="ar-progress-fill" id="arProgressFill"></div></div>
+        <span class="ar-progress-txt" id="arProgressTxt">Reading…</span>
+      </div>
+      <div class="ar-form" id="arForm" style="display:none">
+        <div class="ar-fields">
+          <label>WIP #<input id="arfWip" placeholder="26464" /></label>
+          <label>Plate (last 4)<input id="arfPlate" placeholder="4185" /></label>
+          <label id="arfNoWrap">QT No.<input id="arfNo" placeholder="—" /></label>
+          <label id="arfAmtWrap">Amount<input id="arfAmt" placeholder="0" /></label>
+          <label>Currency
+            <select id="arfCur"><option value="LAK">LAK</option><option value="USD">USD</option></select>
+          </label>
+          <label id="arfDateWrap">Date<input id="arfDate" type="date" /></label>
+        </div>
+        <details class="ar-raw">
+          <summary>Raw OCR text</summary>
+          <textarea id="arRawText" rows="5" oninput="arReExtract()"></textarea>
+        </details>
+        <div class="ar-form-btns">
+          <button class="ar-cancel" onclick="arCancelForm()">Cancel</button>
+          <button class="ar-save" onclick="arSaveRecord()">💾 Save to AR</button>
+        </div>
+      </div>
+      <div class="ar-hint" id="arHint">Pick a document type, then scan a QT, PO, or invoice. OCR runs on-device — nothing is uploaded.</div>
+    </div>
+
+    <div class="search-bar">
+      <input id="arSearchInput" type="text" placeholder="Search AR (WIP, plate, QT#, PO#)..." oninput="renderARTable()" />
+      <select class="status-filter" id="arStageFilter" onchange="renderARTable()">
+        <option value="">All stages</option>
+        <option value="QT sent">QT sent</option>
+        <option value="PO received">PO received</option>
+        <option value="Invoiced">Invoiced</option>
+        <option value="Paid">Paid</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table ar-table">
+        <thead><tr><th>WIP</th><th>Plate</th><th>Stage</th><th>QT</th><th>Amount</th><th></th></tr></thead>
+        <tbody id="arTableBody"></tbody>
+      </table>
+      <div id="arEmptyTable" class="empty-table">No AR records yet — scan a Beerlao QT above ↑</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Beerlao AR — Notion block modal -->
+<div class="export-overlay" id="arNotionOverlay" onclick="if(event.target===this)closeArNotion()">
+  <div class="export-box" style="max-width:560px;max-height:88vh;display:flex;flex-direction:column">
+    <h3>🍺 Notion block — <span id="arNotionWip"></span></h3>
+    <div style="font-size:12px;color:#7a8499;margin-bottom:8px">SOP file name + PO Status block, ready to paste into the Beerlao WIP page.</div>
+    <pre id="arNotionText" style="flex:1;min-height:0;overflow:auto;background:#f7f9fc;border:1.5px solid #e2e6ef;border-radius:9px;padding:12px;font-size:12px;white-space:pre-wrap;line-height:1.6"></pre>
+    <div class="export-btns" style="flex-wrap:wrap">
+      <button class="export-close-btn" onclick="closeArNotion()">Close</button>
+      <button class="export-copy-btn" style="background:#4f8ef7" onclick="arCopyNotion()">📋 Copy block</button>
+    </div>
+  </div>
 </div>
 
 <!-- Firebase -->
@@ -348,6 +464,9 @@ h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; text-align: center; 
 <input type="file" id="chatFileInput" accept=".txt,.csv,.xlsx,.xls,.json,.md,.html,.log,.tsv,.pdf,.png,.jpg,.jpeg,.gif,.webp" style="display:none" onchange="handleChatFileAttach(this)" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<!-- Tesseract.js for offline OCR (Beerlao AR) -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js"></script>
+<input type="file" id="arFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp" style="display:none" onchange="arHandleFile(this)" />
 <div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
   <div class="detail-box">
     <div class="detail-header">
@@ -841,6 +960,7 @@ function switchTab(name){
   document.getElementById('tab-'+name+'-btn').classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
   if(name==='list') setTimeout(()=>document.getElementById('listValInput').focus(),80);
+  if(name==='ar') renderARTable();
 }
 
 // ════════════════════════════════════════
@@ -1961,9 +2081,274 @@ function clearChat(){
   document.getElementById('chips').style.display='flex';
 }
 
+// ════════════════════════════════════════
+// BEERLAO AR  (OCR intake + AR tracker)
+// ════════════════════════════════════════
+const AR_KEY='beerlao-ar-v1';
+let arRecords={};        // wip -> record
+let arDraft=null;        // pending OCR result awaiting save
+
+function arLoad(){
+  try{ const s=localStorage.getItem(AR_KEY); if(s) arRecords=JSON.parse(s)||{}; }catch(e){ arRecords={}; }
+}
+function arSave(){
+  try{ localStorage.setItem(AR_KEY, JSON.stringify(arRecords)); }catch(e){}
+  if(fbConnected && fbRef){ try{ fbRef.child('beerlaoAR').set(arRecords); }catch(e){} }
+  arUpdateBadge();
+}
+function arUpdateBadge(){
+  const n=Object.keys(arRecords).length;
+  const b=document.getElementById('arBadge');
+  if(b){ b.textContent=n; b.style.display=n?'inline-block':'none'; }
+  const rc=document.getElementById('arRowCount');
+  if(rc) rc.textContent=n+' record'+(n===1?'':'s');
+}
+
+// SOP-format QT file name: "QTT wip26464 car4185.pdf"
+function arQtFileName(wip,plate){
+  if(!wip||!plate) return '';
+  return 'QTT wip'+String(wip).replace(/\D/g,'')+' car'+String(plate).replace(/\D/g,'').slice(-4)+'.pdf';
+}
+
+function arStageOf(r){
+  if(r.payment&&r.payment.date) return 'Paid';
+  if(r.invoice&&r.invoice.no) return 'Invoiced';
+  if(r.po&&r.po.no) return 'PO received';
+  if(r.qt&&(r.qt.no||r.qt.amount)) return 'QT sent';
+  return 'Draft';
+}
+function arStageClass(stage){
+  return {'QT sent':'qt','PO received':'po','Invoiced':'inv','Paid':'paid'}[stage]||'qt';
+}
+
+// ── Field extraction from OCR text ──
+function arExtract(text,docType){
+  const t=(text||'').replace(/\r/g,'');
+  const out={wip:'',plate:'',no:'',amount:'',currency:'LAK',date:''};
+  const grab=re=>{ const m=t.match(re); return m?m[1].trim():''; };
+
+  out.wip = grab(/wip[\s#:.\-]*([0-9]{3,6})/i) || grab(/\bW\.?I\.?P\.?[\s#:.\-]*([0-9]{3,6})/i);
+  out.plate = grab(/(?:car|plate|ທະບຽນ|ทะเบียน)[\s#:.\-]*([0-9]{3,4})/i);
+
+  // number token must contain a digit so we don't capture the label word itself
+  if(docType==='qt')      out.no = grab(/(?:QTT?|quotation)[\s#:.No\-]*([A-Z0-9\-\/]*\d[A-Z0-9\-\/]*)/i);
+  else if(docType==='po') out.no = grab(/(?:P\.?O\.?|purchase\s*order)[\s#:.No\-]*([A-Z0-9\-\/]*\d[A-Z0-9\-\/]*)/i);
+  else                    out.no = grab(/(?:invoice|INV)[\s#:.No\-]*([A-Z0-9\-\/]*\d[A-Z0-9\-\/]*)/i);
+  // avoid capturing the WIP/plate number as the doc number
+  if(out.no && (out.no===out.wip || out.no===out.plate)) out.no='';
+
+  // currency
+  if(/\bUSD\b|\$/.test(t) && !/\bLAK\b|\bKIP\b/i.test(t)) out.currency='USD';
+  else out.currency='LAK';
+
+  // amount — prefer a number near a "total" line, else the largest money-looking number
+  let amt='';
+  const totalLine=t.split('\n').find(l=>/total|ລວມ|รวม|grand/i.test(l));
+  const numRe=/([0-9]{1,3}(?:[,\.\s][0-9]{3})+(?:\.[0-9]{1,2})?)/g;
+  const pick=line=>{ const ms=(line||'').match(numRe); if(!ms)return ''; return ms.sort((a,b)=>b.replace(/\D/g,'').length-a.replace(/\D/g,'').length)[0]; };
+  amt = pick(totalLine);
+  if(!amt){ const all=t.match(numRe); if(all) amt=all.sort((a,b)=>b.replace(/\D/g,'').length-a.replace(/\D/g,'').length)[0]; }
+  out.amount = amt ? amt.replace(/[^\d.]/g,'') : '';
+
+  // date -> YYYY-MM-DD
+  let d = grab(/(\d{4}[-\/.]\d{1,2}[-\/.]\d{1,2})/) || grab(/(\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4})/);
+  if(d){ const iso=arToISO(d); if(iso) out.date=iso; }
+  return out;
+}
+function arToISO(s){
+  s=s.replace(/\./g,'-').replace(/\//g,'-');
+  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  m=s.match(/^(\d{1,2})-(\d{1,2})-(\d{2,4})$/);
+  if(m){ let y=m[3].length===2?'20'+m[3]:m[3]; return y+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'); }
+  return '';
+}
+
+// ── OCR intake ──
+async function arHandleFile(input){
+  const file=input.files[0]; input.value=''; if(!file) return;
+  const docType=document.getElementById('arDocType').value;
+  const ext=(file.name.split('.').pop()||'').toLowerCase();
+  arShowProgress(true,'Reading…',0.05);
+  try{
+    let text='';
+    if(ext==='pdf'){
+      const buf=await file.arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
+      for(let i=1;i<=pdf.numPages;i++){
+        const page=await pdf.getPage(i);
+        const tc=await page.getTextContent();
+        text += tc.items.map(it=>it.str).join(' ')+'\n';
+      }
+      if(!text.trim()){ // scanned PDF — OCR page 1
+        arShowProgress(true,'Scanned PDF — OCR…',0.15);
+        const page=await pdf.getPage(1);
+        const vp=page.getViewport({scale:2});
+        const canvas=document.createElement('canvas');
+        canvas.width=vp.width; canvas.height=vp.height;
+        await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
+        text=await arOcrImage(canvas);
+      }
+    } else {
+      const url=URL.createObjectURL(file);
+      text=await arOcrImage(url);
+      URL.revokeObjectURL(url);
+    }
+    arShowProgress(false);
+    arOpenForm(text,docType);
+  }catch(err){
+    arShowProgress(false);
+    showToast('⚠️ OCR failed: '+err.message);
+  }
+}
+async function arOcrImage(src){
+  if(!window.Tesseract) throw new Error('OCR engine not loaded (check connection)');
+  const res=await Tesseract.recognize(src,'eng',{logger:m=>{
+    if(m.status==='recognizing text') arShowProgress(true,'OCR '+Math.round(m.progress*100)+'%',0.2+m.progress*0.8);
+  }});
+  return res.data.text||'';
+}
+function arShowProgress(show,txt,frac){
+  const p=document.getElementById('arProgress');
+  document.getElementById('arHint').style.display=show?'none':'block';
+  p.style.display=show?'flex':'none';
+  if(show){ document.getElementById('arProgressTxt').textContent=txt||''; document.getElementById('arProgressFill').style.width=Math.round((frac||0)*100)+'%'; }
+}
+
+function arOpenForm(text,docType){
+  arDraft={docType};
+  document.getElementById('arRawText').value=text;
+  const labels={qt:'QT No.',po:'PO No.',invoice:'Invoice No.'};
+  document.getElementById('arfNoWrap').childNodes[0].nodeValue=labels[docType];
+  const f=arExtract(text,docType);
+  document.getElementById('arfWip').value=f.wip;
+  document.getElementById('arfPlate').value=f.plate;
+  document.getElementById('arfNo').value=f.no;
+  document.getElementById('arfAmt').value=f.amount;
+  document.getElementById('arfCur').value=f.currency;
+  document.getElementById('arfDate').value=f.date;
+  document.getElementById('arForm').style.display='block';
+  document.getElementById('arHint').style.display='none';
+}
+function arReExtract(){
+  if(!arDraft) return;
+  const f=arExtract(document.getElementById('arRawText').value,arDraft.docType);
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el&&!el.value&&v) el.value=v; };
+  set('arfWip',f.wip); set('arfPlate',f.plate); set('arfNo',f.no); set('arfAmt',f.amount); set('arfDate',f.date);
+}
+function arCancelForm(){ arDraft=null; document.getElementById('arForm').style.display='none'; document.getElementById('arHint').style.display='block'; }
+
+function arSaveRecord(){
+  if(!arDraft) return;
+  const wip=document.getElementById('arfWip').value.replace(/\D/g,'');
+  if(!wip){ showToast('⚠️ WIP # required'); return; }
+  const plate=document.getElementById('arfPlate').value.replace(/\D/g,'').slice(-4);
+  const no=document.getElementById('arfNo').value.trim();
+  const amount=document.getElementById('arfAmt').value.trim();
+  const currency=document.getElementById('arfCur').value;
+  const date=document.getElementById('arfDate').value;
+  const dt=arDraft.docType;
+
+  const r=arRecords[wip]||{wip,plate:'',customer:'Beerlao LBC (B0002)',qt:{},po:{},invoice:{},payment:{}};
+  if(plate) r.plate=plate;
+  if(dt==='qt'){ r.qt={no,amount,currency,date,file:arQtFileName(wip,plate||r.plate)}; }
+  else if(dt==='po'){ r.po={no,amount,currency,date}; }
+  else { r.invoice={no,amount,currency,date}; }
+  r.updated=new Date().toISOString();
+  arRecords[wip]=r;
+  arSave();
+  arCancelForm();
+  renderARTable();
+  showToast('✅ Saved WIP '+wip+' ('+arStageOf(r)+')');
+}
+
+function renderARTable(){
+  const body=document.getElementById('arTableBody');
+  const empty=document.getElementById('arEmptyTable');
+  if(!body) return;
+  const q=(document.getElementById('arSearchInput')?.value||'').toLowerCase();
+  const stageF=document.getElementById('arStageFilter')?.value||'';
+  let recs=Object.values(arRecords).sort((a,b)=>(b.updated||'').localeCompare(a.updated||''));
+  recs=recs.filter(r=>{
+    const stage=arStageOf(r);
+    if(stageF && stage!==stageF) return false;
+    if(!q) return true;
+    return [r.wip,r.plate,r.qt?.no,r.po?.no,r.invoice?.no].filter(Boolean).join(' ').toLowerCase().includes(q);
+  });
+  arUpdateBadge();
+  if(!recs.length){ body.innerHTML=''; empty.style.display='block'; empty.textContent=Object.keys(arRecords).length?'No records match.':'No AR records yet — scan a Beerlao QT above ↑'; return; }
+  empty.style.display='none';
+  body.innerHTML=recs.map(r=>{
+    const stage=arStageOf(r);
+    const amt=(r.qt?.amount)||(r.invoice?.amount)||'';
+    const cur=(r.qt?.currency)||(r.invoice?.currency)||'LAK';
+    return `<tr>
+      <td><b>${esc(r.wip)}</b></td>
+      <td>${esc(r.plate||'—')}</td>
+      <td><span class="ar-stage ${arStageClass(stage)}">${stage}</span></td>
+      <td>${esc(r.qt?.no||'—')}</td>
+      <td>${amt?esc(amt)+' '+esc(cur):'—'}</td>
+      <td><button class="ar-notion-btn" onclick="openArNotion('${esc(r.wip)}')">📋 Notion</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Notion block (SOP file name + PO Status block) ──
+function arNotionBlock(r){
+  const stage=arStageOf(r);
+  const fileLine=r.qt?.file?('QT file: '+r.qt.file):'QT file: '+arQtFileName(r.wip,r.plate);
+  const money=(o)=>o&&o.amount?(o.amount+' '+(o.currency||'LAK')):'';
+  const poLine = r.po?.no ? ('✅ '+r.po.no+' received'+(r.po.date?' '+r.po.date:'')) : '❌ Pending';
+  const invLine= r.invoice?.no ? ('✅ Invoice '+r.invoice.no+' issued'+(r.invoice.date?' '+r.invoice.date:'')) : '❌ Pending';
+  const payLine= r.payment?.date ? ('✅ Received '+r.payment.date) : '❌ Pending';
+  return [
+    '# Beerlao WIP '+r.wip+'  ('+(r.plate||'plate?')+')',
+    'Customer: '+(r.customer||'Beerlao LBC (B0002)')+'   |   Stage: '+stage,
+    fileLine,
+    '',
+    '## PO Status',
+    '- QT sent: '+(r.qt?.date||'[date]'),
+    '- QT No: '+(r.qt?.no||'[number]'),
+    '- QT Amount: '+(money(r.qt)||'[LAK / USD]'),
+    '- PO received: '+poLine,
+    '- Invoice issued: '+invLine,
+    '- Payment: '+payLine
+  ].join('\n');
+}
+function openArNotion(wip){
+  const r=arRecords[wip]; if(!r) return;
+  document.getElementById('arNotionWip').textContent='WIP '+wip;
+  document.getElementById('arNotionText').textContent=arNotionBlock(r);
+  document.getElementById('arNotionOverlay').classList.add('open');
+}
+function closeArNotion(){ document.getElementById('arNotionOverlay').classList.remove('open'); }
+async function arCopyNotion(){
+  try{ await navigator.clipboard.writeText(document.getElementById('arNotionText').textContent); showToast('📋 Copied — paste into the WIP page'); }
+  catch(e){ showToast('⚠️ Copy failed'); }
+}
+
+function arExport(){
+  const recs=Object.values(arRecords);
+  if(!recs.length){ showToast('No AR records'); return; }
+  const head=['WIP','Plate','Stage','QT No','QT Amount','Currency','QT Date','PO No','PO Date','Invoice No','Invoice Date','Payment Date','QT File'];
+  const rows=recs.map(r=>[r.wip,r.plate,arStageOf(r),r.qt?.no,r.qt?.amount,r.qt?.currency,r.qt?.date,r.po?.no,r.po?.date,r.invoice?.no,r.invoice?.date,r.payment?.date,r.qt?.file]
+    .map(v=>csvEscape(v==null?'':v)).join(','));
+  const csv=head.join(',')+'\n'+rows.join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='beerlao-ar.csv'; a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('📤 Exported '+recs.length+' records');
+}
+function arClearAll(){
+  const btn=document.getElementById('arClearBtn');
+  if(btn.dataset.confirm==='1'){ arRecords={}; arSave(); renderARTable(); btn.textContent='🗑 Clear All'; btn.dataset.confirm='0'; btn.classList.remove('tbar-confirm'); }
+  else{ btn.textContent='⚠️ Sure?'; btn.dataset.confirm='1'; btn.classList.add('tbar-confirm'); setTimeout(()=>{btn.textContent='🗑 Clear All';btn.dataset.confirm='0';btn.classList.remove('tbar-confirm');},3000); }
+}
+
 // ── Init ──
 loadStatuses();
 loadList();
+arLoad(); arUpdateBadge();
 renderListTable(); updateIndicator();
 document.getElementById('listDateInput').value=todayStr();
 // Auto-reconnect Firebase if previously configured
