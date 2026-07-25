@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quick Lane Card Maker</title>
+<style>
+  :root{
+    --blue:#003876;
+    --blue2:#0057a8;
+    --orange:#f47b20;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:Arial, Helvetica, sans-serif;
+    background:#e9edf1;
+    margin:0;
+    padding:20px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:24px;
+  }
+  .panel{
+    background:#fff;
+    border-radius:10px;
+    padding:18px 20px;
+    box-shadow:0 1px 4px rgba(0,0,0,.15);
+    width:320px;
+    flex-shrink:0;
+  }
+  .panel h2{
+    font-size:16px;
+    margin:0 0 12px;
+    color:var(--blue);
+  }
+  label{
+    display:block;
+    font-size:12px;
+    font-weight:bold;
+    margin:10px 0 4px;
+    color:#333;
+  }
+  input[type=text], input[type=number], select{
+    width:100%;
+    padding:7px 8px;
+    border:1px solid #ccc;
+    border-radius:5px;
+    font-size:14px;
+  }
+  input[type=file]{
+    width:100%;
+    font-size:12px;
+  }
+  .radio-row{
+    display:flex;
+    gap:14px;
+    margin-top:4px;
+  }
+  .radio-row label{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-weight:normal;
+    margin:0;
+  }
+  .scale-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .scale-row input[type=range]{
+    flex:1;
+  }
+  .scale-row span{
+    width:46px;
+    text-align:right;
+    font-size:12px;
+    color:#555;
+  }
+  button{
+    margin-top:16px;
+    width:100%;
+    padding:10px;
+    background:var(--blue);
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+  }
+  button:hover{ background:var(--blue2); }
+  button.secondary{
+    background:#6c757d;
+    margin-top:8px;
+  }
+  button.secondary:hover{ background:#5a6268; }
+
+  /* ---- Card ---- */
+  .stage{
+    flex:1;
+    min-width:340px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+  }
+  .card{
+    --w:15cm;
+    --name-scale:1;
+    --num-scale:1;
+    --icon-scale:1;
+    --photo-shift:0%;
+    --photo-scale:1;
+    --name-shift:0%;
+    --num-shift:0%;
+    width:var(--w);
+    font-size:calc(var(--w) / 100);
+    aspect-ratio:15/4.5;
+    background:#fff;
+    border:6px solid var(--blue);
+    border-radius:22px;
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    font-family:Arial, Helvetica, sans-serif;
+  }
+  .card .head{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:3.5% 4% 2%;
+    border-bottom:3px solid var(--blue);
+  }
+  .card .brand{
+    font-size:calc(8.2em * var(--logo-scale));
+    font-weight:900;
+    font-style:italic;
+    color:var(--blue);
+    letter-spacing:-0.5px;
+    line-height:1;
+  }
+  .card .subbrand{
+    font-size:calc(3.4em * var(--logo-scale));
+    font-weight:800;
+    color:var(--blue);
+    letter-spacing:2px;
+    margin-top:2%;
+  }
+  .card .body{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:3% 4%;
+    gap:4%;
+  }
+  .card .photo-box{
+    width:calc(26% * var(--photo-scale));
+    aspect-ratio:1/1;
+    border:3px solid var(--blue);
+    border-radius:12px;
+    overflow:hidden;
+    background:#f2f2f2;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    transform:translateY(var(--photo-shift));
+  }
+  .card .photo-box img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .card .photo-box .placeholder{
+    color:#aaa;
+    font-size:12px;
+    text-align:center;
+    padding:6px;
+  }
+  .card .name-col{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-width:0;
+    align-self:center;
+    border-right:2px solid var(--blue);
+    padding-right:4%;
+  }
+  .card .name{
+    font-size:calc(9.5em * var(--name-scale));
+    font-weight:900;
+    color:#0d1b3d;
+    line-height:1.05;
+    word-break:break-word;
+    text-align:center;
+    transform:translateY(var(--name-shift));
+  }
+  .card .num-col{
+    flex-shrink:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6%;
+    transform:translateY(var(--num-shift));
+  }
+  .card .icon{
+    height:calc(16em * var(--icon-scale));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--blue);
+  }
+  .card .icon svg{ height:100%; width:auto; display:block; }
+  .card .num-label{
+    font-size:calc(5.5em * var(--num-scale));
+    font-weight:800;
+    color:var(--blue);
+    white-space:nowrap;
+  }
+  .card .num-value{
+    font-size:calc(13em * var(--num-scale));
+    font-weight:900;
+    color:var(--blue);
+    line-height:1;
+  }
+  .card .foot{
+    background:var(--blue);
+    color:#fff;
+    text-align:center;
+    font-size:3.6em;
+    font-weight:bold;
+    letter-spacing:1.5px;
+    padding:2.2% 0;
+  }
+
+  @media print{
+    body{ background:#fff; padding:0; }
+    .panel{ display:none; }
+    .stage{ min-width:0; }
+    .card{ border-color:var(--blue) !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="panel">
+    <h2>Quick Lane Card Maker</h2>
+
+    <label>Staff name</label>
+    <input type="text" id="staffName" placeholder="e.g. Bik Seepha" value="Bik Seepha">
+
+    <label>Photo</label>
+    <input type="file" id="photoInput" accept="image/*">
+
+    <label>Card type</label>
+    <div class="radio-row">
+      <label><input type="radio" name="cardType" value="LIFT" checked> Lift No.</label>
+      <label><input type="radio" name="cardType" value="TOOL"> Tool No.</label>
+    </div>
+
+    <label>Number</label>
+    <input type="text" id="numValue" value="4" maxlength="3">
+
+    <label>Print size (scale)</label>
+    <div class="scale-row">
+      <input type="range" id="scaleSlider" min="50" max="150" value="100">
+      <span id="scaleVal">100%</span>
+    </div>
+
+    <label>Name size</label>
+    <div class="scale-row">
+      <input type="range" id="nameSlider" min="50" max="200" value="100">
+      <span id="nameVal">100%</span>
+    </div>
+
+    <label>Lift / Tool number size</label>
+    <div class="scale-row">
+      <input type="range" id="numSlider" min="50" max="200" value="100">
+      <span id="numSizeVal">100%</span>
+    </div>
+
+    <label>Symbol size</label>
+    <div class="scale-row">
+      <input type="range" id="iconSlider" min="50" max="200" value="100">
+      <span id="iconVal">100%</span>
+    </div>
+
+    <label>Picture size</label>
+    <div class="scale-row">
+      <input type="range" id="photoSizeSlider" min="50" max="200" value="100">
+      <span id="photoSizeVal">100%</span>
+    </div>
+
+    <label>Picture position (up/down)</label>
+    <div class="scale-row">
+      <input type="range" id="photoPosSlider" min="-50" max="50" value="0">
+      <span id="photoPosVal">0%</span>
+    </div>
+
+    <label>Name position (up/down)</label>
+    <div class="scale-row">
+      <input type="range" id="namePosSlider" min="-50" max="50" value="0">
+      <span id="namePosVal">0%</span>
+    </div>
+
+    <label>Number position (up/down)</label>
+    <div class="scale-row">
+      <input type="range" id="numPosSlider" min="-50" max="50" value="0">
+      <span id="numPosVal">0%</span>
+    </div>
+
+    <button onclick="window.print()">Print card</button>
+    <button class="secondary" onclick="downloadPNG()">Download as image</button>
+  </div>
+
+  <div class="stage">
+    <div class="card" id="card">
+      <div class="body">
+        <div class="photo-box" id="photoBox">
+          <div class="placeholder">No photo<br>uploaded</div>
+        </div>
+        <div class="name-col">
+          <div class="name" id="nameOut">Bik Seepha</div>
+        </div>
+        <div class="num-col">
+          <div class="icon" id="iconOut"></div>
+          <div class="num-label" id="labelOut">LIFT NO.</div>
+          <div class="num-value" id="numOut">4</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* Two-post lift, front-view car — matches reference */
+const carIcon = `<svg viewBox="6 18 133 101" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+  <!-- posts -->
+  <rect x="18" y="23" width="11.5" height="91"/>
+  <rect x="115.5" y="23" width="11.5" height="91"/>
+  <!-- floor bases -->
+  <rect x="11" y="105" width="25.5" height="9" rx="2"/>
+  <rect x="108.5" y="105" width="25.5" height="9" rx="2"/>
+  <!-- lift arms -->
+  <rect x="18" y="83" width="28" height="8.5" rx="2"/>
+  <rect x="99" y="83" width="28" height="8.5" rx="2"/>
+  <!-- wheels -->
+  <rect x="36" y="70" width="11" height="12" rx="2.5"/>
+  <rect x="98" y="70" width="11" height="12" rx="2.5"/>
+  <!-- mirrors -->
+  <rect x="33" y="41" width="9" height="6" rx="2.5"/>
+  <rect x="103" y="41" width="9" height="6" rx="2.5"/>
+  <!-- body (front view) -->
+  <path d="M35 74 L35 52 Q35 47 40 45.5 L54 34 Q56.5 32 60 32 L85 32 Q88.5 32 91 34
+           L105 45.5 Q110 47 110 52 L110 74 Z"/>
+  <!-- windscreen -->
+  <path d="M60 36 L85 36 Q87 36 88.5 37.2 L98 45 L47 45 L56.5 37.2 Q58 36 60 36 Z"
+        fill="#d2e1ef"/>
+  <!-- headlights -->
+  <rect x="41" y="52" width="12" height="7" rx="3.5" fill="#fff"/>
+  <rect x="92" y="52" width="12" height="7" rx="3.5" fill="#fff"/>
+</svg>`;
+
+/* Crossed screwdriver + open-end wrench — matches reference */
+const toolIcon = `<svg viewBox="12 13 76 74" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+  <!-- wrench: jaw upper-right, handle lower-left -->
+  <g transform="translate(50,50) rotate(45)">
+    <path d="M-11 -20 L-11 -40 Q-11 -45 -6.5 -45 L-4.5 -45 L-4.5 -32 L4.5 -32 L4.5 -45
+             L6.5 -45 Q11 -45 11 -40 L11 -20 Z"/>
+    <rect x="-5.5" y="-24" width="11" height="64" rx="5.5"/>
+    <circle cx="0" cy="33" r="3.2" fill="#fff"/>
+  </g>
+  <!-- screwdriver: blade upper-left, handle lower-right, white outline where it crosses -->
+  <g transform="translate(50,50) rotate(-45)" stroke="#fff" stroke-width="1.6" stroke-linejoin="round">
+    <path d="M-4.6 -48 L4.6 -48 L3.2 -39 L-3.2 -39 Z"/>
+    <rect x="-3" y="-40" width="6" height="25"/>
+    <rect x="-6.5" y="-17.5" width="13" height="5.5" rx="1.5"/>
+    <rect x="-8.5" y="-13" width="17" height="52" rx="7.5"/>
+  </g>
+</svg>`;
+
+const nameOut = document.getElementById('nameOut');
+const numOut = document.getElementById('numOut');
+const labelOut = document.getElementById('labelOut');
+const iconOut = document.getElementById('iconOut');
+const photoBox = document.getElementById('photoBox');
+const card = document.getElementById('card');
+
+function updateName(){ nameOut.textContent = document.getElementById('staffName').value || ' '; }
+function updateNum(){ numOut.textContent = document.getElementById('numValue').value || ''; }
+function updateType(){
+  const type = document.querySelector('input[name=cardType]:checked').value;
+  if(type === 'LIFT'){
+    labelOut.textContent = 'LIFT NO.';
+    iconOut.innerHTML = carIcon;
+  } else {
+    labelOut.textContent = 'TOOL NO.';
+    iconOut.innerHTML = toolIcon;
+  }
+}
+function updateScale(){
+  const val = document.getElementById('scaleSlider').value;
+  document.getElementById('scaleVal').textContent = val + '%';
+  card.style.setProperty('--w', (15*val/100) + 'cm');
+}
+function updateNameSize(){
+  const val = document.getElementById('nameSlider').value;
+  document.getElementById('nameVal').textContent = val + '%';
+  card.style.setProperty('--name-scale', val/100);
+}
+function updateIconSize(){
+  const val = document.getElementById('iconSlider').value;
+  document.getElementById('iconVal').textContent = val + '%';
+  card.style.setProperty('--icon-scale', val/100);
+}
+function updateNumSize(){
+  const val = document.getElementById('numSlider').value;
+  document.getElementById('numSizeVal').textContent = val + '%';
+  card.style.setProperty('--num-scale', val/100);
+}
+function updatePhotoPos(){
+  const val = document.getElementById('photoPosSlider').value;
+  document.getElementById('photoPosVal').textContent = val + '%';
+  card.style.setProperty('--photo-shift', val + '%');
+}
+function updatePhotoSize(){
+  const val = document.getElementById('photoSizeSlider').value;
+  document.getElementById('photoSizeVal').textContent = val + '%';
+  card.style.setProperty('--photo-scale', val/100);
+}
+function updateNamePos(){
+  const val = document.getElementById('namePosSlider').value;
+  document.getElementById('namePosVal').textContent = val + '%';
+  card.style.setProperty('--name-shift', val + '%');
+}
+function updateNumPos(){
+  const val = document.getElementById('numPosSlider').value;
+  document.getElementById('numPosVal').textContent = val + '%';
+  card.style.setProperty('--num-shift', val + '%');
+}
+
+document.getElementById('staffName').addEventListener('input', updateName);
+document.getElementById('numValue').addEventListener('input', updateNum);
+document.querySelectorAll('input[name=cardType]').forEach(r=>r.addEventListener('change', updateType));
+document.getElementById('scaleSlider').addEventListener('input', updateScale);
+document.getElementById('nameSlider').addEventListener('input', updateNameSize);
+document.getElementById('numSlider').addEventListener('input', updateNumSize);
+document.getElementById('iconSlider').addEventListener('input', updateIconSize);
+document.getElementById('photoPosSlider').addEventListener('input', updatePhotoPos);
+document.getElementById('photoSizeSlider').addEventListener('input', updatePhotoSize);
+document.getElementById('namePosSlider').addEventListener('input', updateNamePos);
+document.getElementById('numPosSlider').addEventListener('input', updateNumPos);
+
+document.getElementById('photoInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    photoBox.innerHTML = '<img src="' + ev.target.result + '">';
+  };
+  reader.readAsDataURL(file);
+});
+
+function downloadPNG(){
+  const scale = 3;
+  const rect = card.getBoundingClientRect();
+  const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${rect.width}" height="${rect.height}">
+    <foreignObject width="100%" height="100%">${new XMLSerializer().serializeToString(card).replace(/#/g,'%23')}</foreignObject>
+  </svg>`;
+  const canvas = document.createElement('canvas');
+  canvas.width = rect.width*scale;
+  canvas.height = rect.height*scale;
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  const svgBlob = new Blob([svgData], {type:'image/svg+xml;charset=utf-8'});
+  const url = URL.createObjectURL(svgBlob);
+  img.onload = function(){
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0, rect.width, rect.height);
+    URL.revokeObjectURL(url);
+    const a = document.createElement('a');
+    a.download = (document.getElementById('staffName').value || 'card') + '.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  };
+  img.onerror = function(){
+    alert('Image export needs the browser print option instead — use "Print card" and choose "Save as PDF".');
+  };
+  img.src = url;
+}
+
+updateName(); updateNum(); updateType(); updateScale(); updateNameSize(); updateNumSize(); updateIconSize();
+</script>
+
+</body>
+</html>
