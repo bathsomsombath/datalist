@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quick Lane Stationery Stock</title>
+<style>
+:root{
+  --bg:#f5f6f7; --panel:#ffffff; --ink:#1e2430; --sub:#6b7280;
+  --line:#e3e6ea; --blue:#1d4ed8; --blue-d:#173ea8; --green:#0f9d58;
+  --red:#d93025; --amber:#b8860b; --amber-bg:#fff8e1; --red-bg:#fdecea; --green-bg:#e8f7ee;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+header{background:var(--ink);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+header h1{font-size:17px;margin:0;font-weight:600;}
+header .sub{font-size:12px;color:#aab0bb;margin-top:2px;}
+nav{display:flex;gap:2px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto;position:sticky;top:0;z-index:10;}
+nav button{flex:1;min-width:110px;background:none;border:none;padding:12px 8px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;}
+nav button.active{color:var(--blue);border-bottom-color:var(--blue);}
+main{padding:14px;max-width:1100px;margin:0 auto;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px;}
+.card h2{font-size:14px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.03em;color:var(--sub);}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+input,select{padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;background:#fff;color:var(--ink);}
+input[type=text],input[type=search]{flex:1;min-width:160px;}
+input[type=number]{width:90px;}
+button.btn{background:var(--blue);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;}
+button.btn:hover{background:var(--blue-d);}
+button.btn.green{background:var(--green);}
+button.btn.red{background:var(--red);}
+button.btn.ghost{background:#fff;color:var(--blue);border:1px solid var(--blue);}
+button.btn.excel{background:#fff;color:#137a45;border:1px solid #137a45;}
+button.btn.excel:hover{background:#e8f7ee;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line);}
+th{background:#fafbfc;color:var(--sub);font-weight:600;position:sticky;top:0;}
+tbody tr:hover{background:#f8f9fb;}
+.tbl-wrap{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:8px;}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+.b-ok{background:var(--green-bg);color:var(--green);}
+.b-low{background:var(--amber-bg);color:var(--amber);}
+.b-out{background:var(--red-bg);color:var(--red);}
+.pill{background:#eef1f5;color:var(--sub);padding:2px 8px;border-radius:20px;font-size:11px;}
+.stat{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.stat div{background:#fafbfc;border:1px solid var(--line);border-radius:8px;padding:10px 14px;flex:1;min-width:110px;}
+.stat .n{font-size:20px;font-weight:700;}
+.stat .l{font-size:11px;color:var(--sub);text-transform:uppercase;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:100;}
+.toast.show{opacity:1;}
+small.hint{color:var(--sub);font-size:11px;display:block;margin-top:4px;}
+.empty{padding:30px;text-align:center;color:var(--sub);font-size:13px;}
+.qty-input{width:70px;}
+.type-badge{font-size:10.5px;padding:1px 7px;border-radius:5px;background:#eef1f5;color:var(--sub);}
+footer{text-align:center;color:var(--sub);font-size:11px;padding:20px;}
+.right{margin-left:auto;}
+.hidden{display:none !important;}
+@media (max-width:640px){
+  nav button{font-size:11.5px;padding:10px 6px;}
+  .stat div{min-width:90px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Quick Lane Stationery Stock</h1>
+    <div class="sub">Stock &middot; Order &middot; GRN &middot; Cut Stock &middot; Check Stock</div>
+  </div>
+  <div class="sub" id="lastSync"></div>
+</header>
+
+<nav>
+  <button class="tab-btn active" data-tab="stock">Stock</button>
+  <button class="tab-btn" data-tab="check">Check Stock</button>
+  <button class="tab-btn" data-tab="order">Order</button>
+  <button class="tab-btn" data-tab="grn">GRN (Receive)</button>
+  <button class="tab-btn" data-tab="cut">Cut Stock (Issue)</button>
+  <button class="tab-btn" data-tab="history">History</button>
+</nav>
+
+<main>
+
+<!-- STOCK TAB -->
+<section id="tab-stock">
+  <div class="card">
+    <div class="stat">
+      <div><div class="n" id="statTotalItems">0</div><div class="l">Items</div></div>
+      <div><div class="n" id="statLow">0</div><div class="l">Low Stock</div></div>
+      <div><div class="n" id="statOut">0</div><div class="l">Out of Stock</div></div>
+      <div><div class="n" id="statValue">0</div><div class="l">Stock Value (LAK)</div></div>
+    </div>
+    <div class="row">
+      <input type="text" id="stockSearch" placeholder="Search item name...">
+      <select id="stockTypeFilter"><option value="">All categories</option></select>
+      <label style="font-size:12px;color:var(--sub);display:flex;gap:5px;align-items:center;">
+        <input type="checkbox" id="stockLowOnly" style="width:auto;"> Low/out only
+      </label>
+      <button class="btn excel right" id="exportStockXlsxBtn">Export Excel</button>
+      <button class="btn ghost" id="exportStockBtn">Export CSV</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>No.</th><th>Item</th><th>Category</th><th>UOM</th><th>Price (LAK)</th>
+          <th>On Hand</th><th>Reorder Lvl</th><th>Status</th>
+        </tr></thead>
+        <tbody id="stockTbody"></tbody>
+      </table>
+    </div>
+    <small class="hint">Set the reorder level per item &mdash; used to flag Low Stock and to build the Order tab suggestions. Changes save automatically.</small>
+  </div>
+</section>
+
+<!-- CHECK STOCK TAB -->
+<section id="tab-check" class="hidden">
+  <div class="card">
+    <h2>Quick Lookup</h2>
+    <div class="row">
+      <input type="search" id="checkSearch" placeholder="Type item name to check stock..." autofocus>
+    </div>
+    <div id="checkResults"></div>
+  </div>
+</section>
+
+<!-- ORDER TAB -->
+<section id="tab-order" class="hidden">
+  <div class="card">
+    <h2>New Order Request</h2>
+    <div class="row">
+      <select id="orderItemSelect" style="flex:1;min-width:220px;"></select>
+      <input type="number" id="orderQty" min="1" value="1" placeholder="Qty">
+      <button class="btn" id="addToOrderBtn">Add to Order</button>
+      <button class="btn ghost" id="fillLowStockBtn">Fill Suggested (Low Stock)</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Item</th><th>Category</th><th>UOM</th><th>On Hand</th><th>Qty</th><th>Unit Price</th><th>Line Total</th><th></th></tr></thead>
+        <tbody id="orderDraftTbody"></tbody>
+      </table>
+    </div>
+    <div class="row" style="justify-content:flex-end;">
+      <strong id="orderDraftTotal">Total: 0 LAK</strong>
+    </div>
+    <div class="row">
+      <input type="text" id="orderRef" placeholder="Order ref / PO no." style="flex:1;min-width:150px;">
+      <input type="text" id="orderBy" placeholder="Requested by" style="flex:1;min-width:140px;">
+      <input type="text" id="orderSupplier" placeholder="Supplier (optional)" style="flex:1;min-width:140px;">
+    </div>
+    <div class="row">
+      <input type="text" id="orderNote" placeholder="Note (optional)" style="flex:1;min-width:180px;">
+    </div>
+    <div class="row">
+      <button class="btn green" id="submitOrderBtn">Submit Order</button>
+      <button class="btn excel" id="exportOrderXlsxBtn">Export Order to Excel</button>
+      <button class="btn ghost" id="clearDraftBtn">Clear Draft</button>
+    </div>
+    <small class="hint">Export builds a ready-to-send purchase order sheet (.xlsx). You can export the draft before submitting, or re-export any submitted order below.</small>
+  </div>
+
+  <div class="card">
+    <h2>Submitted Orders</h2>
+    <div class="row">
+      <button class="btn excel right" id="exportAllOrdersXlsxBtn">Export All Orders to Excel</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Order Ref</th><th>Requested By</th><th>Supplier</th><th>Items</th><th>Total (LAK)</th><th>Status</th><th></th></tr></thead>
+        <tbody id="orderLogTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- GRN TAB -->
+<section id="tab-grn" class="hidden">
+  <div class="card">
+    <h2>Goods Received (GRN)</h2>
+    <div class="row">
+      <select id="grnItemSelect" style="flex:1;min-width:220px;"></select>
+      <input type="number" id="grnQty" min="1" value="1" placeholder="Qty received">
+      <input type="text" id="grnRef" placeholder="Supplier / PO ref" style="min-width:160px;">
+      <button class="btn green" id="grnAddBtn">Add to Stock</button>
+    </div>
+    <small class="hint">Adds the received qty straight into on-hand stock and logs it below.</small>
+  </div>
+  <div class="card">
+    <h2>GRN History</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Item</th><th>Qty In</th><th>Supplier/Ref</th><th></th></tr></thead>
+        <tbody id="grnLogTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- CUT STOCK TAB -->
+<section id="tab-cut" class="hidden">
+  <div class="card">
+    <h2>Cut Stock (Issue)</h2>
+    <div class="row">
+      <select id="cutItemSelect" style="flex:1;min-width:220px;"></select>
+      <input type="number" id="cutQty" min="1" value="1" placeholder="Qty issued">
+      <input type="text" id="cutTo" placeholder="Issued to (staff/dept)" style="min-width:160px;">
+      <button class="btn red" id="cutAddBtn">Issue / Cut Stock</button>
+    </div>
+    <small class="hint">Deducts qty from on-hand stock. Will not allow issuing more than what's on hand.</small>
+  </div>
+  <div class="card">
+    <h2>Cut Stock History</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Item</th><th>Qty Out</th><th>Issued To</th><th></th></tr></thead>
+        <tbody id="cutLogTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- HISTORY TAB -->
+<section id="tab-history" class="hidden">
+  <div class="card">
+    <h2>Combined Movement Log</h2>
+    <div class="row">
+      <select id="histFilter">
+        <option value="">All movements</option>
+        <option value="GRN">GRN (In)</option>
+        <option value="CUT">Cut Stock (Out)</option>
+        <option value="ORDER">Orders</option>
+      </select>
+      <button class="btn excel right" id="exportHistoryXlsxBtn">Export Excel</button>
+      <button class="btn ghost" id="clearAllBtn">Reset All Data</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Type</th><th>Item / Ref</th><th>Qty</th><th>Note</th></tr></thead>
+        <tbody id="historyTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>Quick Lane Service Centre &middot; Stationery Stock App &middot; Data stored locally in this browser</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const ITEMS = [{"no": 1, "desc": "A4 Paper white (5 reams = 1 box) Double A", "desc_lao": "ເຈັ້ຍເອຊີ (Double A)", "type": "Stationary", "uom": "box", "price": 430000}, {"no": 2, "desc": "A4 Paper white (5 reams = 1 box) Idea Work", "desc_lao": "ເຈັ້ຍເອຊີ (Idea Work)", "type": "Stationary", "uom": "box", "price": 430000}, {"no": 3, "desc": "A4 Paper white (5 reams = 1 box) Idea Max", "desc_lao": "ເຈັ້ຍເອຊີ (Idea Max)", "type": "Stationary", "uom": "box", "price": 430000}, {"no": 4, "desc": "Post-it standard  #654, size 76mm x 76mm, yellow", "desc_lao": "ເຈັ້ຍໂນດສີເຫຼືອງ 3M", "type": "Stationary", "uom": "pack", "price": 20000}, {"no": 5, "desc": "Post-it standard  #654, size 76mm x 76mm, yellow", "desc_lao": "ເຈັ້ຍໂນດສີເຫຼືອງ 3M", "type": "Stationary", "uom": "box", "price": 20000}, {"no": 6, "desc": "Post-it standard  #654", "desc_lao": "ເຈັ້ຍໂນດສີເຫຼືອງທຳມະດາ", "type": "Stationary", "uom": "pack", "price": 15000}, {"no": 7, "desc": "Post-it # 670-5AN size 15mm x 50mm (1 pack / 5 pieces /100 notes)-Paper", "desc_lao": "ເຈ້ຍໂນດສິເຫລືອງນ້ອຍຫຼາຍສີ (ແບບເຈ້ຍ)", "type": "Stationary", "uom": "pack", "price": 20000}, {"no": 8, "desc": "Post-it # 670-5AN size 15mm x 50mm (1 pack / 5 pieces /100 notes)-Plastic", "desc_lao": "ເຈ້ຍໂນດສິເຫລືອງນ້ອຍຫຼາຍສີ (ແບບຢາງ)", "type": "Stationary", "uom": "pack", "price": 25000}, {"no": 9, "desc": "Post-it DELI No. A203", "desc_lao": "ເຈ້ຍໂນດສິເຫລືອງນ້ອຍ (Deli)", "type": "Stationary", "uom": "pack", "price": 20000}, {"no": 10, "desc": "Post-it DELI No. 7154 50*15 mm", "desc_lao": "ເຈັ້ຍໂນດສີເຫຼືອງ (Deli)", "type": "Stationary", "uom": "pack", "price": 20000}, {"no": 11, "desc": "Note book with black cover 17cm x 25cm (piece)", "desc_lao": "ປື້ມຂຽນ ຂະໜາດ 17mmx25cm", "type": "Stationary", "uom": "piece", "price": 40000}, {"no": 12, "desc": "Note book with black cover 13cm x 18cm (piece)", "desc_lao": "ປື້ມຂຽນ ຂະໜາດ 13mmx18cm", "type": "Stationary", "uom": "piece", "price": 30000}, {"no": 13, "desc": "Note book Deli 7900", "desc_lao": "ປື້ມຂຽນ Deli 17mmx25cm", "type": "Stationary", "uom": "piece", "price": 55000}, {"no": 14, "desc": "Note book Deli 7901", "desc_lao": "ປື້ມຂຽນ Deli 13mmx18cm", "type": "Stationary", "uom": "piece", "price": 38000}, {"no": 127, "desc": "Note book 33*21", "desc_lao": "ປຶ້ມບັນທຶກ 33*21 200 ໜ້າ", "type": "Stationary", "uom": "unit", "price": 45000}, {"no": 128, "desc": "Note book size A4 WPP-444 Elephant", "desc_lao": "ປຶ້ມບັນທຶກ ກາຊ້າງແບບຢ່ວງ (ຫົວນ້ອຍ)", "type": "Stationary", "uom": "unit", "price": 65000}, {"no": 129, "desc": "Note book small", "desc_lao": "ປຶ້ມບັນທຶກ ນ້ອຍ", "type": "Stationary", "uom": "unit", "price": 28000}, {"no": 130, "desc": "Note book mid", "desc_lao": "ປຶ້ມບັນທຶກ ກາງ", "type": "Stationary", "uom": "unit", "price": 35000}, {"no": 131, "desc": "Note book large", "desc_lao": "ປຶ້ມບັນທຶກ ໃຫຍ່", "type": "Stationary", "uom": "unit", "price": 40000}, {"no": 134, "desc": "Note book With blue or green cover 330 x 210mm (piece)/300", "desc_lao": "ປຶ້ມບັນທຶກ (ແບບຕາກະໂລ່) ລຸ້ນໜາ", "type": "Stationary", "uom": "piece", "price": 55000}, {"no": 135, "desc": "Note book \"size A4 DELI\"", "desc_lao": "ປື້ມບັນທຶກ ກາDELIແບບຢ່ວງ", "type": "Stationary", "uom": "piece", "price": 85000}, {"no": 133, "desc": "Name Card holder, 4 per page (piece)", "desc_lao": "ປື້ມໃສ່ນາມບັດ", "type": "Stationary", "uom": "piece", "price": 120000}, {"no": 15, "desc": "Glue stick small tube 8G Deli", "desc_lao": "ກາວຫລອດ Deli 8g", "type": "Stationary", "uom": "piece", "price": 10000}, {"no": 16, "desc": "Glue stick small tube 22G Deli", "desc_lao": "ກາວຫລອດ Deli 22g", "type": "Stationary", "uom": "piece", "price": 20000}, {"no": 17, "desc": "Glue stick small tube 8G elephant", "desc_lao": "ກາວຫລອດ ກາຊ້າງ 8g", "type": "Stationary", "uom": "piece", "price": 10000}, {"no": 18, "desc": "Glue stick small tube 22G elephant", "desc_lao": "ກາວຫລອດ ກາຊ້າງ 22g", "type": "Stationary", "uom": "piece", "price": 25000}, {"no": 19, "desc": "Power glue 3g deli", "desc_lao": "ກາວກາຊ້າງ deli", "type": "Stationary", "uom": "piece", "price": 18000}, {"no": 20, "desc": "Power glue 3g elephant", "desc_lao": "ກາວກາຊ້າງ", "type": "Stationary", "uom": "piece", "price": 18000}, {"no": 21, "desc": "Scotch Double side tape (Thick) 1m 3M", "desc_lao": "ກາວສອງໜ້າ ( ລຸ້ນໜາ)", "type": "Stationary", "uom": "roll", "price": 40000}, {"no": 22, "desc": "Scotch Double side tape (Thin)", "desc_lao": "ກາວສອງໜ້າ ( ລຸ້ນບາງ)", "type": "Stationary", "uom": "roll", "price": 20000}, {"no": 23, "desc": "Small Scotch Louis Tape (18 mm  x 33 mm  x 8 Rolls )", "desc_lao": "ສະກ໊ອດໃສ (8 ກໍ້/ແພັກ)", "type": "Stationary", "uom": "pack", "price": 96000}, {"no": 24, "desc": "Small Scotch Louis Tape (18 mm  x 33 mm  x 8 Rolls )", "desc_lao": "ສະກ໊ອດໃສ (8 ກໍ້/ແພັກ)", "type": "Stationary", "uom": "roll", "price": 96000}, {"no": 25, "desc": "Scotch tape 3/4", "desc_lao": "ສະກອ໋ດນ້ອຍ 3/4", "type": "Stationary", "uom": "roll", "price": 18000}, {"no": 26, "desc": "Scotch tape small roll 1/2", "desc_lao": "ສະກອ໋ດນ້ອຍ 1/2", "type": "Stationary", "uom": "roll", "price": 18000}, {"no": 27, "desc": "Scotch packing tape, the standard 5 cm wide (roll) 2\" Thin", "desc_lao": "ສະກ໋ອດເທັບໃສ (5cm) 2\" ບາງ 45 ຫຼາ", "type": "Stationary", "uom": "roll", "price": 20000}, {"no": 28, "desc": "Scotch packing tape, the standard 5 cm wide (roll) 2\" Thick", "desc_lao": "ສະກ໋ອດເທັບໃສ (5cm) 2\" ໜາ 100 ຫຼາ", "type": "Stationary", "uom": "roll", "price": 35000}, {"no": 29, "desc": "Scotch for book 2\"", "desc_lao": "ສະກອ໋ດຕິດຫົວປຶ້ມ 2\"", "type": "Stationary", "uom": "roll", "price": 25000}, {"no": 30, "desc": "Scotch for book 1.2\"", "desc_lao": "ສະກອ໋ດຕິດຫົວປຶ້ມ 1.2\"", "type": "Stationary", "uom": "roll", "price": 18000}, {"no": 31, "desc": "Red DYMO scotch (small roll)", "desc_lao": "ສະກອ໋ດຕິດປ້າຍຊື່ພະນັກງານ", "type": "Stationary", "uom": "roll", "price": 45000}, {"no": 32, "desc": "Scotch tape holder, normal size (piece)", "desc_lao": "ໂຮງສະກ໋ອດນ້ອຍ", "type": "Stationary", "uom": "piece", "price": 30000}, {"no": 33, "desc": "Scotch tape holder, mid size (piece)", "desc_lao": "ໂຮງສະກ໋ອດກາງ", "type": "Stationary", "uom": "piece", "price": 45000}, {"no": 34, "desc": "Scotch tape holder, big size (piece)", "desc_lao": "ໂຮງສະກ໋ອດໃຫ່ຍ", "type": "Stationary", "uom": "piece", "price": 75000}, {"no": 35, "desc": "Scotch tape holder, big size (included pen, pencil tray)", "desc_lao": "ໂຮງສະກ໋ອດໃຫ່ຍ ໃສ່ບິກ ສໍໄດ້", "type": "Stationary", "uom": "piece", "price": 150000}, {"no": 36, "desc": "Sheet protector cover book (1pack x 20ps)", "desc_lao": "ແຜ່ນໃສໃສ່ປົກປຶ້ມ", "type": "Stationary", "uom": "pack", "price": 110000}, {"no": 37, "desc": "Paper cover 150g", "desc_lao": "ໜ້າປັກປຶ້ມ 150g", "type": "Stationary", "uom": "pack", "price": 70000}, {"no": 38, "desc": "Plastic laminate A4", "desc_lao": "ເຈ້ຍລາມິນິດ", "type": "Stationary", "uom": "pack", "price": 240000}, {"no": 39, "desc": "Glossy white sticker A4", "desc_lao": "ເຈ້ຍສະຕິກເກີ່ຂາວມັນ", "type": "Stationary", "uom": "pack", "price": 110000}, {"no": 40, "desc": "Photo paper", "desc_lao": "ເຈ້ຍປຣິ້ນຮູບ", "type": "Stationary", "uom": "pack", "price": 110000}, {"no": 41, "desc": "Paper clip No. 1 (1 pack = 10 box )", "desc_lao": "ຄີບຂາວ", "type": "Stationary", "uom": "pack", "price": 55000}, {"no": 42, "desc": "Binder black clip no. 108  size 51mm (1x12pc)", "desc_lao": "ເຫຼັກຄິບດໍາໃຫ່ຍ 51mm", "type": "Stationary", "uom": "box", "price": 38000}, {"no": 43, "desc": "Binder black clip no. 109  size 41mm (1x12pc)", "desc_lao": "ເຫຼັກຄິບດໍາໃຫ່ຍ 41mm", "type": "Stationary", "uom": "box", "price": 35000}, {"no": 44, "desc": "Binder black clip no. 110 miduim size 32mm  (1x12pc)", "desc_lao": "ເຫຼັກຄິບດໍາກາງ 32mm", "type": "Stationary", "uom": "box", "price": 200000}, {"no": 45, "desc": "Binder black clip no. 111 miduim size 25mm  (1x12pc)", "desc_lao": "ເຫຼັກຄິບດໍາກາງ 25mm", "type": "Stationary", "uom": "box", "price": 140000}, {"no": 46, "desc": "Binder black clip no. 112 size 19mm (1x12pc)", "desc_lao": "ເຫຼັກຄິບດໍານ້ອຍ 19mm", "type": "Stationary", "uom": "box", "price": 96000}, {"no": 47, "desc": "HORSE file no. 404 A/F14 (1 pack = 24pieces) Glono", "desc_lao": "ໂກໂນໃຫ່ຍ (24 pieces)", "type": "Stationary", "uom": "pack", "price": 840000}, {"no": 48, "desc": "HORSE file no. 404 A/F14 (piece) Glono", "desc_lao": "ໂກໂນໃຫ່ຍ", "type": "Stationary", "uom": "piece", "price": 35000}, {"no": 49, "desc": "Board Eraser", "desc_lao": "ອັນລຶບກະດານ", "type": "Stationary", "uom": "Unit", "price": 10000}, {"no": 50, "desc": "White board marker (piece) Red, Black, Blue", "desc_lao": "ບິກຂຽນກະດານສີແດງ", "type": "Stationary", "uom": "piece", "price": 10000}, {"no": 51, "desc": "Marker permanent ink 2 side (1 pcs) HORSE", "desc_lao": "ບິກຂຽນຊີດີກາມ້າ (ຂຽນໄດ້ສອງດ້ານ)", "type": "Stationary", "uom": "piece", "price": 15000}, {"no": 52, "desc": "Marker permanent ink 2 side (1 pcs) DELI", "desc_lao": "ບິກຂຽນຊີດີກາ DELI (ຂຽນໄດ້ສອງດ້ານ)", "type": "Stationary", "uom": "piece", "price": 15000}, {"no": 53, "desc": "Pen QUANTUM (1x50) normal quantity (box)", "desc_lao": "ບິກຟ້າ QUANTUM", "type": "Stationary", "uom": "box", "price": 145000}, {"no": 54, "desc": "Pen M&G", "desc_lao": "ບິກຟ້າ M&G", "type": "Stationary", "uom": "box", "price": 180000}, {"no": 55, "desc": "Pen Deli (1x50)", "desc_lao": "ບິກ Deli", "type": "Stationary", "uom": "box", "price": 145000}, {"no": 56, "desc": "Pen HORSE", "desc_lao": "ບິກຟ້າ ກາມ້າ", "type": "Stationary", "uom": "box", "price": 145000}, {"no": 57, "desc": "Pen (Pental)", "desc_lao": "ບິກຊຶມຟ້າ (Pental)", "type": "Stationary", "uom": "box", "price": 660000}, {"no": 58, "desc": "Pen stand", "desc_lao": "ບິກຈັບໜ້າໂຕະ", "type": "Stationary", "uom": "Unit", "price": 25000}, {"no": 59, "desc": "High lighter QUANTUM medium quantity (piece)", "desc_lao": "ຮາຍໄລ້ QUANTUM", "type": "Stationary", "uom": "piece", "price": 15000}, {"no": 60, "desc": "High lighter Deli", "desc_lao": "ຮາຍໄລ້ Deli", "type": "Stationary", "uom": "piece", "price": 15000}, {"no": 61, "desc": "Ruler (stainless)", "desc_lao": "ບັນທັດເຫຼັກ", "type": "Stationary", "uom": "Unit", "price": 15000}, {"no": 62, "desc": "Liquid paper Big Size (Green cover) 22ml", "desc_lao": "ນ້ຳລຶບບິກ", "type": "Stationary", "uom": "piece", "price": 28000}, {"no": 63, "desc": "Correction tape papermate", "desc_lao": "ນ້ຳລຶບຂາວແບບຂີດ Papermate", "type": "Stationary", "uom": "piece", "price": 28000}, {"no": 64, "desc": "Wood pencil (1 box = 12 pieces)", "desc_lao": "ສໍດໍາ", "type": "Stationary", "uom": "box", "price": 20000}, {"no": 65, "desc": "Pencil Deli (1 box = 12 pieces)", "desc_lao": "ສໍດໍາ Deli", "type": "Stationary", "uom": "box", "price": 20000}, {"no": 66, "desc": "Eraser", "desc_lao": "ຢາງລຶບສໍ", "type": "Stationary", "uom": "piece", "price": 3000}, {"no": 67, "desc": "Sharpener  standard size (piece)", "desc_lao": "ໂຮງແຫຼມສໍ (ອັນນ້ອຍ)", "type": "Stationary", "uom": "piece", "price": 38000}, {"no": 68, "desc": "Sharpener  standard size (piece)", "desc_lao": "ໂຮງແຫຼມສໍ (ອັນກາງ)", "type": "Stationary", "uom": "piece", "price": 45000}, {"no": 69, "desc": "Sharpener  big  size (piece)", "desc_lao": "ໂຮງແຫຼມສໍ (ອັນໃຫຍ່)", "type": "Stationary", "uom": "piece", "price": 65000}, {"no": 70, "desc": "Carbon paper HORSE no; 4400. blue, size210 x 330mm (pack x 100 sheets)", "desc_lao": "ກາກບອນ", "type": "Stationary", "uom": "pack", "price": 135000}, {"no": 71, "desc": "Staple no. 10-1M MAX  (24 small boxes = 240 lines of staples)", "desc_lao": "ລູກກາລະເຟີ້ນ້ອຍ", "type": "Stationary", "uom": "box", "price": 85000}, {"no": 72, "desc": "Staple no. 3-10 MAX (24 small boxes = 240 lines of staples)", "desc_lao": "ລູກກາລະເຟີ້ໃຫ່ຍ", "type": "Stationary", "uom": "box", "price": 120000}, {"no": 73, "desc": "Stapler no. 10 MAX (piece)", "desc_lao": "ກະລາເຟີ້", "type": "Stationary", "uom": "piece", "price": 38000}, {"no": 74, "desc": "Stapler no. 3 MAX (piece)", "desc_lao": "ກະລາເຟີ້", "type": "Stationary", "uom": "piece", "price": 85000}, {"no": 75, "desc": "Staple no. 10 Deli (1 Box/20 Pcs)", "desc_lao": "ລູກກາລະເຟີ້ນ້ອຍ Deli", "type": "Stationary", "uom": "box", "price": 120000}, {"no": 76, "desc": "Stapler no. 10 Deli 0238", "desc_lao": "ກະລາເຟີ້ Deli", "type": "Stationary", "uom": "piece", "price": 48000}, {"no": 77, "desc": "Stapler no. 10 elephant", "desc_lao": "ແມ່ກາລັບເຟີ່ ເບີ 10 ກາຊ້າງ", "type": "Stationary", "uom": "piece", "price": 35000}, {"no": 78, "desc": "Stapler no. 3 elephant", "desc_lao": "ແມ່ກາລັບເຟີ່ ເບີ 3 ກາຊ້າງ", "type": "Stationary", "uom": "piece", "price": 75000}, {"no": 79, "desc": "Big staple remover (piece)", "desc_lao": "ແນວດຶງລູກແມ໋ກທ່ີເປັນຄີມ", "type": "Stationary", "uom": "piece", "price": 45000}, {"no": 80, "desc": "Small staple remover (piece)", "desc_lao": "ແນວດຶງລູກແມ໋ກທ່ີເປັນກ້າມປູ", "type": "Stationary", "uom": "piece", "price": 10000}, {"no": 81, "desc": "Batteries AA (1 box = 2 batt.)", "desc_lao": "ຖ່ານໃສ່ລີໂມດ 2A", "type": "Stationary", "uom": "Pair", "price": 30000}, {"no": 82, "desc": "Batteries AAA (1 box = 2 batt.)", "desc_lao": "ຖ່ານໃສ່ລີໂມດ 3A", "type": "Stationary", "uom": "Pair", "price": 30000}, {"no": 83, "desc": "Batteries AA (1 box = 24 batt.)", "desc_lao": "ຖ່ານໃສ່ລີໂມດ 2A", "type": "Stationary", "uom": "box", "price": 300000}, {"no": 84, "desc": "Batteries AAA (1 box = 24 batt.)", "desc_lao": "ຖ່ານໃສ່ລີໂມດ 3A", "type": "Stationary", "uom": "box", "price": 300000}, {"no": 85, "desc": "Scissors  (piece)", "desc_lao": "ມີດຕັດ", "type": "Stationary", "uom": "piece", "price": 35000}, {"no": 86, "desc": "Cutter  (piece)", "desc_lao": "ມີດຄັດເຕີ", "type": "Stationary", "uom": "piece", "price": 35000}, {"no": 87, "desc": "Cutter blade (10 pcs/unit)", "desc_lao": "ໃບມີດຄັດເຕີ", "type": "Stationary", "uom": "box", "price": 25000}, {"no": 88, "desc": "Calculator big size DELI 1629; 12 digit (piece)", "desc_lao": "ຈັກຄິດໄລ່", "type": "Stationary", "uom": "piece", "price": 350000}, {"no": 89, "desc": "Calculator DELI  size 1239", "desc_lao": "ຈັກຄິດໄລ່ Deli", "type": "Stationary", "uom": "piece", "price": 260000}, {"no": 90, "desc": "Socket extension 3 m, 6 hole (piece)", "desc_lao": "ກໍ້ປັກສຽບໄຟຟ້າ (3m) ກາຊ້າງ", "type": "Stationary", "uom": "piece", "price": 250000}, {"no": 91, "desc": "Socket extension 5 m , 6 hole (piece)", "desc_lao": "ກໍ້ປັກສຽບໄຟຟ້າ (5m) ກາຊ້າງ", "type": "Stationary", "uom": "piece", "price": 320000}, {"no": 92, "desc": "Socket extension 10 m , 6 hole (piece)", "desc_lao": "ກໍ້ປັກສຽບໄຟຟ້າ (10m) ກາຊ້າງ", "type": "Stationary", "uom": "piece", "price": 650000}, {"no": 93, "desc": "Ink refill for stamp blue, black or red (please select the color)", "desc_lao": "ນໍ້າມືກເຕີມ", "type": "Stationary", "uom": "piece", "price": 8000}, {"no": 94, "desc": "Stamp pad", "desc_lao": "ແຜ່ນກາຈ້ຳ ຟ້າ", "type": "Stationary", "uom": "Unit", "price": 30000}, {"no": 95, "desc": "Marker", "desc_lao": "ບິກຂຽນ CD", "type": "Stationary", "uom": "Unit", "price": 10000}, {"no": 96, "desc": "Quick stamper (PAID stamp) Eng/Lao", "desc_lao": "ກາຈ້ຳຈ່າຍ ອັງກິດ/ລາວ", "type": "Stationary", "uom": "piece", "price": 150000}, {"no": 97, "desc": "Car parking book (pack/5books/250 pair)", "desc_lao": "ປຶ້ມຝາກລົດ", "type": "Stationary", "uom": "unit", "price": 110000}, {"no": 98, "desc": "Date stamp", "desc_lao": "ກາຈ້ຳເລກທີ", "type": "Stationary", "uom": "Unit", "price": 35000}, {"no": 99, "desc": "Brown envolop A3 (1 pack = 50 piece)", "desc_lao": "ຊອງເອກະສານນໍ້າຕານ A3", "type": "Stationary", "uom": "pack", "price": 150000}, {"no": 100, "desc": "Brown envelop A4 (1 pack = 50 piece)", "desc_lao": "ຊອງເອກະສານນໍ້າຕານ A4", "type": "Stationary", "uom": "pack", "price": 75000}, {"no": 101, "desc": "Brown envolop A5 (1 pack = 50 piece)", "desc_lao": "ຊອງເອກະສານນໍ້າຕານ A5", "type": "Stationary", "uom": "pack", "price": 60000}, {"no": 102, "desc": "Paper file folder for A4 paper (1pack=100 piece)", "desc_lao": "ແຟ້ມເຈ້ຍ (ສີ) 50 Pcs", "type": "Stationary", "uom": "pack", "price": 175000}, {"no": 103, "desc": "Paper file folder for A4 paper", "desc_lao": "ແຟ້ມເຈ້ຍ (ສີ)", "type": "Stationary", "uom": "piece", "price": 5000}, {"no": 132, "desc": "Paper A4 180 g", "desc_lao": "ເຈ້ຍ A4 ແຂງ", "type": "Stationary", "uom": "pack", "price": 110000}, {"no": 104, "desc": "White Envelope No. 9AAA", "desc_lao": "ຊອງຂາວຍາວເບີ 9 AAA", "type": "Stationary", "uom": "Unit", "price": 20000}, {"no": 105, "desc": "Board paper clip (A4 size)(pice)", "desc_lao": "ແຜ່ນຮອງເອກະສານ", "type": "Stationary", "uom": "piece", "price": 40000}, {"no": 106, "desc": "Board paper clip (A4 size)(pice) Elephant", "desc_lao": "ແຜ່ນຮອງເອກະສານ", "type": "Stationary", "uom": "box", "price": 420000}, {"no": 107, "desc": "Paper box 3 layers", "desc_lao": "ບ໋ອກໃສ່ເອກະສານ 3 ຫ້ອງ ຢາງ", "type": "Stationary", "uom": "Unit", "price": 75000}, {"no": 108, "desc": "Paper tray 3 floor,9217 Deli", "desc_lao": "ຖາດວາງເອກະສານ 03 ຊັ້ນ", "type": "Stationary", "uom": "piece", "price": 110000}, {"no": 109, "desc": "Mouse pad  (piece)", "desc_lao": "ແຜ່ນຮອງເມົາສ", "type": "Stationary", "uom": "piece", "price": 15000}, {"no": 110, "desc": "Pin (1 box = 35 pieces)", "desc_lao": "ເຂັມມຸດປັກກະດານ", "type": "Stationary", "uom": "box", "price": 12000}, {"no": 111, "desc": "Pin (1 box = 100 pieces)", "desc_lao": "ເຂັມມຸດປັກກະດານ (ກັບໃຫຍ່)", "type": "Stationary", "uom": "box", "price": 96000}, {"no": 112, "desc": "Pin board blue or red (please select the color) 80*120 cm", "desc_lao": "ກະດານປັກເຂັມມຸດ  80*120 cm", "type": "Stationary", "uom": "piece", "price": 600000}, {"no": 113, "desc": "Pin board blue or red (please select the color) 90*120 cm", "desc_lao": "ກະດານປັກເຂັມມຸດ 90*120 cm", "type": "Stationary", "uom": "piece", "price": 1200000}, {"no": 114, "desc": "White boad Lao 60x80cm", "desc_lao": "ກະດານຂາວ ຂະໜາດ 60x80cm", "type": "Stationary", "uom": "piece", "price": 200000}, {"no": 115, "desc": "White board 85 x 65cm", "desc_lao": "ກະດານຂາວ ຂະໜາດ 85x65cm", "type": "Stationary", "uom": "piece", "price": 120000}, {"no": 116, "desc": "White board 150x90cm", "desc_lao": "ກະດານຂາວ ຂະໜາດ 150x90cm", "type": "Stationary", "uom": "piece", "price": 550000}, {"no": 117, "desc": "White board 120x180cm", "desc_lao": "ກະດານຂາວ ຂະໜາດ 120x180cm", "type": "Stationary", "uom": "piece", "price": 900000}, {"no": 118, "desc": "White board 120x200cm", "desc_lao": "ກະດານຂາວ ຂະໜາດ 120x200cm", "type": "Stationary", "uom": "piece", "price": 900000}, {"no": 119, "desc": "White board 120x240cm", "desc_lao": "ກະດານຂາວ ຂະໜາດ 120x240cm", "type": "Stationary", "uom": "piece", "price": 900000}, {"no": 120, "desc": "Purch Elephant DP 900", "desc_lao": "ເຄື້ອງເຈາະຮູເຈ້ຍ (ອັນໃຫ່ຍ) 7000", "type": "Stationary", "uom": "piece", "price": 150000}, {"no": 121, "desc": "Purch Power Stone 800", "desc_lao": "ເຄື້ອງເຈາະຮູເຈ້ຍ (ອັນກາງ) 420", "type": "Stationary", "uom": "piece", "price": 75000}, {"no": 122, "desc": "Purch Power Stone 700", "desc_lao": "ເຄື້ອງເຈາະຮູເຈ້ຍ (ອັນນ້ອຍ) 280", "type": "Stationary", "uom": "piece", "price": 45000}, {"no": 123, "desc": "Pocket folder", "desc_lao": "ແຟ້ມໃສຢາງໃສ່ເອກະສານ", "type": "Stationary", "uom": "pack", "price": 35000}, {"no": 124, "desc": "Plastic file folder open corner size A4 (1pack x 12)", "desc_lao": "ແຟ້ມ ປລາສຕິກ (ສີ)", "type": "Stationary", "uom": "pack", "price": 35000}, {"no": 125, "desc": "Sheet protector Deli", "desc_lao": "ຖົງຢາງໃສໃສ່ເອກະສານ(ມີຮູທາງຂ້າງ 11 ຮູ)", "type": "Stationary", "uom": "pack", "price": 20000}, {"no": 126, "desc": "Key chain", "desc_lao": "ພວງກຸນແຈ", "type": "Stationary", "uom": "box", "price": 65000}, {"no": 1, "desc": "Floor cleaner Mr. Muscle 5.2L", "desc_lao": "ນໍ້າຢາຖູພື້ນ Mr. Muscle 5.2 L", "type": "Household", "uom": "btl", "price": 155000}, {"no": 2, "desc": "Floor cleaner Mr. Muscle 900 ml", "desc_lao": "ນໍ້າຢາຖູພື້ນ Mr. Muscle 900 ml", "type": "Household", "uom": "btl", "price": 55000}, {"no": 3, "desc": "Toilet liquid Duck (bottle 900 ml)", "desc_lao": "ນໍ້າຢາລ້າງຫ້ອງນໍ້າເປັດ 900 ml", "type": "Household", "uom": "btl", "price": 30000}, {"no": 4, "desc": "Glass cleaner Mr. Muscle 5.2 L", "desc_lao": "ນໍ້າຢາເຊັດແວ່ນ Mr. Muscle 5.2 L", "type": "Household", "uom": "btl", "price": 155000}, {"no": 5, "desc": "Glass cleaner Mr. Muscle 520 ml", "desc_lao": "ນໍ້າຢາເຊັດແວ່ນ Mr. Muscle 520 ml", "type": "Household", "uom": "btl", "price": 45000}, {"no": 6, "desc": "Liquid hand soap washing 3M (3.8L)", "desc_lao": "ສະບູແຫຼວລ້າງມື 3M (3.8L)", "type": "Household", "uom": "btl", "price": 180000}, {"no": 7, "desc": "Liquid hand soap washing 3M (400ml)", "desc_lao": "ສະບູແຫຼວລ້າງມື 3M (400ml)", "type": "Household", "uom": "btl", "price": 75000}, {"no": 8, "desc": "Mosquito Spray, Baygon (bottle 600 ml)", "desc_lao": "ສະເປສີດຍຸງ", "type": "Household", "uom": "piece", "price": 60000}, {"no": 9, "desc": "Anti Mosquito Spray, Odoriess (bottle 600 ml)", "desc_lao": "ສະເປສີດຍຸງ", "type": "Household", "uom": "piece", "price": 65000}, {"no": 10, "desc": "Lipon F Dish Washing Liquid 800ml", "desc_lao": "ໄລປອນເອັບ", "type": "Household", "uom": "btl", "price": 28000}, {"no": 11, "desc": "Sunlight 800ml", "desc_lao": "ຊັນໄລ", "type": "Household", "uom": "btl", "price": 28000}, {"no": 12, "desc": "Toilet air freshener, Glade gel (piece)", "desc_lao": "ເກຣດຫ້ອງນໍ້າ", "type": "Household", "uom": "piece", "price": 55000}, {"no": 13, "desc": "Toilet and office spray, Glade (piece)", "desc_lao": "ສະເປເກຮດ", "type": "Household", "uom": "piece", "price": 55000}, {"no": 14, "desc": "Refill Air Perfurme spray", "desc_lao": "ສະເປຍນ້ຳຫອມປັບອາກາດ ແບບເຕີມ", "type": "Household", "uom": "pcs", "price": 175000}, {"no": 15, "desc": "Washing powder 3kg OMO", "desc_lao": "ແຟັບ 3kg  OMO", "type": "Household", "uom": "bag", "price": 79000}, {"no": 16, "desc": "Washing powder 3kg OMO", "desc_lao": "ແຟັບ 3kg  OMO", "type": "Household", "uom": "box", "price": 460000}, {"no": 17, "desc": "Washing powder 3kg PAO", "desc_lao": "ແຟັບ 3kg PAO", "type": "Household", "uom": "bag", "price": 120000}, {"no": 18, "desc": "Dettol Soap 8g (1 pack/4 pcs)", "desc_lao": "ສະບູ Dettol 8g (1pack/4pcs)", "type": "Household", "uom": "pack", "price": 40000}, {"no": 19, "desc": "Hand Sanitizer Gel 400ml", "desc_lao": "ເຈວລ້າງມື", "type": "Household", "uom": "bott", "price": 120000}, {"no": 20, "desc": "Sponge to clean glass 2 side 1/12", "desc_lao": "ຟອຍລ້າງຖ້ວຍ. ຈອກ", "type": "Household", "uom": "Pack", "price": 35000}, {"no": 21, "desc": "Sponge to clean glass 2 side 1/24", "desc_lao": "ຟອຍລ້າງຖ້ວຍ. ຈອກ", "type": "Household", "uom": "Pack", "price": 65000}, {"no": 22, "desc": "Kiwi blue (piece)", "desc_lao": "ກີວີບູ", "type": "Household", "uom": "pcs", "price": 40000}, {"no": 23, "desc": "Hand Towel", "desc_lao": "ຜ້າເຊັດມື", "type": "Household", "uom": "pcs", "price": 15000}, {"no": 24, "desc": "Plastic broom", "desc_lao": "ຟອຍຢາງ", "type": "Household", "uom": "pcs", "price": 80000}, {"no": 25, "desc": "Wooden broom (Plastic handle)", "desc_lao": "ຟອຍລຸ້ນດີ (ກ້ານຢາງ)", "type": "Household", "uom": "pcs", "price": 38000}, {"no": 26, "desc": "Broom", "desc_lao": "ຟອຍກ້ານພ້າວ", "type": "Household", "uom": "pcs", "price": 20000}, {"no": 27, "desc": "Wooden broom", "desc_lao": "ຟອຍລຸ້ນທຳມະດາ", "type": "Household", "uom": "pcs", "price": 30000}, {"no": 28, "desc": "Dustpan Stainless", "desc_lao": "ອັນຊ້ວນີ້ເຫຍື້ຍອ ເຫຼັກ", "type": "Household", "uom": "pcs", "price": 38000}, {"no": 29, "desc": "Dustpan Plastic", "desc_lao": "ອັນຊ້ວນຂີ້ເຫຍື້ຍອ ຢາງ", "type": "Household", "uom": "pcs", "price": 35000}, {"no": 30, "desc": "Mop \"wet\" model, classic (piece) 10 inch", "desc_lao": "ໄມ້ຖູພື້ນປຽກ ຂະໜາດ 10 ນິ້ວ", "type": "Household", "uom": "pcs", "price": 65000}, {"no": 31, "desc": "Mop Refill 10''", "desc_lao": "ຜ້າຖູພື້ນປຽກ ມີແຕ້ຜ້າ 10 ນິ້ວ", "type": "Household", "uom": "pcs", "price": 30000}, {"no": 32, "desc": "Dry mop cloth refill 18 inch", "desc_lao": "ຜ້າເຊັດພື້ນແຫ້ງ (ມີແຕ່ຜ້າ) 18 ນິ້ວ", "type": "Household", "uom": "pcs", "price": 110000}, {"no": 33, "desc": "Mop \"dry\" model, classic (piece) 18 inch", "desc_lao": "ໄມ້ຖູພື້ນແຫ້ງ ຂະໜາດ 18 ນິ້ວ", "type": "Household", "uom": "pcs", "price": 185000}, {"no": 34, "desc": "Spin mop bucket", "desc_lao": "ຖັງຖູພື້ນພ້ອມໄມ້ຖູ", "type": "Household", "uom": "set", "price": 990000}, {"no": 35, "desc": "Floor wiper (24 inch # Big)", "desc_lao": "ໄມ້ລີດນໍ້າ (ອັນໃຫ່ຍ)", "type": "Household", "uom": "pcs", "price": 240000}, {"no": 36, "desc": "Floor wiper (20 inch # small)", "desc_lao": "ໄມ້ລີດນໍ້າ (ອັນນ້ອຍ)", "type": "Household", "uom": "pcs", "price": 190000}, {"no": 37, "desc": "Fabric softener", "desc_lao": "ນ້ຳຢາປັບຜ້ານຸ່ມ", "type": "Household", "uom": "bag", "price": 32000}, {"no": 38, "desc": "Spider web broom", "desc_lao": "ໄມ້ກວາດໄຍແມງມຸມ", "type": "Household", "uom": "pcs", "price": 45000}, {"no": 39, "desc": "Feather Duster", "desc_lao": "ໄມ້ປັດຝຸ່ນຂົນໄກ່", "type": "Household", "uom": "pcs", "price": 65000}, {"no": 40, "desc": "Toilet brush  (Long)", "desc_lao": "ແປງຖູຫ້ອງນໍ້າ (ດ້າມຍາວ)", "type": "Household", "uom": "pcs", "price": 65000}, {"no": 41, "desc": "Toilet brush  (short)", "desc_lao": "ແປງຖູຫ້ອງນໍ້າ (ດ້າມສັ້ນ)", "type": "Household", "uom": "pcs", "price": 45000}, {"no": 42, "desc": "Gloves (yellow)", "desc_lao": "ຖົງມືຢາງ ສີເຫຼືອງ", "type": "Household", "uom": "box", "price": 300000}, {"no": 43, "desc": "Doormat (Foot Welcome logo) 80*120", "desc_lao": "ຜ້າເຊັດຕີນໃຫຍ່ (Welcome Logo)", "type": "Household", "uom": "pcs", "price": 270000}, {"no": 44, "desc": "Doormat (Foot Welcome logo) 45*75", "desc_lao": "ຜ້າເຊັດຕີນນ້ອຍ (Welcome Logo)", "type": "Household", "uom": "pcs", "price": 120000}, {"no": 45, "desc": "Doormat (Foot lao cotton/piece)", "desc_lao": "ຜ້າເຊັດຕີນ (ທຳມະດາ)", "type": "Household", "uom": "pcs", "price": 30000}, {"no": 46, "desc": "Plastic bag 12X26", "desc_lao": "ຖົງຢາງດຳ 12x26", "type": "Household", "uom": "pack", "price": 20000}, {"no": 47, "desc": "Plastic bag 15X30", "desc_lao": "ຖົງຢາງດຳ 15X30", "type": "Household", "uom": "pack", "price": 40000}, {"no": 48, "desc": "Plastic bag 30X40", "desc_lao": "ຖົງຢາງດຳ 30X40", "type": "Household", "uom": "pack", "price": 40000}, {"no": 49, "desc": "Plastic bag 36X45", "desc_lao": "ຖົງຢາງດຳ 36X45", "type": "Household", "uom": "pack", "price": 40000}, {"no": 50, "desc": "Masking tape for carpet (double side tape) 1\" (24MM*25M)", "desc_lao": "ສະກ໋ອດຕິດພົມ", "type": "Household", "uom": "roll", "price": 30000}, {"no": 1, "desc": "Tissue Cellox big roll (1 CTN/12pack)", "desc_lao": "ທິດຊູ້ Festa (ກໍ້ໃຫຍ່ໃສ່ຫ້ອງນ້ຳ)", "type": "Household", "uom": "CTN", "price": 695000}, {"no": 2, "desc": "Tissue HYGIENIST big roll", "desc_lao": "ທິດຊູ້ HYGIENIST (ກໍ້ໃຫຍ່ໃສ່ຫ້ອງນ້ຳ)", "type": "Household", "uom": "roll", "price": 65000}, {"no": 3, "desc": "Tissue Festa hand towel  (1 CTN/24 pcs)", "desc_lao": "ທິດຊູ້ Festa (ເຊັດມື)", "type": "Household", "uom": "CTN", "price": 900000}, {"no": 4, "desc": "Tissue Festa hand towel  (1 pack/5 pcs)", "desc_lao": "ທິດຊູ້ Festa (ເຊັດມື)", "type": "Household", "uom": "Pack", "price": 110000}, {"no": 5, "desc": "Tissue box Cellox 1/3 pcs", "desc_lao": "ທິດຊູ້ກັບ Cellox (1/3 pcs)", "type": "Household", "uom": "Pack", "price": 87000}, {"no": null, "desc": "Tissue Cellox big roll (1 CTN/12roll)", "desc_lao": "ທິດຊູ້ກໍ້ Cellox", "type": "Household", "uom": "CTN", "price": 695000}, {"no": 6, "desc": "Tissue Hygienist (Hand towel)", "desc_lao": "ທິດຊູ້ HYGIENIST (ເຊັດມື)", "type": "Household", "uom": "unit", "price": 55000}, {"no": 7, "desc": "Tissue Hygienist (Hand towel)", "desc_lao": "ທິດຊູ້ HYGIENIST (ເຊັດມື) 24 pcs/CTN", "type": "Household", "uom": "CTN", "price": 1200000}, {"no": 8, "desc": "Tissue 10roll/bag Zilk", "desc_lao": "ທິດຊູ້ກໍ້ນ້ອຍ Zilk (10roll/Bag)", "type": "Household", "uom": "Bag", "price": 45000}, {"no": 9, "desc": "Tissue 12 bag/CTN Zilk", "desc_lao": "ທິດຊູ້ກໍ້ນ້ອຍ Zilk (12 bag/CTN)", "type": "Household", "uom": "CTN", "price": 450000}, {"no": 10, "desc": "Tissue Zilk hand towel(3 piece = 1 pack)", "desc_lao": "ທິດຊູ້ Zilk (ເຊັດມື)(3 piece = 1 pack)", "type": "Household", "uom": "pack", "price": 85000}, {"no": null, "desc": "Tissue Zilk hand towel(3 piece = 1 pack)", "desc_lao": "ທິດຊູ້ Zilk (ເຊັດມື)(3 piece = 1 pack) 16 pack/ctn", "type": "Household", "uom": "CTN", "price": 1200000}, {"no": 11, "desc": "Tissue Big roll PD", "desc_lao": "ເຈ້ຍອານາໄມ ກໍ້ໃຫຍ່ PD", "type": "Household", "uom": "roll", "price": 38000}, {"no": 12, "desc": "Tissue Big roll PD", "desc_lao": "ເຈ້ຍອານາໄມ ກໍ້ໃຫຍ່ PD", "type": "Household", "uom": "CTN", "price": 370000}, {"no": 13, "desc": "Tissue hand towel Villa (4pcs/1 pack)", "desc_lao": "ທິດຊູ່ເຊັດມື Villa (4pcs/1 pack)", "type": "Household", "uom": "pack", "price": 42000}, {"no": 14, "desc": "Tissue hand towel Scott", "desc_lao": "ເຈ້ຍເຊັດມ Scott 16 pcs", "type": "Household", "uom": "CTN", "price": 820000}, {"no": 15, "desc": "Tissue hand towel Scott", "desc_lao": "ເຈ້ຍເຊັດມ Scott", "type": "Household", "uom": "unit", "price": 55000}, {"no": 1, "desc": "Coffee Nescafe red cup 360g", "desc_lao": "ກາເຟ (ແບບເຕີມ)", "type": "Drinking", "uom": "box", "price": 185000}, {"no": 2, "desc": "Coffee Nescafe red cup (stick)", "desc_lao": "ກາເຟ (ແບບຊອງ)", "type": "Drinking", "uom": "bag", "price": 110000}, {"no": 3, "desc": "Coffee Nescafe 3 in 1", "desc_lao": "ກາເຟ 3 in 1", "type": "Drinking", "uom": "bag", "price": 110000}, {"no": 4, "desc": "Coffee Dao 3in1 500g", "desc_lao": "ກາເຟຊອງ 3 in 1", "type": "Drinking", "uom": "bag", "price": 110000}, {"no": 5, "desc": "Coffee mate box 900g", "desc_lao": "ຄຣີມທຽມ 900g", "type": "Drinking", "uom": "box", "price": 110000}, {"no": 6, "desc": "Coffee mate box 450g", "desc_lao": "ຄຣີມທຽມ 450g", "type": "Drinking", "uom": "box", "price": 55000}, {"no": 7, "desc": "Coffee mate bag", "desc_lao": "ຄຣີມທຽມ (ແບບຊອງ)", "type": "Drinking", "uom": "bag", "price": 35000}, {"no": 8, "desc": "Ovaltinne 1 kg", "desc_lao": "ໂອວັນຕິນ ຖົງ 1kg", "type": "Drinking", "uom": "bag", "price": 110000}, {"no": 9, "desc": "Ovaltinne 3 in 1", "desc_lao": "ໂອວັນຕິນ 3 in 1", "type": "Drinking", "uom": "bag", "price": 87000}, {"no": 10, "desc": "Tea baimon lao", "desc_lao": "ຊາໃບມອນ", "type": "Drinking", "uom": "box", "price": 55000}, {"no": 11, "desc": "Tea lipton yellow 1/100pc", "desc_lao": "ຊາລິບຕັ້ນ", "type": "Drinking", "uom": "box", "price": 175000}, {"no": 12, "desc": "Tea lipton yellow 1/50pc", "desc_lao": "ຊາລິບຕັ້ນ", "type": "Drinking", "uom": "box", "price": 0}, {"no": 13, "desc": "Sugar 1kg", "desc_lao": "ນໍ້່າຕານ", "type": "Drinking", "uom": "bag", "price": 30000}, {"no": 14, "desc": "Sugar Mitphol (100 pcs)", "desc_lao": "ນໍ້່າຕານ", "type": "Drinking", "uom": "bag", "price": 55000}, {"no": 15, "desc": "Palace Condensed Milk", "desc_lao": "ນົມຂຸ້ນຫວານ", "type": "Drinking", "uom": "can", "price": 28000}, {"no": 16, "desc": "Euro Peking crunch", "desc_lao": "ເຂົ້າໜົມປັງຢູໂຣ່", "type": "Drinking", "uom": "box", "price": 55000}, {"no": 17, "desc": "Voiz yellow", "desc_lao": "ເຂົ້າໜົມວ້ອຍ", "type": "Drinking", "uom": "pack", "price": 55000}, {"no": 18, "desc": "Voiz Waffle choco crispies", "desc_lao": "ເຂົ້າໜົມວ້ອຍ", "type": "Drinking", "uom": "pack", "price": 48000}, {"no": 19, "desc": "Euro Cake", "desc_lao": "ເຂົ້າໜົມຢູໂຣ່", "type": "Drinking", "uom": "pack", "price": 55000}, {"no": 20, "desc": "Euro gussen", "desc_lao": "ເຂົ້າໜົມຢູໂຣ່", "type": "Drinking", "uom": "pack", "price": 55000}, {"no": 21, "desc": "Wafers Violet coconut flavoured", "desc_lao": null, "type": "Drinking", "uom": "pack", "price": 55000}, {"no": 22, "desc": "Bang Bang white chocolate", "desc_lao": "ເຂົ້າໜົມ ບັງບັງ ຊອກໂກ້ແລັດຂາວ", "type": "Drinking", "uom": "pack", "price": 45000}, {"no": 23, "desc": "Euro creco", "desc_lao": "ເຂົ້າໜົມຢູໂຣ່", "type": "Drinking", "uom": "pack", "price": 55000}, {"no": 24, "desc": "Candy (Huney lemon)", "desc_lao": "ເຂົ້າໜົມອົມລົດນ້ຳເຜິ້ງ", "type": "Drinking", "uom": "bag", "price": 48000}, {"no": 25, "desc": "Tiger water 235 ml", "desc_lao": "ນ້ຳດື່ມຫົວເສືອ 235 ml", "type": "Drinking", "uom": "pack", "price": 65000}, {"no": 26, "desc": "Tiger water 350 ml", "desc_lao": "ນ້ຳດື່ມຫົວເສືອ 350 ml", "type": "Drinking", "uom": "pack", "price": 75000}, {"no": 27, "desc": "Tiger water 600 ml (2pack)", "desc_lao": "ນ້ຳດື່ມຫົວເສືອ 600 ml", "type": "Drinking", "uom": "CTN", "price": 90000}, {"no": 28, "desc": "Tiger water 1500 ml", "desc_lao": "ນ້ຳດື່ມຫົວເສືອ 1500 ml", "type": "Drinking", "uom": "pack", "price": 48000}, {"no": 1, "desc": "Antiflatulence, Air-X (pack)", "desc_lao": "ຢາກະເພາະເປັນແຜງ", "type": "Medicine", "uom": "pack", "price": 12000}, {"no": 2, "desc": "Ampiciline (tablet)", "desc_lao": "ຢາອໍ່າປີ້", "type": "Medicine", "uom": "tablet", "price": 12000}, {"no": 3, "desc": "Paracetamol (piece)", "desc_lao": "ຢາປາລາ", "type": "Medicine", "uom": "piece", "price": 10000}, {"no": 4, "desc": "Face mask", "desc_lao": "ຜ້າອັດປາກ", "type": "Medicine", "uom": "Pack", "price": 60000}, {"no": 5, "desc": "Cotton fabric", "desc_lao": "ສຳລີ", "type": "Medicine", "uom": "unit", "price": 10000}, {"no": 6, "desc": "Alcohol 90°(bottle)", "desc_lao": "ເຫຼົ້າ 90", "type": "Medicine", "uom": "btl", "price": 95000}, {"no": 7, "desc": "Flood TC (Alovela)", "desc_lao": "ຍາທານໍ້າຮ້ອນລວກ", "type": "Medicine", "uom": "piece", "price": 65000}, {"no": 8, "desc": "Stick head", "desc_lao": "ຢາຕິດຫົວ", "type": "Medicine", "uom": "piece", "price": 25000}, {"no": 9, "desc": "Poysian", "desc_lao": "ຢາດົມ", "type": "Medicine", "uom": "piece", "price": 15000}, {"no": 10, "desc": "Balm gel", "desc_lao": "ຢາມ່ອງກາລິງ", "type": "Medicine", "uom": "piece", "price": 15000}, {"no": 11, "desc": "Stomach", "desc_lao": "ຢາດີແກ້ເຈັບທ້ອງ", "type": "Medicine", "uom": "Pack", "price": 10000}, {"no": 12, "desc": "Terpin codein", "desc_lao": "ຢາດີໄອ", "type": "Medicine", "uom": "Pack", "price": 10000}, {"no": 13, "desc": "Petadine", "desc_lao": "ຢາເປຕາດິນ", "type": "Medicine", "uom": "piece", "price": 12000}, {"no": 14, "desc": "Step sill", "desc_lao": "ສະເຕັບຊີວ", "type": "Medicine", "uom": "piece", "price": 35000}, {"no": 15, "desc": "Counter pain cool", "desc_lao": "ຢາຄັ້ນກ້າມ", "type": "Medicine", "uom": "piece", "price": 65000}, {"no": 16, "desc": "Deewad", "desc_lao": "ຢາດີຫວັດ", "type": "Medicine", "uom": "Pack", "price": 15000}, {"no": 17, "desc": "Neoplast-s", "desc_lao": "ແນວຕິດບາດ", "type": "Medicine", "uom": "box", "price": 35000}, {"no": 18, "desc": "Deewad (40 pcs/box)", "desc_lao": "ຢາດີຫວັດ", "type": "Medicine", "uom": "box", "price": 400000}, {"no": 19, "desc": "Sara", "desc_lao": "ຢາແກ້ໄຂ້", "type": "Medicine", "uom": "pcs", "price": 12000}, {"no": "20", "desc": "Dofinal Medicine", "desc_lao": "ຢາແກ້ປວດ", "type": "Medicine", "uom": "pcs", "price": 15000}, {"no": "21", "desc": "Royal D", "desc_lao": "ຢາເກືອແຮ່", "type": "Medicine", "uom": "box", "price": 38000}, {"no": "22", "desc": "Eye drop", "desc_lao": "ຢາຢອດຕາ", "type": "Medicine", "uom": "piece", "price": 65000}, {"no": "23", "desc": "Amoxycillin", "desc_lao": "ຢາຕ້ານເຊື້ອ", "type": "Medicine", "uom": "piece", "price": 12000}, {"no": "24", "desc": "Poysian Black Inhaler", "desc_lao": "ຢາດົມ", "type": "Medicine", "uom": "piece", "price": 28000}, {"no": "25", "desc": "Inhaler Pepermint", "desc_lao": "ຢາດົມ ກີ່ນມີ້ນ", "type": "Medicine", "uom": "pcs", "price": 28000}, {"no": "26", "desc": "Lipphon F 3litter", "desc_lao": "ໄລປອນເອັບ 3ລິດ", "type": "Household", "uom": "Bott", "price": 130000}, {"no": "27", "desc": "Thermal paper 50*70", "desc_lao": "ເຈ້ຍປຣິ້ນ50*70", "type": "Stationary", "uom": "pack", "price": 110000}, {"no": "28", "desc": "Zip files", "desc_lao": "ຊອງເອກະສານ ມີຊີບ", "type": "Stationary", "uom": "pack", "price": 300000}, {"no": "29", "desc": "Tissue LIVI 300 pcs/pack", "desc_lao": "ທິດຊູ ລີວີ 300 ແຜ່ນ", "type": "Household", "uom": "pack", "price": 55000}, {"no": "30", "desc": "Coffee No sugar", "desc_lao": "ກາເຟດາວ ດຳ ບໍ່ມີນ້ຳຕານ", "type": "Drinking", "uom": "bag", "price": 130000}, {"no": "31", "desc": "Spoon for Coffee (Stainless)", "desc_lao": "ບ່ວງກາເຟ ເຫຼດ", "type": "Drinking", "uom": "box", "price": 55000}, {"no": "32", "desc": "Spoon for Coffee (plastic)", "desc_lao": "ບ່ວງກາເຟ ຢາງ", "type": "Drinking", "uom": "bag", "price": 45000}, {"no": "33", "desc": "Mop \"dry\" model, classic (piece) 24 inch", "desc_lao": "ໄມ້ຖູພື້ນແຫ້ງ ຂະໜາດ 24 ນິ້ວ", "type": "Household", "uom": "pcs", "price": 240000}, {"no": "34", "desc": "Dry mop cloth refill 24 inch", "desc_lao": "ຜ້າເຊັດພື້ນແຫ້ງ (ມີແຕ່ຜ້າ) 24 ນິ້ວ", "type": "Household", "uom": "pcs", "price": 160000}];
+
+// Item "no" repeats across categories (Stationary #1, Household #1, Drinking #1, Medicine #1 all exist)
+// and two tissue rows have no number at all, so "no" cannot be used as a storage key.
+// Every stock/order/GRN/cut record is keyed by uid = the item's position in ITEMS instead.
+ITEMS.forEach((it, idx)=>{ it.uid = idx; });
+
+const LS_KEYS = {stock:'ql_stn_stock_v2', grn:'ql_stn_grn_v2', cut:'ql_stn_cut_v2', order:'ql_stn_order_v2', reorder:'ql_stn_reorder_v2', draft:'ql_stn_draft_v2'};
+const LS_KEYS_V1 = {stock:'ql_stn_stock', grn:'ql_stn_grn', cut:'ql_stn_cut', order:'ql_stn_order', reorder:'ql_stn_reorder'};
+
+function loadLS(key, fallback){
+  try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }catch(e){ return fallback; }
+}
+function saveLS(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+
+// One-time move of data saved by the old "no"-keyed version. An old key maps to the
+// first item carrying that number, which is the item the old app would have shown.
+function migrateV1(){
+  if(localStorage.getItem('ql_stn_migrated_v2')) return;
+  const uidOfNo = {};
+  ITEMS.forEach(it=>{ const k = String(it.no); if(!(k in uidOfNo)) uidOfNo[k] = it.uid; });
+  const remapMap = obj=>{
+    const out = {};
+    Object.keys(obj||{}).forEach(k=>{ const uid = uidOfNo[k]; if(uid!==undefined) out[uid] = obj[k]; });
+    return out;
+  };
+  const remapLog = arr=> (arr||[]).map(r=>{
+    const uid = uidOfNo[String(r.itemNo)];
+    return uid===undefined ? null : Object.assign({}, r, {uid});
+  }).filter(Boolean);
+
+  const oldStock = loadLS(LS_KEYS_V1.stock, null);
+  const oldReorder = loadLS(LS_KEYS_V1.reorder, null);
+  const oldGrn = loadLS(LS_KEYS_V1.grn, null);
+  const oldCut = loadLS(LS_KEYS_V1.cut, null);
+  const oldOrder = loadLS(LS_KEYS_V1.order, null);
+
+  if(oldStock && !localStorage.getItem(LS_KEYS.stock)) saveLS(LS_KEYS.stock, remapMap(oldStock));
+  if(oldReorder && !localStorage.getItem(LS_KEYS.reorder)) saveLS(LS_KEYS.reorder, remapMap(oldReorder));
+  if(oldGrn && !localStorage.getItem(LS_KEYS.grn)) saveLS(LS_KEYS.grn, remapLog(oldGrn));
+  if(oldCut && !localStorage.getItem(LS_KEYS.cut)) saveLS(LS_KEYS.cut, remapLog(oldCut));
+  if(oldOrder && !localStorage.getItem(LS_KEYS.order)){
+    saveLS(LS_KEYS.order, (oldOrder||[]).map(o=> Object.assign({}, o, {lines: remapLog(o.lines)})));
+  }
+  localStorage.setItem('ql_stn_migrated_v2', '1');
+}
+migrateV1();
+
+let stock = loadLS(LS_KEYS.stock, {});     // {uid: qtyOnHand}
+let reorder = loadLS(LS_KEYS.reorder, {}); // {uid: reorderLevel}
+let grnLog = loadLS(LS_KEYS.grn, []);      // [{date,uid,qty,ref}]
+let cutLog = loadLS(LS_KEYS.cut, []);      // [{date,uid,qty,to}]
+let orderLog = loadLS(LS_KEYS.order, []);  // [{date,ref,by,supplier,note,lines:[{uid,qty}],total,status}]
+let orderDraft = loadLS(LS_KEYS.draft, []).filter(l=> ITEMS[l.uid]);
+
+function itemByUid(uid){ return ITEMS[uid]; }
+function getQty(uid){ return stock[uid] || 0; }
+function setQty(uid, q){ stock[uid] = Math.max(0, q); saveLS(LS_KEYS.stock, stock); }
+function getReorder(uid){ return reorder[uid] !== undefined ? reorder[uid] : 0; }
+function setReorder(uid, r){ reorder[uid] = Math.max(0, r); saveLS(LS_KEYS.reorder, reorder); }
+function itemNoLabel(it){ return (it.no===null || it.no===undefined) ? '-' : it.no; }
+function saveDraft(){ saveLS(LS_KEYS.draft, orderDraft); }
+function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
+function nowStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(window.__toastT);
+  window.__toastT = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+function statusOf(uid){
+  const q = getQty(uid), r = getReorder(uid);
+  if(q<=0) return 'out';
+  if(r>0 && q<=r) return 'low';
+  return 'ok';
+}
+function statusBadge(uid){
+  const s = statusOf(uid);
+  if(s==='out') return '<span class="badge b-out">Out</span>';
+  if(s==='low') return '<span class="badge b-low">Low</span>';
+  return '<span class="badge b-ok">OK</span>';
+}
+
+// ==================== XLSX WRITER ====================
+// Minimal Open XML spreadsheet writer: store-only (uncompressed) ZIP, no libraries,
+// so the app stays a single offline file. Produces real .xlsx that Excel opens without warnings.
+// ==XLSX-WRITER-START==
+const XLSX = (function(){
+  const enc = new TextEncoder();
+  let crcTable = null;
+
+  function crc32(bytes){
+    if(!crcTable){
+      crcTable = new Uint32Array(256);
+      for(let n=0;n<256;n++){
+        let c = n;
+        for(let k=0;k<8;k++) c = (c & 1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1);
+        crcTable[n] = c>>>0;
+      }
+    }
+    let crc = 0xFFFFFFFF;
+    for(let i=0;i<bytes.length;i++) crc = (crc>>>8) ^ crcTable[(crc ^ bytes[i]) & 0xFF];
+    return (crc ^ 0xFFFFFFFF)>>>0;
+  }
+  function dosStamp(d){
+    return {
+      time: ((d.getHours()&31)<<11) | ((d.getMinutes()&63)<<5) | ((d.getSeconds()>>1)&31),
+      date: (((d.getFullYear()-1980)&127)<<9) | (((d.getMonth()+1)&15)<<5) | (d.getDate()&31)
+    };
+  }
+  function concat(chunks){
+    let total = 0;
+    chunks.forEach(c=>{ total += c.length; });
+    const out = new Uint8Array(total);
+    let at = 0;
+    chunks.forEach(c=>{ out.set(c, at); at += c.length; });
+    return out;
+  }
+  function zip(files){
+    const st = dosStamp(new Date());
+    const body = [], central = [];
+    let offset = 0;
+    files.forEach(f=>{
+      const name = enc.encode(f.name);
+      const data = f.data;
+      const crc = crc32(data);
+      const lfh = new Uint8Array(30 + name.length);
+      const lv = new DataView(lfh.buffer);
+      lv.setUint32(0, 0x04034b50, true);
+      lv.setUint16(4, 20, true);
+      lv.setUint16(6, 0x0800, true);   // UTF-8 filenames
+      lv.setUint16(8, 0, true);        // stored, no compression
+      lv.setUint16(10, st.time, true);
+      lv.setUint16(12, st.date, true);
+      lv.setUint32(14, crc, true);
+      lv.setUint32(18, data.length, true);
+      lv.setUint32(22, data.length, true);
+      lv.setUint16(26, name.length, true);
+      lv.setUint16(28, 0, true);
+      lfh.set(name, 30);
+      body.push(lfh, data);
+
+      const cdh = new Uint8Array(46 + name.length);
+      const cv = new DataView(cdh.buffer);
+      cv.setUint32(0, 0x02014b50, true);
+      cv.setUint16(4, 20, true);
+      cv.setUint16(6, 20, true);
+      cv.setUint16(8, 0x0800, true);
+      cv.setUint16(10, 0, true);
+      cv.setUint16(12, st.time, true);
+      cv.setUint16(14, st.date, true);
+      cv.setUint32(16, crc, true);
+      cv.setUint32(20, data.length, true);
+      cv.setUint32(24, data.length, true);
+      cv.setUint16(28, name.length, true);
+      cv.setUint16(30, 0, true);
+      cv.setUint16(32, 0, true);
+      cv.setUint16(34, 0, true);
+      cv.setUint16(36, 0, true);
+      cv.setUint32(38, 0, true);
+      cv.setUint32(42, offset, true);
+      cdh.set(name, 46);
+      central.push(cdh);
+      offset += lfh.length + data.length;
+    });
+    const cdSize = central.reduce((s,c)=>s+c.length, 0);
+    const eocd = new Uint8Array(22);
+    const ev = new DataView(eocd.buffer);
+    ev.setUint32(0, 0x06054b50, true);
+    ev.setUint16(4, 0, true);
+    ev.setUint16(6, 0, true);
+    ev.setUint16(8, files.length, true);
+    ev.setUint16(10, files.length, true);
+    ev.setUint32(12, cdSize, true);
+    ev.setUint32(16, offset, true);
+    ev.setUint16(20, 0, true);
+    return concat(body.concat(central, [eocd]));
+  }
+
+  function esc(s){
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      // control chars are illegal in XML and would corrupt the file
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'');
+  }
+  function colRef(i){
+    let s = '', n = i + 1;
+    while(n>0){ const m = (n-1)%26; s = String.fromCharCode(65+m) + s; n = (n-m-1)/26; }
+    return s;
+  }
+
+  // Style indexes available to callers (must match cellXfs order below).
+  const S = {PLAIN:0, BOLD:1, TITLE:2, HEAD:3, CELL:5, MONEY:6, INT:7, TOTAL:8, TOTAL_LBL:9, NOTE:10, CENTER:11, SUB:12, LABEL:1};
+
+  const STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    + '<numFmts count="2"><numFmt numFmtId="164" formatCode="#,##0"/><numFmt numFmtId="165" formatCode="0"/></numFmts>'
+    + '<fonts count="6">'
+    +   '<font><sz val="11"/><color rgb="FF1E2430"/><name val="Calibri"/></font>'
+    +   '<font><b/><sz val="11"/><color rgb="FF1E2430"/><name val="Calibri"/></font>'
+    +   '<font><b/><sz val="15"/><color rgb="FF1E2430"/><name val="Calibri"/></font>'
+    +   '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
+    +   '<font><sz val="9"/><color rgb="FF6B7280"/><name val="Calibri"/></font>'
+    +   '<font><b/><sz val="12"/><color rgb="FF6B7280"/><name val="Calibri"/></font>'
+    + '</fonts>'
+    + '<fills count="4">'
+    +   '<fill><patternFill patternType="none"/></fill>'
+    +   '<fill><patternFill patternType="gray125"/></fill>'
+    +   '<fill><patternFill patternType="solid"><fgColor rgb="FF1E2430"/><bgColor indexed="64"/></patternFill></fill>'
+    +   '<fill><patternFill patternType="solid"><fgColor rgb="FFF2F4F7"/><bgColor indexed="64"/></patternFill></fill>'
+    + '</fills>'
+    + '<borders count="2">'
+    +   '<border><left/><right/><top/><bottom/><diagonal/></border>'
+    +   '<border>'
+    +     '<left style="thin"><color rgb="FFD0D5DD"/></left><right style="thin"><color rgb="FFD0D5DD"/></right>'
+    +     '<top style="thin"><color rgb="FFD0D5DD"/></top><bottom style="thin"><color rgb="FFD0D5DD"/></bottom><diagonal/>'
+    +   '</border>'
+    + '</borders>'
+    + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+    + '<cellXfs count="13">'
+    +   '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'                                                                                     // 0 PLAIN
+    +   '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>'                                                                       // 1 BOLD / LABEL
+    +   '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="center"/></xf>'                   // 2 TITLE
+    +   '<xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">'
+    +     '<alignment horizontal="center" vertical="center" wrapText="1"/></xf>'                                                                             // 3 HEAD
+    +   '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'                                                                                     // 4 (reserved)
+    +   '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1">'
+    +     '<alignment vertical="top" wrapText="1"/></xf>'                                                                                                    // 5 CELL
+    +   '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>'                                             // 6 MONEY
+    +   '<xf numFmtId="165" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1">'
+    +     '<alignment horizontal="center"/></xf>'                                                                                                            // 7 INT
+    +   '<xf numFmtId="164" fontId="1" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>'                 // 8 TOTAL
+    +   '<xf numFmtId="0" fontId="1" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1">'
+    +     '<alignment horizontal="right"/></xf>'                                                                                                             // 9 TOTAL_LBL
+    +   '<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>'                                                                       // 10 NOTE
+    +   '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1">'
+    +     '<alignment horizontal="center" vertical="center" wrapText="1"/></xf>'                                                                             // 11 CENTER
+    +   '<xf numFmtId="0" fontId="5" fillId="0" borderId="0" xfId="0" applyFont="1"/>'                                                                       // 12 SUB
+    + '</cellXfs>'
+    + '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
+    + '</styleSheet>';
+
+  function sheetXml(sheet){
+    const rows = sheet.rows || [];
+    let xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
+    if(sheet.freeze){
+      xml += '<sheetViews><sheetView workbookViewId="0">'
+        + '<pane ySplit="' + sheet.freeze + '" topLeftCell="A' + (sheet.freeze+1) + '" activePane="bottomLeft" state="frozen"/>'
+        + '</sheetView></sheetViews>';
+    }
+    if(sheet.cols && sheet.cols.length){
+      xml += '<cols>';
+      sheet.cols.forEach((w, i)=>{
+        xml += '<col min="' + (i+1) + '" max="' + (i+1) + '" width="' + w + '" customWidth="1"/>';
+      });
+      xml += '</cols>';
+    }
+    xml += '<sheetData>';
+    rows.forEach((cells, r)=>{
+      if(!cells || !cells.length) return;
+      let rowXml = '';
+      cells.forEach((c, i)=>{
+        if(c===null || c===undefined) return;
+        const ref = colRef(i) + (r+1);
+        const sAttr = c.s ? ' s="' + c.s + '"' : '';
+        if(c.t==='n' && c.v!=='' && c.v!==null && isFinite(c.v)){
+          rowXml += '<c r="' + ref + '"' + sAttr + '><v>' + c.v + '</v></c>';
+        } else if(c.v==='' || c.v===null || c.v===undefined){
+          if(c.s) rowXml += '<c r="' + ref + '"' + sAttr + '/>';
+        } else {
+          rowXml += '<c r="' + ref + '"' + sAttr + ' t="inlineStr"><is><t xml:space="preserve">' + esc(c.v) + '</t></is></c>';
+        }
+      });
+      if(rowXml){
+        const hAttr = sheet.rowHeights && sheet.rowHeights[r] ? ' ht="' + sheet.rowHeights[r] + '" customHeight="1"' : '';
+        xml += '<row r="' + (r+1) + '"' + hAttr + '>' + rowXml + '</row>';
+      }
+    });
+    xml += '</sheetData>';
+    if(sheet.autoFilter) xml += '<autoFilter ref="' + sheet.autoFilter + '"/>';
+    if(sheet.merges && sheet.merges.length){
+      xml += '<mergeCells count="' + sheet.merges.length + '">';
+      sheet.merges.forEach(m=>{ xml += '<mergeCell ref="' + m + '"/>'; });
+      xml += '</mergeCells>';
+    }
+    xml += '<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/>';
+    xml += '</worksheet>';
+    return xml;
+  }
+
+  function safeName(name, used){
+    let n = String(name || 'Sheet').replace(/[\\\/\*\?\:\[\]]/g,' ').trim().slice(0,31) || 'Sheet';
+    let base = n, i = 2;
+    while(used.indexOf(n) !== -1){
+      const suffix = ' (' + i + ')';
+      n = base.slice(0, 31 - suffix.length) + suffix;
+      i++;
+    }
+    used.push(n);
+    return n;
+  }
+
+  function bytes(sheets){
+    const used = [];
+    const named = sheets.map(s=> Object.assign({}, s, {name: safeName(s.name, used)}));
+    const files = [];
+
+    let ct = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+      + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+      + '<Default Extension="xml" ContentType="application/xml"/>'
+      + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+      + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>';
+    named.forEach((s, i)=>{
+      ct += '<Override PartName="/xl/worksheets/sheet' + (i+1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+    });
+    ct += '</Types>';
+
+    const rootRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+      + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+      + '</Relationships>';
+
+    let wb = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+      + ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>';
+    named.forEach((s, i)=>{
+      wb += '<sheet name="' + esc(s.name) + '" sheetId="' + (i+1) + '" r:id="rId' + (i+1) + '"/>';
+    });
+    wb += '</sheets></workbook>';
+
+    let wbRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
+    named.forEach((s, i)=>{
+      wbRels += '<Relationship Id="rId' + (i+1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"'
+        + ' Target="worksheets/sheet' + (i+1) + '.xml"/>';
+    });
+    wbRels += '<Relationship Id="rId' + (named.length+1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"'
+      + ' Target="styles.xml"/></Relationships>';
+
+    files.push({name:'[Content_Types].xml', data: enc.encode(ct)});
+    files.push({name:'_rels/.rels', data: enc.encode(rootRels)});
+    files.push({name:'xl/workbook.xml', data: enc.encode(wb)});
+    files.push({name:'xl/_rels/workbook.xml.rels', data: enc.encode(wbRels)});
+    files.push({name:'xl/styles.xml', data: enc.encode(STYLES_XML)});
+    named.forEach((s, i)=>{
+      files.push({name:'xl/worksheets/sheet' + (i+1) + '.xml', data: enc.encode(sheetXml(s))});
+    });
+    return zip(files);
+  }
+
+  function download(filename, sheets){
+    const blob = new Blob([bytes(sheets)], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  }
+
+  return {S, bytes, download,
+          t:(v,s)=>({t:'s', v:v===null||v===undefined?'':v, s:s}),
+          n:(v,s)=>({t:'n', v:v, s:s})};
+})();
+// ==XLSX-WRITER-END==
+
+const XS = XLSX.S;
+const xt = XLSX.t, xn = XLSX.n;
+function safeFileName(s){ return String(s).replace(/[^\w\-\.]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'').slice(0,60) || 'export'; }
+
+// ---------- NAV ----------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('main > section').forEach(s=>s.classList.add('hidden'));
+    document.getElementById('tab-'+btn.dataset.tab).classList.remove('hidden');
+    if(btn.dataset.tab==='check'){ renderCheck(); document.getElementById('checkSearch').focus(); }
+    if(btn.dataset.tab==='history'){ renderHistory(); }
+  });
+});
+
+// ---------- STOCK TAB ----------
+function populateTypeFilter(){
+  const types = [...new Set(ITEMS.map(i=>i.type))].sort();
+  const sel = document.getElementById('stockTypeFilter');
+  types.forEach(t=>{
+    const o = document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o);
+  });
+}
+function renderStock(){
+  const search = document.getElementById('stockSearch').value.toLowerCase();
+  const typeF = document.getElementById('stockTypeFilter').value;
+  const lowOnly = document.getElementById('stockLowOnly').checked;
+  const tbody = document.getElementById('stockTbody');
+  tbody.innerHTML='';
+  let low=0, out=0, value=0;
+  ITEMS.forEach(it=>{
+    const q = getQty(it.uid);
+    value += q * it.price;
+    const st = statusOf(it.uid);
+    if(st==='low') low++;
+    if(st==='out') out++;
+  });
+  document.getElementById('statTotalItems').textContent = ITEMS.length;
+  document.getElementById('statLow').textContent = low;
+  document.getElementById('statOut').textContent = out;
+  document.getElementById('statValue').textContent = fmt(value);
+
+  const filtered = ITEMS.filter(it=>{
+    if(search && !it.desc.toLowerCase().includes(search) && !(it.desc_lao||'').includes(search)) return false;
+    if(typeF && it.type!==typeF) return false;
+    if(lowOnly && statusOf(it.uid)==='ok') return false;
+    return true;
+  });
+  if(filtered.length===0){
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty">No items match.</div></td></tr>';
+    return;
+  }
+  filtered.forEach(it=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${itemNoLabel(it)}</td>
+      <td>${it.desc}<br><span class="type-badge">${it.desc_lao||''}</span></td>
+      <td><span class="pill">${it.type}</span></td>
+      <td>${it.uom}</td>
+      <td>${fmt(it.price)}</td>
+      <td><input type="number" class="qty-input stock-qty-edit" min="0" value="${getQty(it.uid)}" data-uid="${it.uid}"></td>
+      <td><input type="number" class="qty-input reorder-edit" min="0" value="${getReorder(it.uid)}" data-uid="${it.uid}"></td>
+      <td>${statusBadge(it.uid)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.stock-qty-edit').forEach(inp=>{
+    inp.addEventListener('change', e=>{
+      setQty(parseInt(e.target.dataset.uid), parseInt(e.target.value)||0);
+      renderStock();
+    });
+  });
+  tbody.querySelectorAll('.reorder-edit').forEach(inp=>{
+    inp.addEventListener('change', e=>{
+      setReorder(parseInt(e.target.dataset.uid), parseInt(e.target.value)||0);
+      renderStock();
+    });
+  });
+}
+['stockSearch','stockTypeFilter'].forEach(id=>document.getElementById(id).addEventListener('input', renderStock));
+document.getElementById('stockTypeFilter').addEventListener('change', renderStock);
+document.getElementById('stockLowOnly').addEventListener('change', renderStock);
+document.getElementById('exportStockBtn').addEventListener('click', ()=>{
+  let csv = 'No,Item,Category,UOM,Price,On Hand,Reorder Level,Status\n';
+  ITEMS.forEach(it=>{
+    csv += `${itemNoLabel(it)},"${it.desc.replace(/"/g,'""')}",${it.type},${it.uom},${it.price},${getQty(it.uid)},${getReorder(it.uid)},${statusOf(it.uid)}\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'stationery_stock_'+nowStr().replace(/[: ]/g,'_')+'.csv';
+  a.click();
+});
+
+const STATUS_TEXT = {ok:'OK', low:'Low', out:'Out of stock'};
+
+function stockSheetRows(items){
+  const rows = [];
+  rows.push([xt('No.', XS.HEAD), xt('Item', XS.HEAD), xt('Lao Description', XS.HEAD), xt('Category', XS.HEAD),
+             xt('UOM', XS.HEAD), xt('Price (LAK)', XS.HEAD), xt('On Hand', XS.HEAD), xt('Reorder Lvl', XS.HEAD),
+             xt('Status', XS.HEAD), xt('Stock Value (LAK)', XS.HEAD)]);
+  items.forEach(it=>{
+    const q = getQty(it.uid);
+    rows.push([
+      xt(itemNoLabel(it), XS.CENTER), xt(it.desc, XS.CELL), xt(it.desc_lao||'', XS.CELL), xt(it.type, XS.CELL),
+      xt(it.uom, XS.CENTER), xn(it.price, XS.MONEY), xn(q, XS.INT), xn(getReorder(it.uid), XS.INT),
+      xt(STATUS_TEXT[statusOf(it.uid)], XS.CENTER), xn(q*it.price, XS.MONEY)
+    ]);
+  });
+  return rows;
+}
+document.getElementById('exportStockXlsxBtn').addEventListener('click', ()=>{
+  const cols = [7, 46, 34, 13, 8, 14, 10, 11, 13, 17];
+  const all = stockSheetRows(ITEMS);
+  const shortItems = ITEMS.filter(it=> statusOf(it.uid)!=='ok');
+  const sheets = [{
+    name: 'Stock List', cols, rows: all, freeze: 1, autoFilter: 'A1:J' + all.length
+  }];
+  if(shortItems.length){
+    const short = stockSheetRows(shortItems);
+    sheets.push({name:'Low & Out of Stock', cols, rows: short, freeze: 1, autoFilter: 'A1:J' + short.length});
+  }
+  XLSX.download('Stationery_Stock_' + safeFileName(nowStr()) + '.xlsx', sheets);
+  toast('Stock exported to Excel');
+});
+
+// ---------- CHECK STOCK TAB ----------
+function renderCheck(){
+  const q = document.getElementById('checkSearch').value.toLowerCase();
+  const box = document.getElementById('checkResults');
+  if(!q){ box.innerHTML = '<div class="empty">Start typing to check stock levels.</div>'; return; }
+  const matches = ITEMS.filter(it=> it.desc.toLowerCase().includes(q) || (it.desc_lao||'').includes(q)).slice(0,30);
+  if(matches.length===0){ box.innerHTML = '<div class="empty">No matching item.</div>'; return; }
+  let html = '<div class="tbl-wrap"><table><thead><tr><th>Item</th><th>Category</th><th>UOM</th><th>Price</th><th>On Hand</th><th>Status</th></tr></thead><tbody>';
+  matches.forEach(it=>{
+    html += `<tr><td>${it.desc}<br><span class="type-badge">${it.desc_lao||''}</span></td><td><span class="pill">${it.type}</span></td><td>${it.uom}</td><td>${fmt(it.price)}</td><td><strong>${getQty(it.uid)}</strong></td><td>${statusBadge(it.uid)}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  box.innerHTML = html;
+}
+document.getElementById('checkSearch').addEventListener('input', renderCheck);
+
+// ---------- SELECT POPULATION ----------
+function fillItemSelect(sel){
+  sel.innerHTML = '<option value="">Select item...</option>';
+  ITEMS.forEach(it=>{
+    const o = document.createElement('option');
+    o.value = it.uid;
+    // category is part of the label because item names and numbers repeat across categories
+    o.textContent = `${it.desc} — ${it.type} (${it.uom})`;
+    sel.appendChild(o);
+  });
+}
+fillItemSelect(document.getElementById('orderItemSelect'));
+fillItemSelect(document.getElementById('grnItemSelect'));
+fillItemSelect(document.getElementById('cutItemSelect'));
+
+// ---------- ORDER TAB ----------
+function draftTotal(){
+  return orderDraft.reduce((s,l)=>{
+    const it = itemByUid(l.uid);
+    return s + (it ? it.price * l.qty : 0);
+  }, 0);
+}
+function renderOrderDraft(){
+  const tbody = document.getElementById('orderDraftTbody');
+  tbody.innerHTML='';
+  if(orderDraft.length===0){
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty">No lines yet. Add items above.</div></td></tr>';
+  }
+  orderDraft.forEach((line, idx)=>{
+    const it = itemByUid(line.uid);
+    if(!it) return;
+    const lineTotal = it.price * line.qty;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${it.desc}<br><span class="type-badge">${it.desc_lao||''}</span></td>
+      <td><span class="pill">${it.type}</span></td>
+      <td>${it.uom}</td>
+      <td>${getQty(it.uid)}</td>
+      <td><input type="number" class="qty-input draft-qty" min="1" value="${line.qty}" data-idx="${idx}"></td>
+      <td>${fmt(it.price)}</td><td>${fmt(lineTotal)}</td>
+      <td><button class="btn ghost" data-idx="${idx}" style="padding:4px 10px;">Remove</button></td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('orderDraftTotal').textContent = 'Total: ' + fmt(draftTotal()) + ' LAK';
+  tbody.querySelectorAll('.draft-qty').forEach(inp=>{
+    inp.addEventListener('change', e=>{
+      const q = parseInt(e.target.value)||0;
+      const idx = parseInt(e.target.dataset.idx);
+      if(q<=0){ orderDraft.splice(idx,1); } else { orderDraft[idx].qty = q; }
+      saveDraft();
+      renderOrderDraft();
+    });
+  });
+  tbody.querySelectorAll('button[data-idx]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      orderDraft.splice(parseInt(e.target.dataset.idx),1);
+      saveDraft();
+      renderOrderDraft();
+    });
+  });
+}
+document.getElementById('addToOrderBtn').addEventListener('click', ()=>{
+  const uidRaw = document.getElementById('orderItemSelect').value;
+  const qty = parseInt(document.getElementById('orderQty').value)||0;
+  if(uidRaw==='' || qty<=0){ toast('Pick an item and qty'); return; }
+  const uid = parseInt(uidRaw);
+  const existing = orderDraft.find(l=>l.uid===uid);
+  if(existing) existing.qty += qty; else orderDraft.push({uid, qty});
+  saveDraft();
+  renderOrderDraft();
+  toast('Added to order draft');
+});
+document.getElementById('fillLowStockBtn').addEventListener('click', ()=>{
+  let added=0;
+  ITEMS.forEach(it=>{
+    if(statusOf(it.uid)!=='ok'){
+      const need = Math.max(getReorder(it.uid) - getQty(it.uid), 1);
+      const existing = orderDraft.find(l=>l.uid===it.uid);
+      if(existing) existing.qty = need; else orderDraft.push({uid:it.uid, qty:need});
+      added++;
+    }
+  });
+  saveDraft();
+  renderOrderDraft();
+  toast(added ? `Added ${added} low-stock item(s)` : 'No low-stock items');
+});
+document.getElementById('clearDraftBtn').addEventListener('click', ()=>{
+  if(orderDraft.length===0){ toast('Draft is already empty'); return; }
+  if(!confirm('Clear the current order draft?')) return;
+  orderDraft = [];
+  saveDraft();
+  renderOrderDraft();
+  toast('Draft cleared');
+});
+function currentOrderMeta(){
+  return {
+    ref: document.getElementById('orderRef').value.trim(),
+    by: document.getElementById('orderBy').value.trim(),
+    supplier: document.getElementById('orderSupplier').value.trim(),
+    note: document.getElementById('orderNote').value.trim()
+  };
+}
+document.getElementById('submitOrderBtn').addEventListener('click', ()=>{
+  if(orderDraft.length===0){ toast('Order draft is empty'); return; }
+  const meta = currentOrderMeta();
+  orderLog.unshift({
+    date: nowStr(),
+    ref: meta.ref || '(no ref)',
+    by: meta.by, supplier: meta.supplier, note: meta.note,
+    lines: JSON.parse(JSON.stringify(orderDraft)),
+    total: draftTotal(),
+    status: 'Pending'
+  });
+  saveLS(LS_KEYS.order, orderLog);
+  orderDraft = [];
+  saveDraft();
+  ['orderRef','orderBy','orderSupplier','orderNote'].forEach(id=>{ document.getElementById(id).value=''; });
+  renderOrderDraft();
+  renderOrderLog();
+  toast('Order submitted');
+});
+
+// ---------- ORDER -> EXCEL ----------
+// Builds one purchase-order sheet: header block, item lines, total, sign-off block.
+function orderSheet(order, sheetName){
+  const rows = [];
+  const merges = [];
+  const blank = ()=> rows.push([]);
+  const R = ()=> rows.length + 1;      // 1-based row number of the row about to be pushed
+
+  merges.push('A' + R() + ':H' + R());
+  rows.push([xt('QUICK LANE SERVICE CENTRE', XS.TITLE)]);
+  merges.push('A' + R() + ':H' + R());
+  rows.push([xt('STATIONERY PURCHASE ORDER  /  ໃບສັ່ງຊື້ເຄື່ອງໃຊ້ຫ້ອງການ', XS.SUB)]);
+  blank();
+
+  rows.push([xt('Order Ref:', XS.BOLD), xt(order.ref||'-'), null, null, null, null, xt('Date:', XS.BOLD), xt(order.date||'-')]);
+  rows.push([xt('Requested By:', XS.BOLD), xt(order.by||'-'), null, null, null, null, xt('Status:', XS.BOLD), xt(order.status||'Draft')]);
+  rows.push([xt('Supplier:', XS.BOLD), xt(order.supplier||'-'), null, null, null, null, xt('Lines:', XS.BOLD), xn(order.lines.length)]);
+  if(order.note) rows.push([xt('Note:', XS.BOLD), xt(order.note)]);
+  blank();
+
+  const headRow = R();
+  rows.push([xt('No.', XS.HEAD), xt('Item', XS.HEAD), xt('Lao Description', XS.HEAD), xt('Category', XS.HEAD),
+             xt('UOM', XS.HEAD), xt('Qty', XS.HEAD), xt('Unit Price (LAK)', XS.HEAD), xt('Line Total (LAK)', XS.HEAD)]);
+
+  let total = 0;
+  order.lines.forEach(l=>{
+    const it = itemByUid(l.uid);
+    if(!it) return;
+    const lineTotal = it.price * l.qty;
+    total += lineTotal;
+    rows.push([
+      xt(itemNoLabel(it), XS.CENTER), xt(it.desc, XS.CELL), xt(it.desc_lao||'', XS.CELL), xt(it.type, XS.CELL),
+      xt(it.uom, XS.CENTER), xn(l.qty, XS.INT), xn(it.price, XS.MONEY), xn(lineTotal, XS.MONEY)
+    ]);
+  });
+
+  merges.push('A' + R() + ':G' + R());
+  rows.push([xt('TOTAL (LAK)', XS.TOTAL_LBL), xt('', XS.TOTAL_LBL), xt('', XS.TOTAL_LBL), xt('', XS.TOTAL_LBL),
+             xt('', XS.TOTAL_LBL), xt('', XS.TOTAL_LBL), xt('', XS.TOTAL_LBL), xn(total, XS.TOTAL)]);
+  blank();
+  blank();
+  rows.push([xt('Requested by', XS.BOLD), null, xt('Checked by', XS.BOLD), null, xt('Approved by', XS.BOLD)]);
+  rows.push([xt('.............................'), null, xt('.............................'), null, xt('.............................')]);
+  blank();
+  rows.push([xt('Generated by Quick Lane Stationery Stock app on ' + nowStr(), XS.NOTE)]);
+
+  return {
+    name: sheetName || 'Purchase Order',
+    cols: [7, 46, 34, 13, 8, 8, 16, 18],
+    rows, merges,
+    freeze: headRow
+  };
+}
+function orderFileName(order){
+  const ref = order.ref && order.ref !== '(no ref)' ? order.ref : 'draft';
+  return 'Order_' + safeFileName(ref) + '_' + safeFileName((order.date||nowStr()).slice(0,10)) + '.xlsx';
+}
+document.getElementById('exportOrderXlsxBtn').addEventListener('click', ()=>{
+  if(orderDraft.length===0){ toast('Order draft is empty'); return; }
+  const meta = currentOrderMeta();
+  const order = {
+    date: nowStr(), ref: meta.ref || '(no ref)', by: meta.by, supplier: meta.supplier, note: meta.note,
+    lines: orderDraft, total: draftTotal(), status: 'Draft'
+  };
+  XLSX.download(orderFileName(order), [orderSheet(order)]);
+  toast('Order exported to Excel');
+});
+document.getElementById('exportAllOrdersXlsxBtn').addEventListener('click', ()=>{
+  if(orderLog.length===0){ toast('No submitted orders yet'); return; }
+  // Sheet 1 summarises every order; one sheet per order follows (Excel caps sheet names at 31 chars).
+  const summary = [[xt('Date', XS.HEAD), xt('Order Ref', XS.HEAD), xt('Requested By', XS.HEAD), xt('Supplier', XS.HEAD),
+                    xt('Lines', XS.HEAD), xt('Total (LAK)', XS.HEAD), xt('Status', XS.HEAD), xt('Note', XS.HEAD)]];
+  orderLog.forEach(o=>{
+    summary.push([xt(o.date, XS.CELL), xt(o.ref, XS.CELL), xt(o.by||'-', XS.CELL), xt(o.supplier||'-', XS.CELL),
+                  xn(o.lines.length, XS.INT), xn(o.total, XS.MONEY), xt(o.status, XS.CENTER), xt(o.note||'', XS.CELL)]);
+  });
+  summary.push([xt('TOTAL', XS.TOTAL_LBL), xt('', XS.TOTAL_LBL), xt('', XS.TOTAL_LBL), xt('', XS.TOTAL_LBL),
+                xt('', XS.TOTAL_LBL), xn(orderLog.reduce((s,o)=>s+o.total,0), XS.TOTAL), xt('', XS.TOTAL_LBL), xt('', XS.TOTAL_LBL)]);
+  const sheets = [{name:'All Orders', cols:[18, 24, 18, 20, 8, 18, 12, 30], rows: summary, freeze: 1}];
+  orderLog.slice(0, 30).forEach((o, i)=>{
+    sheets.push(orderSheet(o, (i+1) + '. ' + (o.ref==='(no ref)' ? o.date.slice(0,10) : o.ref)));
+  });
+  XLSX.download('Stationery_Orders_' + safeFileName(nowStr()) + '.xlsx', sheets);
+  toast(orderLog.length > 30 ? 'Exported summary + first 30 orders' : 'Orders exported to Excel');
+});
+
+function renderOrderLog(){
+  const tbody = document.getElementById('orderLogTbody');
+  tbody.innerHTML='';
+  if(orderLog.length===0){ tbody.innerHTML='<tr><td colspan="8"><div class="empty">No orders yet.</div></td></tr>'; return; }
+  orderLog.forEach((o, idx)=>{
+    const itemsStr = o.lines.map(l=>{ const it=itemByUid(l.uid); return it ? `${it.desc} x${l.qty}` : ''; }).filter(Boolean).join('; ');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${o.date}</td><td>${o.ref}</td><td>${o.by||'-'}</td><td>${o.supplier||'-'}</td>
+      <td style="max-width:300px;">${itemsStr}</td><td>${fmt(o.total)}</td>
+      <td>
+        <select class="order-status" data-idx="${idx}">
+          <option value="Pending" ${o.status==='Pending'?'selected':''}>Pending</option>
+          <option value="Ordered" ${o.status==='Ordered'?'selected':''}>Ordered</option>
+          <option value="Received" ${o.status==='Received'?'selected':''}>Received</option>
+        </select>
+      </td>
+      <td style="white-space:nowrap;">
+        <button class="btn excel" data-xlsx="${idx}" style="padding:4px 10px;">Excel</button>
+        <button class="btn ghost" data-del="${idx}" style="padding:4px 10px;">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.order-status').forEach(sel=>{
+    sel.addEventListener('change', e=>{
+      orderLog[parseInt(e.target.dataset.idx)].status = e.target.value;
+      saveLS(LS_KEYS.order, orderLog);
+    });
+  });
+  tbody.querySelectorAll('button[data-xlsx]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      const o = orderLog[parseInt(e.target.dataset.xlsx)];
+      XLSX.download(orderFileName(o), [orderSheet(o)]);
+      toast('Order exported to Excel');
+    });
+  });
+  tbody.querySelectorAll('button[data-del]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      orderLog.splice(parseInt(e.target.dataset.del),1);
+      saveLS(LS_KEYS.order, orderLog);
+      renderOrderLog();
+    });
+  });
+}
+
+// ---------- GRN TAB ----------
+document.getElementById('grnAddBtn').addEventListener('click', ()=>{
+  const uidRaw = document.getElementById('grnItemSelect').value;
+  const qty = parseInt(document.getElementById('grnQty').value)||0;
+  const ref = document.getElementById('grnRef').value || '';
+  if(uidRaw==='' || qty<=0){ toast('Pick an item and qty'); return; }
+  const uid = parseInt(uidRaw);
+  setQty(uid, getQty(uid)+qty);
+  grnLog.unshift({date: nowStr(), uid, qty, ref});
+  saveLS(LS_KEYS.grn, grnLog);
+  document.getElementById('grnQty').value=1;
+  document.getElementById('grnRef').value='';
+  renderGrnLog();
+  renderStock();
+  renderOrderDraft();
+  toast('Stock received');
+});
+function renderGrnLog(){
+  const tbody = document.getElementById('grnLogTbody');
+  tbody.innerHTML='';
+  if(grnLog.length===0){ tbody.innerHTML='<tr><td colspan="5"><div class="empty">No GRN entries yet.</div></td></tr>'; return; }
+  grnLog.forEach((g, idx)=>{
+    const it = itemByUid(g.uid);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${g.date}</td><td>${it?it.desc:'(deleted item)'}</td><td>+${g.qty}</td><td>${g.ref||'-'}</td>
+      <td><button class="btn ghost" data-idx="${idx}" style="padding:4px 10px;">Undo</button></td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('button[data-idx]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      const idx = parseInt(e.target.dataset.idx);
+      const g = grnLog[idx];
+      setQty(g.uid, getQty(g.uid)-g.qty);
+      grnLog.splice(idx,1);
+      saveLS(LS_KEYS.grn, grnLog);
+      renderGrnLog(); renderStock(); renderOrderDraft();
+      toast('GRN entry undone');
+    });
+  });
+}
+
+// ---------- CUT STOCK TAB ----------
+document.getElementById('cutAddBtn').addEventListener('click', ()=>{
+  const uidRaw = document.getElementById('cutItemSelect').value;
+  const qty = parseInt(document.getElementById('cutQty').value)||0;
+  const to = document.getElementById('cutTo').value || '';
+  if(uidRaw==='' || qty<=0){ toast('Pick an item and qty'); return; }
+  const uid = parseInt(uidRaw);
+  if(qty > getQty(uid)){ toast('Not enough stock on hand ('+getQty(uid)+' available)'); return; }
+  setQty(uid, getQty(uid)-qty);
+  cutLog.unshift({date: nowStr(), uid, qty, to});
+  saveLS(LS_KEYS.cut, cutLog);
+  document.getElementById('cutQty').value=1;
+  document.getElementById('cutTo').value='';
+  renderCutLog();
+  renderStock();
+  renderOrderDraft();
+  toast('Stock issued');
+});
+function renderCutLog(){
+  const tbody = document.getElementById('cutLogTbody');
+  tbody.innerHTML='';
+  if(cutLog.length===0){ tbody.innerHTML='<tr><td colspan="5"><div class="empty">No cut stock entries yet.</div></td></tr>'; return; }
+  cutLog.forEach((c, idx)=>{
+    const it = itemByUid(c.uid);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${c.date}</td><td>${it?it.desc:'(deleted item)'}</td><td>-${c.qty}</td><td>${c.to||'-'}</td>
+      <td><button class="btn ghost" data-idx="${idx}" style="padding:4px 10px;">Undo</button></td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('button[data-idx]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      const idx = parseInt(e.target.dataset.idx);
+      const c = cutLog[idx];
+      setQty(c.uid, getQty(c.uid)+c.qty);
+      cutLog.splice(idx,1);
+      saveLS(LS_KEYS.cut, cutLog);
+      renderCutLog(); renderStock(); renderOrderDraft();
+      toast('Cut stock entry undone');
+    });
+  });
+}
+
+// ---------- HISTORY TAB ----------
+function historyRows(){
+  let rows = [];
+  grnLog.forEach(g=>{ const it=itemByUid(g.uid); rows.push({date:g.date, type:'GRN', ref: it?it.desc:'', qty:'+'+g.qty, note:g.ref||''}); });
+  cutLog.forEach(c=>{ const it=itemByUid(c.uid); rows.push({date:c.date, type:'CUT', ref: it?it.desc:'', qty:'-'+c.qty, note:c.to||''}); });
+  orderLog.forEach(o=>{ rows.push({date:o.date, type:'ORDER', ref:o.ref, qty:fmt(o.total)+' LAK', note:o.status}); });
+  const filter = document.getElementById('histFilter').value;
+  if(filter) rows = rows.filter(r=>r.type===filter);
+  rows.sort((a,b)=> a.date < b.date ? 1 : -1);
+  return rows;
+}
+function renderHistory(){
+  const tbody = document.getElementById('historyTbody');
+  const rows = historyRows();
+  tbody.innerHTML='';
+  if(rows.length===0){ tbody.innerHTML='<tr><td colspan="5"><div class="empty">No movements yet.</div></td></tr>'; return; }
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.date}</td><td><span class="pill">${r.type}</span></td><td>${r.ref}</td><td>${r.qty}</td><td>${r.note}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+document.getElementById('histFilter').addEventListener('change', renderHistory);
+document.getElementById('exportHistoryXlsxBtn').addEventListener('click', ()=>{
+  const rows = historyRows();
+  if(rows.length===0){ toast('No movements to export'); return; }
+  const sheetRows = [[xt('Date', XS.HEAD), xt('Type', XS.HEAD), xt('Item / Ref', XS.HEAD), xt('Qty', XS.HEAD), xt('Note', XS.HEAD)]];
+  rows.forEach(r=>{
+    sheetRows.push([xt(r.date, XS.CELL), xt(r.type, XS.CENTER), xt(r.ref, XS.CELL), xt(r.qty, XS.CENTER), xt(r.note, XS.CELL)]);
+  });
+  XLSX.download('Stationery_Movements_' + safeFileName(nowStr()) + '.xlsx',
+    [{name:'Movements', cols:[18, 10, 46, 14, 28], rows: sheetRows, freeze: 1, autoFilter: 'A1:E' + sheetRows.length}]);
+  toast('Movements exported to Excel');
+});
+document.getElementById('clearAllBtn').addEventListener('click', ()=>{
+  if(!confirm('Reset all stock, GRN, cut stock, and order data? This cannot be undone.')) return;
+  stock={}; reorder={}; grnLog=[]; cutLog=[]; orderLog=[]; orderDraft=[];
+  Object.values(LS_KEYS).forEach(k=>localStorage.removeItem(k));
+  renderStock(); renderGrnLog(); renderCutLog(); renderOrderLog(); renderOrderDraft(); renderHistory();
+  toast('All data reset');
+});
+
+// ---------- INIT ----------
+populateTypeFilter();
+renderStock();
+renderOrderDraft();
+renderOrderLog();
+renderGrnLog();
+renderCutLog();
+document.getElementById('lastSync').textContent = ITEMS.length + ' items loaded from price list';
+</script>
+</body>
+</html>
