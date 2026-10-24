@@ -156,7 +156,7 @@ const page = `<!doctype html><html><head><meta charset="utf-8"><style>@page{size
 const safe = s => String(s == null || s === '' ? 'x' : s).trim().replace(/[\\/:*?"<>|]/g, '-');
 (async () => {
   fs.mkdirSync(outDir, { recursive: true });
-  const pdf = path.join(outDir, `QTT wip${safe(get('wip'))} car${safe(get('reg'))}.pdf`);
+  const pdf = path.join(outDir, (get('wip') || get('reg')) ? `QTT wip${safe(get('wip'))} car${safe(get('reg'))}.pdf` : `QT oil change ${safe(get('model')).split(' / ')[0]}.pdf`);
   const b = await chromium.launch(); const pg = await b.newPage();
   await pg.setContent(page, { waitUntil: 'load' });
   await pg.pdf({ path: pdf, format: 'A4', printBackground: true, preferCSSPageSize: true });
