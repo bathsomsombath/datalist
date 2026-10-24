@@ -6,11 +6,11 @@
 //   { "model":"Ford RANGER T6 / EVEREST 2.0-2.2L", "wip":"27185", "date":"2026-10-24", "acct":"C0006", "terms":"MN",
 //     "reg":"1633", "regdate":"30/06/2022", "vin":"", "mile":"", "yr":"", "job":"", "sa":"Sombath Bounmany",
 //     "cname":"Beerlao LBC", "ca1":"", "ca2":"", "ca3":"", "contact":"", "phone":"020 5555 1234",
-//     "lh":1, "lr":20, "ld":25, "rate":22750,
+//     "lh":1, "lr":20, "ld":25, "rate":22646,
 //     "lines":[ ["CODE","DESCRIPTION",qty,unitUSD], ... ]   // overrides the menu parts
 //   }
-// Needs Chromium via Playwright. Optional logos: qtt/assets/logo.png and qtt/assets/wordmark.png.
-// Lao oil/filter/labour label images from the web app are not included.
+// Needs Chromium via Playwright. Uses assets/logo.png and the Lao labels assets/lao_oil.png, lao_filter.png,
+// lao_labour.png when present (each is skipped if missing).
 
 const fs = require('fs');
 const path = require('path');
@@ -53,7 +53,6 @@ const LAOI = (key, x, y, hh) => {
 // header
 RECT(L, 30, R - L, 72);
 const hasLogo = IMG('logo.png', L + 6, 44, 127, 37);
-const hasWord = false;
 if (hasLogo) T('Lao Quick Lane', L + 146, 66, 9.5, 'c', true); else T('QUICK LANE', L + 12, 78, 20, 'h', true);
 ['Unit 3, Saphanthong Neua Village,', 'Sisattanak District,', 'Vientiane Capital, Lao P.D.R', 'Tel: (+856) 21 263 999, 20 22 239 757']
   .forEach((t, i) => T(t, L + 350, 46 + i * 9.5, 7.2, 'c'));
