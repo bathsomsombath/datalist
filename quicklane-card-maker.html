@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quick Lane Card Maker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
     --blue:#003876;
@@ -237,6 +239,21 @@
     padding:2.2% 0;
   }
 
+  .sync{font-size:11px;padding:2px 8px;border-radius:10px;background:#eee;color:#555;float:right;margin-top:2px;}
+  .sync.ok{background:#d4edda;color:#155724;}
+  .sync.err{background:#f8d7da;color:#721c24;}
+  .sync.busy{background:#fff3cd;color:#856404;}
+  .row2{display:flex;gap:8px;}
+  .row2 button{margin-top:8px;}
+  button.green{background:#198754;}
+  button.green:hover{background:#157347;}
+  button.red{background:#b02a37;}
+  .saved{max-height:180px;overflow:auto;border:1px solid #ddd;border-radius:6px;margin-top:6px;}
+  .saved div{padding:6px 8px;font-size:13px;border-bottom:1px solid #eee;cursor:pointer;display:flex;justify-content:space-between;}
+  .saved div:hover,.saved div.on{background:#e7f0fa;}
+  .saved small{color:#777;}
+  hr{border:none;border-top:1px solid #e3e3e3;margin:14px 0 4px;}
+  @media (max-width:700px){ body{padding:10px;} .panel{width:100%;} .stage{min-width:0;width:100%;overflow:auto;} }
   @media print{
     body{ background:#fff; padding:0; }
     .panel{ display:none; }
@@ -248,7 +265,14 @@
 <body>
 
   <div class="panel">
-    <h2>Quick Lane Card Maker</h2>
+    <h2>Quick Lane Card Maker <span class="sync" id="sync">connecting…</span></h2>
+
+    <label>Saved cards (Supabase)</label>
+    <div class="saved" id="savedList"><div><small>loading…</small></div></div>
+
+    <label>Pick staff (ql_staff)</label>
+    <select id="staffPick"><option value="">— type name manually —</option></select>
+    <hr>
 
     <label>Staff name</label>
     <input type="text" id="staffName" placeholder="e.g. Bik Seepha" value="Bik Seepha">
@@ -313,6 +337,11 @@
       <span id="numPosVal">0%</span>
     </div>
 
+    <div class="row2">
+      <button class="green" onclick="saveCard()">💾 Save</button>
+      <button class="secondary" onclick="newCard()">＋ New</button>
+      <button class="red" id="delBtn" onclick="deleteCard()" style="display:none">🗑</button>
+    </div>
     <button onclick="window.print()">Print card</button>
     <button class="secondary" onclick="downloadPNG()">Download as image</button>
   </div>
@@ -454,45 +483,128 @@ document.getElementById('photoSizeSlider').addEventListener('input', updatePhoto
 document.getElementById('namePosSlider').addEventListener('input', updateNamePos);
 document.getElementById('numPosSlider').addEventListener('input', updateNumPos);
 
-document.getElementById('photoInput').addEventListener('change', function(e){
+/* ===== Supabase (live) ===== */
+const SB_URL = 'https://tbwkbtslmtxvwnqcqljx.supabase.co';
+const SB_KEY = 'sb_publishable_G30ExD8MuYHXOF9I-Qs4-w_Dao4H7zD';
+const BUCKET = 'ql_files';
+const H = {apikey:SB_KEY, Authorization:'Bearer '+SB_KEY};
+let currentId = null, photoUrl = '', staff = [], cards = [];
+
+function setSync(t, cls){ const s=document.getElementById('sync'); s.textContent=t; s.className='sync '+(cls||''); }
+async function db(path, opt={}){
+  const r = await fetch(SB_URL+'/rest/v1/'+path, {...opt, headers:{...H,'Content-Type':'application/json',Prefer:'return=representation',...(opt.headers||{})}});
+  if(!r.ok) throw new Error(r.status+' '+await r.text());
+  const t = await r.text(); return t ? JSON.parse(t) : null;
+}
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const SLIDERS = ['scaleSlider','nameSlider','numSlider','iconSlider','photoSizeSlider','photoPosSlider','namePosSlider','numPosSlider'];
+function refreshAll(){ updateName(); updateNum(); updateType(); updateScale(); updateNameSize(); updateNumSize(); updateIconSize(); updatePhotoSize(); updatePhotoPos(); updateNamePos(); updateNumPos(); }
+
+function showPhoto(url){
+  photoUrl = url || '';
+  photoBox.innerHTML = url ? '<img crossorigin="anonymous" src="'+esc(url)+'">' : '<div class="placeholder">No photo<br>uploaded</div>';
+}
+
+async function loadStaff(){
+  staff = await db('ql_staff?select=id,name,full_name,photo_url&active=eq.true&order=sort_order.asc.nullslast,name.asc');
+  const sel = document.getElementById('staffPick');
+  sel.innerHTML = '<option value="">— type name manually —</option>' + staff.map(s=>'<option value="'+s.id+'">'+esc(s.name||s.full_name)+(s.photo_url?' 📷':'')+'</option>').join('');
+}
+async function loadCards(){
+  cards = await db('ql_cards?select=*&deleted_at=is.null&order=card_type.asc,num.asc');
+  const box = document.getElementById('savedList');
+  box.innerHTML = cards.length ? cards.map(c=>'<div data-id="'+c.id+'" class="'+(c.id===currentId?'on':'')+'"><span>'+esc(c.name)+'</span><small>'+c.card_type+' '+esc(c.num||'')+'</small></div>').join('') : '<div><small>No saved cards yet</small></div>';
+  box.querySelectorAll('[data-id]').forEach(d=>d.onclick=()=>openCard(+d.dataset.id));
+}
+function openCard(id){
+  const c = cards.find(x=>x.id===id); if(!c) return;
+  currentId = c.id;
+  document.getElementById('staffPick').value = c.staff_id || '';
+  document.getElementById('staffName').value = c.name;
+  document.getElementById('numValue').value = c.num || '';
+  document.querySelector('input[name=cardType][value='+c.card_type+']').checked = true;
+  SLIDERS.forEach(k=>{ if(c.settings && c.settings[k]!=null) document.getElementById(k).value = c.settings[k]; });
+  showPhoto(c.photo_url); refreshAll(); loadCards();
+  document.getElementById('delBtn').style.display='';
+}
+function newCard(){
+  currentId = null;
+  document.getElementById('staffPick').value=''; document.getElementById('staffName').value=''; document.getElementById('numValue').value='';
+  SLIDERS.forEach(k=>{ const el=document.getElementById(k); el.value = el.defaultValue; });
+  showPhoto(''); refreshAll(); loadCards();
+  document.getElementById('delBtn').style.display='none';
+}
+async function saveCard(){
+  const name = document.getElementById('staffName').value.trim();
+  if(!name){ setSync('name required','err'); return; }
+  const row = {
+    staff_id: +document.getElementById('staffPick').value || null,
+    name, card_type: document.querySelector('input[name=cardType]:checked').value,
+    num: document.getElementById('numValue').value.trim(),
+    photo_url: photoUrl || null,
+    settings: Object.fromEntries(SLIDERS.map(k=>[k,+document.getElementById(k).value])),
+    updated_at: new Date().toISOString()
+  };
+  setSync('saving…','busy');
+  try{
+    const r = currentId ? await db('ql_cards?id=eq.'+currentId,{method:'PATCH',body:JSON.stringify(row)})
+                        : await db('ql_cards',{method:'POST',body:JSON.stringify(row)});
+    currentId = r[0].id; await loadCards(); setSync('saved ✓','ok');
+    document.getElementById('delBtn').style.display='';
+  }catch(e){ setSync('save error','err'); console.error(e); }
+}
+let delArmed = false;
+async function deleteCard(){
+  const b = document.getElementById('delBtn');
+  if(!currentId) return;
+  if(!delArmed){ delArmed = true; b.textContent='Sure?'; setTimeout(()=>{delArmed=false;b.textContent='🗑';},3000); return; }
+  delArmed=false; b.textContent='🗑';
+  try{ await db('ql_cards?id=eq.'+currentId,{method:'PATCH',body:JSON.stringify({deleted_at:new Date().toISOString()})}); setSync('deleted','ok'); newCard(); }
+  catch(e){ setSync('delete error','err'); console.error(e); }
+}
+
+document.getElementById('staffPick').addEventListener('change', function(){
+  const s = staff.find(x=>x.id==this.value); if(!s) return;
+  document.getElementById('staffName').value = s.name || s.full_name; updateName();
+  if(s.photo_url) showPhoto(s.photo_url);
+});
+
+document.getElementById('photoInput').addEventListener('change', async function(e){
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = function(ev){
-    photoBox.innerHTML = '<img src="' + ev.target.result + '">';
-  };
+  reader.onload = ev => { photoBox.innerHTML = '<img src="' + ev.target.result + '">'; };
   reader.readAsDataURL(file);
+  setSync('uploading photo…','busy');
+  try{
+    const ext = (file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const path = 'cards/'+Date.now()+'_'+(document.getElementById('staffName').value||'staff').replace(/[^\w-]+/g,'_')+'.'+ext;
+    const r = await fetch(SB_URL+'/storage/v1/object/'+BUCKET+'/'+path,{method:'POST',headers:{...H,'Content-Type':file.type||'image/jpeg','x-upsert':'true'},body:file});
+    if(!r.ok) throw new Error(r.status+' '+await r.text());
+    photoUrl = SB_URL+'/storage/v1/object/public/'+BUCKET+'/'+path;
+    setSync('photo uploaded – press Save','ok');
+  }catch(err){ setSync('photo upload error','err'); console.error(err); }
 });
 
-function downloadPNG(){
-  const scale = 3;
-  const rect = card.getBoundingClientRect();
-  const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${rect.width}" height="${rect.height}">
-    <foreignObject width="100%" height="100%">${new XMLSerializer().serializeToString(card).replace(/#/g,'%23')}</foreignObject>
-  </svg>`;
-  const canvas = document.createElement('canvas');
-  canvas.width = rect.width*scale;
-  canvas.height = rect.height*scale;
-  const ctx = canvas.getContext('2d');
-  const img = new Image();
-  const svgBlob = new Blob([svgData], {type:'image/svg+xml;charset=utf-8'});
-  const url = URL.createObjectURL(svgBlob);
-  img.onload = function(){
-    ctx.scale(scale, scale);
-    ctx.drawImage(img, 0, 0, rect.width, rect.height);
-    URL.revokeObjectURL(url);
+async function downloadPNG(){
+  const fname = (document.getElementById('staffName').value || 'card') + '.png';
+  try{
+    if(!window.html2canvas) throw new Error('html2canvas not loaded');
+    const canvas = await html2canvas(card,{scale:3,useCORS:true,backgroundColor:null});
     const a = document.createElement('a');
-    a.download = (document.getElementById('staffName').value || 'card') + '.png';
-    a.href = canvas.toDataURL('image/png');
-    a.click();
-  };
-  img.onerror = function(){
-    alert('Image export needs the browser print option instead — use "Print card" and choose "Save as PDF".');
-  };
-  img.src = url;
+    a.download = fname; a.href = canvas.toDataURL('image/png'); a.click();
+  }catch(e){
+    console.error(e);
+    setSync('use Print → Save as PDF','err');
+  }
 }
 
-updateName(); updateNum(); updateType(); updateScale(); updateNameSize(); updateNumSize(); updateIconSize();
+refreshAll();
+(async()=>{
+  try{ await Promise.all([loadStaff(), loadCards()]); setSync('live ✓','ok'); }
+  catch(e){ setSync('offline – check connection','err'); console.error(e); }
+})();
 </script>
 
 </body>
