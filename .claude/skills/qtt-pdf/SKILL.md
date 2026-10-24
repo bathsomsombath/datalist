@@ -8,7 +8,7 @@ name: qtt-pdf
 Two saved scripts in `qtt/`. Run them; do not rewrite them and do not build an HTML app.
 
 ## Which script
-- **Oil service quote** (car model is on the menu, or he gives parts with code, description, qty, USD): `node qtt/make_qt.js spec.json`. It draws the Lao Quick Lane / Autoline-style QT (header, customer block, vehicle bands, items, totals, USD and KIP, bank details, signature boxes). Menu of 18 models in `qtt/menu.json`. Labour defaults: 1 hour, 20 USD/h, 25% discount. VAT 10%. Rate default 22,750 (he may say 22,550 / 22,650 / 22,950).
+- **Oil service quote** (car model is on the menu, or he gives parts with code, description, qty, USD): `node qtt/make_qt.js spec.json`. It draws the Lao Quick Lane / Autoline-style QT (header, customer block, vehicle bands, items, totals, USD and KIP, bank details, signature boxes). Menu of 18 models in `qtt/menu.json`. Labour defaults: 1 hour, 20 USD/h, 25% discount. VAT 10%. Rate default 22,646 (he may say another rate).
 - **Any other quote** (free-form items, customer-friendly layout): `node qtt/make_qtt.js spec.json`.
 
 ## Steps

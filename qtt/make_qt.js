@@ -28,7 +28,7 @@ const rows = S.lines || MENU[S.model] || [];
 if (!rows.length) { console.error('Unknown model and no "lines" given. Models: ' + Object.keys(MENU).join(' | ')); process.exit(2); }
 const lines = rows.map(r => ({ code: String(r[0]), desc: String(r[1]), qty: +r[2] || 0, unit: +r[3] || 0 }));
 
-const lh = +get('lh', 1), lr = +get('lr', 20), ld = +get('ld', 25), rate = +get('rate', 22750);
+const lh = +get('lh', 1), lr = +get('lr', 20), ld = +get('ld', 25), rate = +get('rate', 22646);
 const parts = lines.reduce((a, r) => a + r.qty * r.unit, 0);
 const lab = lh * lr * (1 - ld / 100);
 const net = parts + lab, vat = net * 0.1, tot = net + vat;
