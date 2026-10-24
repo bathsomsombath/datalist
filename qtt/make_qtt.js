@@ -37,7 +37,7 @@ const items = (spec.items || []).map(i => ({ d: i.d || '', q: Number(i.q) || 0, 
 const sub = items.reduce((s, i) => s + i.q * i.p, 0);
 const disc = Math.min(Number(spec.discount) || 0, sub);
 const usd = sub - disc;
-const rate = Number(spec.rate) || 22550;
+const rate = Number(spec.rate) || 22646;
 const lak = usd * rate;
 const days = Number(spec.days) || 7;
 const date = spec.date || today;

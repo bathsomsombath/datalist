@@ -8,3 +8,10 @@ qtt/out/
 *.zip
 *.mp4
 *whatsapp-draft.txt
+*.ppt
+*.pptx
+*.jpg
+*.jpeg
+*.mov
+*.png
+!qtt/assets/*.png
