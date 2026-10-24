@@ -52,9 +52,9 @@ const LAOI = (key, x, y, hh) => {
 
 // header
 RECT(L, 30, R - L, 72);
-const hasLogo = IMG('logo.png', L + 6, 38, 196, 58);
-const hasWord = IMG('wordmark.png', L + 212, 46, 125, 48);
-if (!hasLogo && !hasWord) T('QUICK LANE', L + 12, 78, 20, 'h', true);
+const hasLogo = IMG('logo.png', L + 6, 44, 127, 37);
+const hasWord = false;
+if (hasLogo) T('Lao Quick Lane', L + 146, 66, 9.5, 'c', true); else T('QUICK LANE', L + 12, 78, 20, 'h', true);
 ['Unit 3, Saphanthong Neua Village,', 'Sisattanak District,', 'Vientiane Capital, Lao P.D.R', 'Tel: (+856) 21 263 999, 20 22 239 757']
   .forEach((t, i) => T(t, L + 350, 46 + i * 9.5, 7.2, 'c'));
 T('For Customer', R, 114, 7.2, 'h', 0, 'r');
