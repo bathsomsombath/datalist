@@ -21,3 +21,7 @@
 - Files live in git (branch `claude/festive-galileo-c4l9jn`, folder `qtt/`) and as a backup in Supabase project `tbwkbtslmtxvwnqcqljx`, table `ql_qt_files` (path, encoding utf8|base64, content). The skill is `.claude/skills/qtt-pdf/SKILL.md`.
 - If `qtt/make_qt.js` is missing in a new chat: fetch the branch above, or read `ql_qt_files` with Supabase `execute_sql`, write each row to its `path` (decode base64 rows), then run `node qtt/make_qt.js spec.json`. The sandbox cannot reach supabase.co directly, so read through the MCP tool.
 - Command he types: `oil change vigo` → spec `{"model":"Toyota VIGO / HILUX / FORTUNER","date":"<today>"}`. Default rate 22,646. Send the PDF with SendUserFile and reply in Thai.
+
+# What goes to GitHub
+
+- Only code and small config go to GitHub (scripts, menu, skills, CLAUDE.md, logo/label PNGs the script needs). Never commit PDFs, Excel/Word/CSV files, videos, zips or WhatsApp drafts: they hold customer data. `.gitignore` blocks them. Give those files to him in chat with SendUserFile.
