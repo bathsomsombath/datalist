@@ -29,11 +29,12 @@
 # QT oil change PDF (Autoline-style) — where everything is saved
 
 - The full copy lives in git: branch `claude/festive-galileo-c4l9jn`, folder `qtt/` (make_qt.js, menu.json, make_lao_labels.js, assets/ with logo and Lao labels). The skill is `.claude/skills/qtt-pdf/SKILL.md`.
-- If `qtt/make_qt.js` is missing in a new chat: `git fetch origin claude/festive-galileo-c4l9jn` and check out `qtt/`, `.claude/` and `CLAUDE.md` from it, then run `node qtt/make_qt.js spec.json`.
-- Supabase table `ql_qt_files` holds only a partial copy (menu, logo, oil and filter labels). The scripts are not there: the sandbox cannot reach supabase.co and long files cannot be pasted reliably through SQL.
+- Backup of every repo file: Supabase storage bucket `ql_files`, folder `claude_code/datalist/` (same paths as the repo, `ql_file_index` id 89). Skill zips for claude.ai: `claude_code/claude-ai-skills/` (id 90). The table `ql_qt_files` is an older partial copy; ignore it.
+- If `qtt/make_qt.js` is missing in a new chat: `git fetch origin claude/festive-galileo-c4l9jn` and check out `qtt/`, `.claude/` and `CLAUDE.md` from it, or download the files from `https://tbwkbtslmtxvwnqcqljx.supabase.co/storage/v1/object/public/ql_files/claude_code/datalist/<path>` (needs supabase.co allowed in the environment network). Then run `node qtt/make_qt.js spec.json`.
 - Command he types: `oil change vigo` → spec `{"model":"Toyota VIGO / HILUX / FORTUNER","date":"<today>"}`. Default rate 22,646. Send the PDF with SendUserFile and reply in Thai.
 
 # What goes to GitHub
 
-- Only code and small config go to GitHub (scripts, menu, skills, agents, CLAUDE.md, logo/label PNGs the script needs). Never commit PDFs, Excel/Word/PowerPoint/CSV files, photos, videos, zips or WhatsApp drafts: they hold customer data. `.gitignore` blocks them. Give those files to him in chat with SendUserFile; he saves them himself.
-- 24 Oct 2026: the branches that held documents (`claude/compassionate-curie-lhsncp` 5S checklist, `claude/dreamy-lovelace-n9tua5` DMF Lao translation, `claude/zealous-albattani-mb7vf6` AR and Ranger Excel) were deleted after the files were sent to him in chat. Their agents and skills were moved to this branch.
+- Only code and small config go to GitHub (scripts, menu, skills, agents, CLAUDE.md, logo/label PNGs the script needs). Never commit PDFs, Excel/Word/PowerPoint/CSV files, photos, videos, zips or WhatsApp drafts: they hold customer data. `.gitignore` blocks them.
+- Those files go to him in chat with SendUserFile and to Supabase storage bucket `ql_files` (`reports/<topic>/<file>`), with a row in `ql_file_index`. Upload with `tools/sb_upload.sh <file> <path>` and the anon key from the Supabase MCP `get_publishable_keys` in `SB_ANON_KEY` (bucket policies allow anon upload). `ql_files` is a public bucket: anyone with the exact link can open a file.
+- 24 Oct 2026: documents found in other branches (`claude/compassionate-curie-lhsncp` 5S checklist, `claude/dreamy-lovelace-n9tua5` DMF Lao translation, `claude/zealous-albattani-mb7vf6` AR and Ranger Excel) were sent to him in chat and uploaded to `ql_files/reports/` (`ql_file_index` ids 82-88). Their agents and skills were moved to this branch. Deleting those three branches from this session was refused by GitHub (HTTP 403); he deletes them on github.com.
