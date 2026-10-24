@@ -42,6 +42,14 @@ const RECT = (x, y, w, h, fill) => o.push({ k: 'r', x, y, w, h, fill: fill || nu
 const LN = (x1, y1, x2, y2, lw) => o.push({ k: 'l', x1, y1, x2, y2, lw: lw || 0.8 });
 const IMG = (file, x, y, w, h) => { const p = path.join(__dirname, 'assets', file); if (fs.existsSync(p)) o.push({ k: 'i', src: 'data:image/png;base64,' + fs.readFileSync(p).toString('base64'), x, y, w, h }); return fs.existsSync(p); };
 
+// Lao label images (optional files in qtt/assets): lao_oil.png, lao_filter.png, lao_labour.png
+const laoKey = r => { const t = (r.code + ' ' + r.desc).toUpperCase(); if (/FILTER|ELEMENT|FLTR/.test(t)) return 'filter'; if (/OIL|MOTORCRAFT|CASTROL|SYN|5W|10W|15W|20W/.test(t)) return 'oil'; return null; };
+const LAOI = (key, x, y, hh) => {
+  const p = path.join(__dirname, 'assets', 'lao_' + key + '.png'); if (!key || !fs.existsSync(p)) return;
+  const b = fs.readFileSync(p), w0 = b.readUInt32BE(16), h0 = b.readUInt32BE(20);
+  o.push({ k: 'i', src: 'data:image/png;base64,' + b.toString('base64'), x, y: y - hh, w: hh * w0 / h0, h: hh });
+};
+
 // header
 RECT(L, 30, R - L, 72);
 const hasLogo = IMG('logo.png', L + 6, 38, 196, 58);
@@ -87,6 +95,7 @@ T('Unit', L + 420, top + 10, 7.4, 'h', 1); T('Disc%', L + 452, top + 10, 7.4, 'h
 let y = top + 26;
 T('L', L + 2, y, 7.3, 'c'); T('1', L + 12, y, 7.3, 'c'); T('SER', L + 24, y, 7.3, 'c');
 T('REPLACE ENGINE OIL AND OIL FILTER', L + 24, y + 9, 7.3, 'c');
+LAOI('labour', L + 215, y + 9, 6.6);
 T(lh.toFixed(2), L + 358, y, 7.3, 'c', 0, 'r'); T('HOUR', L + 420, y, 7.3, 'c');
 if (ld) T(ld.toFixed(2), L + 483, y, 7.3, 'c', 0, 'r');
 T(f.lab.toFixed(2), CN, y, 7.3, 'c', 0, 'r');
@@ -94,6 +103,7 @@ y += 20;
 lines.forEach((r, i) => {
   T('P', L + 2, y, 7.3, 'c'); T(i + 1, L + 12, y, 7.3, 'c');
   T(r.code.slice(0, 18), L + 24, y, 7.3, 'c'); T(r.desc.slice(0, 20), L + 150, y, 7.3, 'c');
+  LAOI(laoKey(r), L + 248, y, 6.4);
   T(r.qty, L + 352, y, 7.3, 'c', 0, 'r'); T(r.unit.toFixed(2), L + 411, y, 7.3, 'c', 0, 'r');
   T('EACH', L + 420, y, 7.3, 'c'); T((r.qty * r.unit).toFixed(2), CN, y, 7.3, 'c', 0, 'r');
   y += 10;
