@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coaster Bus Parts Movement</title>
+<style>
+  :root{--blue:#003876;--orange:#f47b20;}
+  *{box-sizing:border-box;}
+  body{font-family:Arial,Helvetica,sans-serif;background:#e9edf1;margin:0;padding:16px;color:#222;}
+  h1{font-size:18px;color:var(--blue);margin:0 0 4px;}
+  .sub{font-size:12px;color:#666;margin-bottom:12px;}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .bar input,.bar select{padding:7px 8px;border:1px solid #ccc;border-radius:5px;font-size:14px;}
+  .bar input{flex:1;min-width:180px;}
+  .cards{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .card{background:#fff;border-radius:8px;padding:8px 14px;box-shadow:0 1px 3px rgba(0,0,0,.15);}
+  .card b{display:block;font-size:18px;color:var(--blue);}
+  .card span{font-size:11px;color:#666;}
+  .wrap{background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.15);overflow:auto;max-height:70vh;}
+  table{border-collapse:collapse;width:100%;font-size:13px;}
+  th{position:sticky;top:0;background:var(--blue);color:#fff;text-align:left;padding:7px 8px;white-space:nowrap;}
+  td{padding:6px 8px;border-bottom:1px solid #eee;white-space:nowrap;}
+  td.n,th.n{text-align:right;}
+  td.d{white-space:normal;min-width:200px;}
+  .err{color:#b00020;font-size:13px;}
+</style>
+</head>
+<body>
+<h1>Coaster Bus Parts Movement</h1>
+<div class="sub">Phubia (P0009) Toyota Coaster – parts only · live from Supabase <code>ql_coaster_parts</code></div>
+<div class="bar">
+  <input id="q" type="text" placeholder="Search plate, WIP, part no, description">
+  <select id="m"><option value="">All months</option></select>
+  <select id="p"><option value="">All plates</option></select>
+</div>
+<div class="cards" id="cards"></div>
+<div class="wrap"><table>
+  <thead><tr><th>Month</th><th>WIP</th><th>Job</th><th>Date</th><th>Plate</th><th>Description</th><th>Part No</th><th class="n">Qty</th><th class="n">Unit</th><th class="n">Disc %</th><th class="n">Total</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table></div>
+<div class="err" id="err"></div>
+<script>
+const SB_URL='https://tbwkbtslmtxvwnqcqljx.supabase.co';
+const SB_KEY='sb_publishable_G30ExD8MuYHXOF9I-Qs4-w_Dao4H7zD';
+const H={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+let data=[];
+async function load(){
+  try{
+    let out=[],from=0;
+    while(true){
+      const r=await fetch(SB_URL+'/rest/v1/ql_coaster_parts?deleted_at=is.null&order=repair_date,wip,line_no',{headers:{...H,Range:from+'-'+(from+999)}});
+      if(!r.ok) throw new Error(r.status+' '+await r.text());
+      const part=await r.json(); out=out.concat(part);
+      if(part.length<1000) break; from+=1000;
+    }
+    data=out;
+    const fill=(id,key)=>{const s=document.getElementById(id);[...new Set(data.map(x=>x[key]))].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});};
+    fill('m','sheet_month'); fill('p','plate');
+    render();
+  }catch(e){document.getElementById('err').textContent='Load failed: '+e.message;}
+}
+function render(){
+  const q=document.getElementById('q').value.toLowerCase(),m=document.getElementById('m').value,p=document.getElementById('p').value;
+  const f=data.filter(x=>(!m||x.sheet_month===m)&&(!p||x.plate===p)&&(!q||[x.plate,x.wip,x.job_no,x.part_no,x.description].join(' ').toLowerCase().includes(q)));
+  const tot=f.reduce((a,x)=>a+Number(x.total_price||0),0);
+  document.getElementById('cards').innerHTML=
+    `<div class="card"><b>${f.length}</b><span>part lines</span></div>`+
+    `<div class="card"><b>$${money(tot)}</b><span>total</span></div>`+
+    `<div class="card"><b>${new Set(f.map(x=>x.wip)).size}</b><span>WIP / quotes</span></div>`+
+    `<div class="card"><b>${new Set(f.map(x=>x.plate)).size}</b><span>buses</span></div>`;
+  document.getElementById('rows').innerHTML=f.map(x=>`<tr><td>${esc(x.sheet_month)}</td><td>${esc(x.wip)}</td><td>${esc(x.job_no)}</td><td>${esc(x.repair_date)}</td><td>${esc(x.plate)}</td><td class="d">${esc(x.description)}</td><td>${esc(x.part_no)}</td><td class="n">${esc(x.qty)}</td><td class="n">${money(x.unit_price)}</td><td class="n">${esc(x.discount_pct)}</td><td class="n">${money(x.total_price)}</td></tr>`).join('');
+}
+['q','m','p'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+load();
+</script>
+</body>
+</html>
