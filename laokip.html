@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QT Kip Only — Quick Lane</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root {
+    --bg:#0f1117; --surface:#1a1d27; --card:#22263a; --border:#2e3350;
+    --amber:#f59e0b; --green:#22c55e; --red:#ef4444;
+    --text:#e8eaf0; --muted:#7b82a0; --mono:'JetBrains Mono','Fira Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:14px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap}
+  .logo-badge{background:var(--amber);color:#000;font-weight:800;font-size:11px;letter-spacing:.08em;padding:4px 10px;border-radius:4px;text-transform:uppercase}
+  header h1{font-size:15px;font-weight:600}
+  header span{font-size:12px;color:var(--muted)}
+  .main{display:grid;grid-template-columns:380px 1fr;flex:1}
+  @media (max-width:900px){.main{grid-template-columns:1fr}.preview-panel{min-height:500px}}
+  .panel{background:var(--surface);border-right:1px solid var(--border);padding:24px 20px;display:flex;flex-direction:column;gap:20px;overflow-y:auto}
+  .section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .drop-zone{border:2px dashed var(--border);border-radius:10px;padding:28px 16px;text-align:center;transition:border-color .2s,background .2s}
+  .drop-zone.drag-over{border-color:var(--amber);background:rgba(245,158,11,.06)}
+  .drop-icon{font-size:28px;margin-bottom:8px}
+  .drop-zone p{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:12px}
+  .browse-btn{display:inline-block;background:var(--card);border:1px solid var(--amber);color:var(--amber);font-size:13px;font-weight:600;padding:9px 20px;border-radius:7px;cursor:pointer}
+  .browse-btn:hover{background:rgba(245,158,11,.12)}
+  input[type=file]{display:none}
+  .file-name{margin-top:10px;font-size:12px;color:var(--text);font-family:var(--mono);background:var(--card);padding:6px 10px;border-radius:5px;display:none;word-break:break-all}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:12px;color:var(--muted);font-weight:500}
+  .field input[type=number],.field input[type=text]{display:block;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:14px;padding:9px 12px;font-family:var(--mono);outline:none;width:100%}
+  .field input:focus{border-color:var(--amber)}
+  .rate-step{background:var(--card);border:1px solid var(--border);color:var(--amber);font-size:12px;font-weight:700;padding:0 12px;border-radius:6px;cursor:pointer;font-family:var(--mono)}
+  .rate-step:hover{border-color:var(--amber)}
+  .rate-preset{flex:1;background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:600;padding:6px 4px;border-radius:6px;cursor:pointer;font-family:var(--mono);transition:all .15s}
+  .rate-preset:hover{color:var(--amber);border-color:var(--amber)}
+  .rate-preset.active{background:rgba(245,158,11,.15);color:var(--amber);border-color:var(--amber)}
+  .btn-process{background:var(--amber);color:#000;border:none;border-radius:8px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
+  .btn-process:hover:not(:disabled){opacity:.9}
+  .btn-process:disabled{opacity:.4;cursor:not-allowed}
+  .kip-result{display:none;flex-direction:column;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .kip-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border)}
+  .kip-row:last-child{border-bottom:none}
+  .kip-row .label{color:var(--muted)}
+  .kip-row .value{font-family:var(--mono);font-size:13px;font-weight:600}
+  .kip-row.total .value{color:var(--amber);font-size:14px}
+  .btn-download{display:none;background:var(--green);color:#000;border:none;border-radius:8px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none}
+  .btn-download:hover{opacity:.88}
+  .btn-download-alt{display:none;background:var(--card);border:1px solid var(--green);color:var(--green);border-radius:8px;padding:11px;font-size:12.5px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none}
+  .btn-download-alt:hover{background:rgba(34,197,94,.10)}
+  .page-picker{display:none;flex-direction:column;gap:8px}
+  .page-pills{display:flex;flex-wrap:wrap;gap:6px}
+  .page-pill{background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:600;padding:7px 14px;border-radius:6px;cursor:pointer;font-family:var(--mono);transition:all .15s}
+  .page-pill:hover{color:var(--amber);border-color:var(--amber)}
+  .page-pill.active{background:rgba(245,158,11,.15);color:var(--amber);border-color:var(--amber)}
+  .hint{font-size:11px;color:var(--muted);line-height:1.5}
+  .status{font-size:12px;text-align:center;color:var(--muted);min-height:18px}
+  .status.ok{color:var(--green)}
+  .status.err{color:var(--red)}
+  .preview-panel{display:flex;flex-direction:column;background:var(--bg)}
+  .preview-header{padding:14px 24px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .preview-dot{width:7px;height:7px;border-radius:50%;background:var(--border)}
+  .preview-dot.live{background:var(--green);box-shadow:0 0 6px var(--green)}
+  .preview-canvas-wrap{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
+  #preview-canvas{max-width:100%;border-radius:4px;box-shadow:0 8px 40px rgba(0,0,0,.6);display:none}
+  .preview-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);font-size:13px;flex:1;min-height:300px}
+  .progress-wrap{display:none;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+  .progress-bar{height:100%;background:var(--amber);width:0%;transition:width .3s ease}
+  .debug-box{font-size:10px;font-family:var(--mono);color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px 10px;max-height:110px;overflow-y:auto;display:none;white-space:pre-wrap;line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-badge">QL</div>
+  <h1>QT Kip Only</h1>
+  <span>&#8212; add Lao kip totals + exchange rate (no stamp, no signature)</span>
+</header>
+<div class="main">
+  <div class="panel">
+    <div>
+      <div class="section-label">1. Upload QT PDF</div>
+      <div class="drop-zone" id="drop-zone">
+        <div class="drop-icon">&#128196;</div>
+        <p>Drop Autoline QT PDF here, or</p>
+        <label class="browse-btn" for="file-input">Choose PDF file</label>
+        <input type="file" id="file-input" accept="application/pdf,.pdf">
+        <div class="file-name" id="file-name"></div>
+      </div>
+    </div>
+    <div class="page-picker" id="page-picker">
+      <div class="section-label" style="margin-bottom:0">2. Choose page to add kip</div>
+      <div class="page-pills" id="page-pills"></div>
+      <div class="hint" id="page-hint"></div>
+    </div>
+    <div>
+      <div class="section-label">Exchange Rate</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="field">
+          <label>Rate (LAK / USD)</label>
+          <div style="display:flex;gap:6px;align-items:stretch">
+            <button type="button" class="rate-step" id="rate-minus">&#8722;50</button>
+            <input type="number" id="rate" value="22550" step="50" min="1" style="flex:1;text-align:center">
+            <button type="button" class="rate-step" id="rate-plus">+50</button>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button type="button" class="rate-preset" data-rate="22300">22,300</button>
+            <button type="button" class="rate-preset" data-rate="22550">22,550</button>
+            <button type="button" class="rate-preset" data-rate="22800">22,800</button>
+            <button type="button" class="rate-preset" data-rate="23000">23,000</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Output filename</label>
+          <input type="text" id="filename" value="">
+        </div>
+      </div>
+    </div>
+    <div class="progress-wrap" id="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+    <button class="btn-process" id="btn-process" disabled>Add Kip + Rate &#8594;</button>
+    <div class="status" id="status"></div>
+    <div class="kip-result" id="kip-result">
+      <div class="kip-row"><span class="label">Net</span><span class="value" id="r-net">&#8212;</span></div>
+      <div class="kip-row"><span class="label">V.A.T.</span><span class="value" id="r-vat">&#8212;</span></div>
+      <div class="kip-row total"><span class="label">Total</span><span class="value" id="r-total">&#8212;</span></div>
+      <div class="kip-row"><span class="label">Rate</span><span class="value" id="r-rate">&#8212;</span></div>
+    </div>
+    <a class="btn-download" id="btn-download">&#11015; Download PDF</a>
+    <a class="btn-download-alt" id="btn-download-page">&#11015; Download selected page only</a>
+    <div class="debug-box" id="debug-box"></div>
+  </div>
+  <div class="preview-panel">
+    <div class="preview-header">
+      <div class="preview-dot" id="preview-dot"></div>
+      Preview
+    </div>
+    <div class="preview-canvas-wrap">
+      <div class="preview-placeholder" id="preview-placeholder">
+        <span>Upload a QT PDF to see preview</span>
+      </div>
+      <canvas id="preview-canvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const { PDFDocument, rgb, StandardFonts } = PDFLib;
+
+let uploadedFile = null;
+let outputBlob   = null;
+let pageCount    = 1;
+let selectedPage = 1;   // 1-based
+
+const dropZone   = document.getElementById('drop-zone');
+const fileInput  = document.getElementById('file-input');
+const fileNameEl = document.getElementById('file-name');
+const btnProcess = document.getElementById('btn-process');
+const btnDown    = document.getElementById('btn-download');
+const statusEl   = document.getElementById('status');
+const kipResult  = document.getElementById('kip-result');
+const progressWrap = document.getElementById('progress-wrap');
+const progressBar  = document.getElementById('progress-bar');
+const previewCanvas = document.getElementById('preview-canvas');
+const previewPlaceholder = document.getElementById('preview-placeholder');
+const previewDot = document.getElementById('preview-dot');
+const debugBox   = document.getElementById('debug-box');
+const btnDownPage = document.getElementById('btn-download-page');
+const pagePicker  = document.getElementById('page-picker');
+const pagePills   = document.getElementById('page-pills');
+const pageHint    = document.getElementById('page-hint');
+
+// Rate controls
+const rateInput = document.getElementById('rate');
+function markActivePreset() {
+  document.querySelectorAll('.rate-preset').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.rate) === parseInt(rateInput.value));
+  });
+}
+document.getElementById('rate-minus').addEventListener('click', () => {
+  rateInput.value = Math.max(1, (parseInt(rateInput.value) || 22550) - 50);
+  markActivePreset();
+});
+document.getElementById('rate-plus').addEventListener('click', () => {
+  rateInput.value = (parseInt(rateInput.value) || 22550) + 50;
+  markActivePreset();
+});
+document.querySelectorAll('.rate-preset').forEach(b => {
+  b.addEventListener('click', () => { rateInput.value = b.dataset.rate; markActivePreset(); });
+});
+rateInput.addEventListener('input', markActivePreset);
+markActivePreset();
+
+// File handling
+fileInput.addEventListener('change', e => {
+  if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+});
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+async function handleFile(file) {
+  if (!file) return;
+  const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+  if (!isPdf) { setStatus('Please upload a PDF file.', 'err'); return; }
+  uploadedFile = file;
+  fileNameEl.textContent = file.name;
+  fileNameEl.style.display = 'block';
+  document.getElementById('filename').value = file.name.replace(/\.pdf$/i, '') + '_kip.pdf';
+  btnProcess.disabled = false;
+  outputBlob = null;
+  btnDown.style.display = 'none';
+  btnDownPage.style.display = 'none';
+  kipResult.style.display = 'none';
+  debugBox.style.display = 'none';
+
+  // page count
+  pageCount = 1; selectedPage = 1;
+  try {
+    const ab = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(ab.slice(0)) }).promise;
+    pageCount = pdf.numPages;
+  } catch(e) { console.error('page count error', e); }
+
+  buildPagePicker();
+  setStatus(pageCount > 1
+    ? 'File loaded \u2014 ' + pageCount + ' pages. Choose the page, then process.'
+    : 'File loaded. Ready to process.', 'ok');
+  renderPreview(file, selectedPage);
+}
+
+function buildPagePicker() {
+  pagePills.innerHTML = '';
+  if (pageCount <= 1) { pagePicker.style.display = 'none'; return; }
+  pagePicker.style.display = 'flex';
+  for (let i = 1; i <= pageCount; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'page-pill' + (i === selectedPage ? ' active' : '');
+    b.textContent = 'Page ' + i;
+    b.addEventListener('click', () => selectPage(i));
+    pagePills.appendChild(b);
+  }
+  pageHint.textContent = 'Kip block is added to page ' + selectedPage + '. All ' + pageCount + ' pages stay in the downloaded PDF.';
+}
+
+function selectPage(n) {
+  selectedPage = n;
+  document.querySelectorAll('.page-pill').forEach((b, idx) => {
+    b.classList.toggle('active', idx + 1 === selectedPage);
+  });
+  pageHint.textContent = 'Kip block is added to page ' + selectedPage + '. All ' + pageCount + ' pages stay in the downloaded PDF.';
+  // selection changed after a run -> old output no longer matches
+  outputBlob = null;
+  btnDown.style.display = 'none';
+  btnDownPage.style.display = 'none';
+  kipResult.style.display = 'none';
+  if (uploadedFile) renderPreview(uploadedFile, selectedPage);
+  setStatus('Page ' + selectedPage + ' selected. Ready to process.', 'ok');
+}
+
+async function renderPreview(source, pageNum) {
+  try {
+    const ab = source instanceof Blob ? await source.arrayBuffer() : source;
+    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(ab) }).promise;
+    const n = Math.min(Math.max(1, pageNum || 1), pdf.numPages);
+    const page = await pdf.getPage(n);
+    const vp = page.getViewport({ scale: 1.6 });
+    previewCanvas.width = vp.width; previewCanvas.height = vp.height;
+    await page.render({ canvasContext: previewCanvas.getContext('2d'), viewport: vp }).promise;
+    previewPlaceholder.style.display = 'none';
+    previewCanvas.style.display = 'block';
+    previewDot.classList.add('live');
+  } catch(e) { console.error('preview error', e); }
+}
+
+// Extraction — two-pass, verified against real Autoline QTs
+async function extractTotals(ab, pageNum) {
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(ab.slice(0)) }).promise;
+  const n = Math.min(Math.max(1, pageNum || 1), pdf.numPages);
+  const page = await pdf.getPage(n);
+  const content = await page.getTextContent();
+
+  const words = content.items.map(i => ({
+    text: i.str.trim(), x: i.transform[4], y: i.transform[5],
+  })).filter(i => i.text.length > 0);
+
+  let dbg = '';
+  let net = null, vat = null, total = null;
+
+  for (const w of words) {
+    const t = w.text;
+    if (/^Net\s+[\d,]+\.\d{2}$/.test(t) && w.x > 400) net = parseFloat(t.split(/\s+/).pop().replace(/,/g,''));
+    else if (/^V\.A\.T\.\s+[\d,]+\.\d{2}$/.test(t) && w.x > 400) vat = parseFloat(t.split(/\s+/).pop().replace(/,/g,''));
+    else if (/^Total\s+[\d,]+\.\d{2}$/.test(t) && w.x > 400) total = parseFloat(t.split(/\s+/).pop().replace(/,/g,''));
+  }
+  dbg += 'Pass1: net=' + net + ' vat=' + vat + ' total=' + total + '\n';
+
+  if (net === null || vat === null || total === null) {
+    const rows = {};
+    for (const w of words) {
+      const k = Math.round(w.y / 2) * 2;
+      (rows[k] = rows[k] || []).push(w);
+    }
+    for (const row of Object.values(rows)) {
+      row.sort((a,b) => a.x - b.x);
+      const hasNet   = row.some(r => r.text === 'Net'    && r.x > 400);
+      const hasVAT   = row.some(r => r.text === 'V.A.T.' && r.x > 400);
+      const hasTotal = row.some(r => r.text === 'Total'  && r.x > 400);
+      const nm = row.find(r => /^[\d,]+\.\d{2}$/.test(r.text) && r.x > 480);
+      if (nm) {
+        const v = parseFloat(nm.text.replace(/,/g,''));
+        if (hasNet   && net   === null) { net   = v; dbg += 'Row Net='   + v + '\n'; }
+        if (hasVAT   && vat   === null) { vat   = v; dbg += 'Row VAT='   + v + '\n'; }
+        if (hasTotal && total === null) { total = v; dbg += 'Row Total=' + v + '\n'; }
+      }
+    }
+  }
+  dbg += 'FINAL: net=' + net + ' vat=' + vat + ' total=' + total;
+  return { net, vat, total, dbg };
+}
+
+btnProcess.addEventListener('click', async () => {
+  if (!uploadedFile) return;
+  btnProcess.disabled = true;
+  outputBlob = null;
+  btnDown.style.display = 'none';
+  kipResult.style.display = 'none';
+  setStatus('Reading PDF\u2026');
+  setProgress(10);
+
+  try {
+    const arrayBuffer = await uploadedFile.arrayBuffer();
+    setProgress(25);
+
+    const { net, vat, total, dbg } = await extractTotals(arrayBuffer, selectedPage);
+    debugBox.textContent = 'Page ' + selectedPage + ' of ' + pageCount + '\n' + dbg;
+
+    if (net === null || vat === null || total === null) {
+      debugBox.style.display = 'block';
+      setStatus('Could not read USD totals on page ' + selectedPage + ' \u2014 try another page.', 'err');
+      btnProcess.disabled = false;
+      setProgress(0);
+      return;
+    }
+
+    setProgress(45);
+    const rate   = parseInt(rateInput.value) || 22550;
+    // Tax-invoice method: convert TOTAL only, then split VAT 10% back out
+    // (converting USD net & VAT separately drifts because USD is pre-rounded)
+    const totKip = Math.floor(total * rate + 1e-6);
+    // No VAT on the USD total -> no kip VAT line; net = total
+    const hasVat = vat > 0;
+    const netKip = hasVat ? Math.round(totKip / 1.1 * 100) / 100 : totKip;
+    const vatKip = hasVat ? Math.round((totKip - netKip) * 100) / 100 : 0;
+    const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    setStatus('Adding kip + rate\u2026');
+    setProgress(60);
+
+    const pdfDoc = await PDFDocument.load(arrayBuffer);
+    const pg     = pdfDoc.getPage(selectedPage - 1);
+    const { height } = pg.getSize();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fs   = 7.8;
+    const black = rgb(0,0,0);
+
+    // Kip rows aligned exactly like USD block, small gap below Owing
+    function kipRow(label, value, yFromTop) {
+      const y = height - yFromTop;
+      pg.drawText(label, { x: 453.6, y: y, size: fs, font: font, color: black });
+      const numW = font.widthOfTextAtSize(value, fs);
+      // 'kip' fixed at x=505 so all three line up straight; number right-aligned at 574.9 (USD edge)
+      pg.drawText('kip', { x: 505, y: y, size: fs, font: font, color: black });
+      pg.drawText(value, { x: 574.9 - numW, y: y, size: fs, font: font, color: black });
+    }
+
+    kipRow('Net',    fmt(netKip), 716);
+    if (hasVat) kipRow('V.A.T.', fmt(vatKip), 726);
+    const totY = hasVat ? 736 : 726;
+    kipRow('Total',  fmt(totKip), totY);
+    pg.drawText(rate.toLocaleString('en-US'), { x: 395, y: height - (totY + 11), size: fs, font: font, color: black });
+
+    setProgress(85);
+
+    const pdfBytes = await pdfDoc.save();
+    outputBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+    setProgress(100);
+    setStatus(pageCount > 1
+      ? 'Done \u2713 kip added to page ' + selectedPage + ' \u2014 all ' + pageCount + ' pages kept'
+      : 'Done! \u2713 kip + rate only', 'ok');
+
+    document.getElementById('r-net').textContent   = 'kip ' + fmt(netKip);
+    document.getElementById('r-vat').textContent   = hasVat ? 'kip ' + fmt(vatKip) : '\u2014';
+    document.getElementById('r-vat').parentElement.style.display = hasVat ? 'flex' : 'none';
+    document.getElementById('r-total').textContent = 'kip ' + fmt(totKip);
+    document.getElementById('r-rate').textContent  = rate.toLocaleString('en-US');
+    kipResult.style.display = 'flex';
+
+    let filename = document.getElementById('filename').value || 'QT_kip.pdf';
+    if (!/\.pdf$/i.test(filename)) filename += '.pdf';
+    const url = URL.createObjectURL(outputBlob);
+    btnDown.href = url;
+    btnDown.download = filename;
+    btnDown.textContent = pageCount > 1
+      ? '\u2B07 Download full PDF (all ' + pageCount + ' pages)'
+      : '\u2B07 Download PDF';
+    btnDown.style.display = 'block';
+
+    // optional: just the page that got the kip block
+    if (pageCount > 1) {
+      const single = await PDFDocument.create();
+      const [copied] = await single.copyPages(pdfDoc, [selectedPage - 1]);
+      single.addPage(copied);
+      const singleBytes = await single.save();
+      const singleUrl = URL.createObjectURL(new Blob([singleBytes], { type: 'application/pdf' }));
+      btnDownPage.href = singleUrl;
+      btnDownPage.download = filename.replace(/\.pdf$/i, '') + '_p' + selectedPage + '.pdf';
+      btnDownPage.textContent = '\u2B07 Download page ' + selectedPage + ' only';
+      btnDownPage.style.display = 'block';
+    } else {
+      btnDownPage.style.display = 'none';
+    }
+
+    await renderPreview(pdfBytes.buffer, selectedPage);
+    setTimeout(() => setProgress(0), 800);
+
+  } catch(err) {
+    console.error(err);
+    setStatus('Error: ' + err.message, 'err');
+    setProgress(0);
+  }
+  btnProcess.disabled = false;
+});
+
+function setStatus(msg, type) { statusEl.textContent = msg; statusEl.className = 'status ' + (type || ''); }
+function setProgress(pct) { progressWrap.style.display = pct > 0 ? 'block' : 'none'; progressBar.style.width = pct + '%'; }
+</script>
+</body>
+</html>
