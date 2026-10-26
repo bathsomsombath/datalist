@@ -357,7 +357,7 @@ btnProcess.addEventListener('click', async () => {
     // Tax-invoice method: convert TOTAL only, then split VAT 10% back out
     // (converting USD net & VAT separately drifts because USD is pre-rounded)
     const totKip = Math.floor(total * rate + 1e-6);
-    // No VAT on the USD total -> no kip VAT line; net = total
+    // No VAT on the USD total -> kip VAT shows 0.00; net = total
     const hasVat = vat > 0;
     const netKip = hasVat ? Math.round(totKip / 1.1 * 100) / 100 : totKip;
     const vatKip = hasVat ? Math.round((totKip - netKip) * 100) / 100 : 0;
@@ -384,10 +384,9 @@ btnProcess.addEventListener('click', async () => {
     }
 
     kipRow('Net',    fmt(netKip), 716);
-    if (hasVat) kipRow('V.A.T.', fmt(vatKip), 726);
-    const totY = hasVat ? 736 : 726;
-    kipRow('Total',  fmt(totKip), totY);
-    pg.drawText(rate.toLocaleString('en-US'), { x: 395, y: height - (totY + 11), size: fs, font: font, color: black });
+    kipRow('V.A.T.', fmt(vatKip), 726);
+    kipRow('Total',  fmt(totKip), 736);
+    pg.drawText(rate.toLocaleString('en-US'), { x: 395, y: height - 747, size: fs, font: font, color: black });
 
     setProgress(85);
 
@@ -399,8 +398,7 @@ btnProcess.addEventListener('click', async () => {
       : 'Done! \u2713 kip + rate only', 'ok');
 
     document.getElementById('r-net').textContent   = 'kip ' + fmt(netKip);
-    document.getElementById('r-vat').textContent   = hasVat ? 'kip ' + fmt(vatKip) : '\u2014';
-    document.getElementById('r-vat').parentElement.style.display = hasVat ? 'flex' : 'none';
+    document.getElementById('r-vat').textContent   = 'kip ' + fmt(vatKip);
     document.getElementById('r-total').textContent = 'kip ' + fmt(totKip);
     document.getElementById('r-rate').textContent  = rate.toLocaleString('en-US');
     kipResult.style.display = 'flex';
