@@ -7,7 +7,7 @@
 <title>QL Drive</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Noto+Sans+Lao:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Noto+Sans+Lao:wght@400;500;600&display=swap">
 <style>
 :root{
   --rail:#0B3B7C;--rail-hi:rgba(255,255,255,.15);--rail-hover:rgba(255,255,255,.08);--rail-ink:#EDF3FC;--rail-ink-2:#A8C0E4;
@@ -17,7 +17,7 @@
   --manila:#E4AE48;--manila-2:#C68F2C;--star:#E5A01A;--danger:#C53A31;--ok:#1F8A57;
   --toast:#13243D;--toast-ink:#F2F6FC;--toast-act:#9EC0FF;
   --shadow:0 1px 2px rgba(15,32,60,.10),0 10px 28px rgba(15,32,60,.16);
-  --font:'Barlow','Noto Sans Thai','Noto Sans Lao','Leelawadee UI','Tahoma','Leelawadee UI','Lao Sangam MN','Phetsarath OT',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font:'Barlow','Noto Sans Lao','Leelawadee UI','Lao Sangam MN','Phetsarath OT',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
@@ -873,7 +873,6 @@ mark{background:rgba(229,160,26,.32);color:inherit;border-radius:3px;padding:0 1
       <button class="icon-btn only-m" id="menuBtn" type="button" aria-label="Open navigation"><svg class="i"><use href="#i-menu"/></svg></button>
       <label class="search"><svg class="i"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Search" autocomplete="off" spellcheck="false" aria-label="Search files"><button class="icon-btn" id="qClear" type="button" aria-label="Clear search" hidden><svg class="i"><use href="#i-x"/></svg></button><div class="qrec" id="qrec" hidden></div></label>
       <div class="top-actions">
-        <button class="icon-btn" id="langBtn" type="button" title="ภาษา / Language" aria-label="Language" style="width:auto;padding:0 10px;font-weight:600;font-size:13px"></button>
         <button class="icon-btn" id="helpBtn" type="button" title="How to use (?)" aria-label="How to use"><svg class="i"><use href="#i-help"/></svg></button>
         <button class="icon-btn" id="refreshBtn" type="button" title="Refresh" aria-label="Refresh"><svg class="i"><use href="#i-refresh"/></svg></button>
         <button class="icon-btn" id="layoutBtn" type="button"></button>
@@ -961,15 +960,14 @@ function fmtSize(n) {
   do { n /= 1024; i++; } while (n >= 1024 && i < u.length - 1);
   return (n >= 100 ? Math.round(n) : +n.toFixed(1)) + ' ' + u[i];
 }
-const DLOC = () => (prefs.lang === 'en' ? 'en-GB' : 'th-TH-u-ca-gregory');
 function fmtDate(ms, long) {
   if (!ms) return '—';
   const d = new Date(ms), now = new Date();
-  const time = d.toLocaleTimeString(DLOC(), { hour: '2-digit', minute: '2-digit' });
-  const full = d.toLocaleDateString(DLOC(), { day: 'numeric', month: 'short', year: 'numeric' });
+  const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const full = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   if (long) return full + ', ' + time;
   if (d.toDateString() === now.toDateString()) return time;
-  if (d.getFullYear() === now.getFullYear()) return d.toLocaleDateString(DLOC(), { day: 'numeric', month: 'short' });
+  if (d.getFullYear() === now.getFullYear()) return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   return full;
 }
 async function pool(items, limit, fn) {
@@ -1103,156 +1101,6 @@ function rememberQ(q) {
 }
 function savePrefs() { const v = LS.get(); v.prefs = prefs; LS.set(v); }
 function saveSettings(ns) { const v = LS.get(); if (ns) v.settings = ns; else delete v.settings; LS.set(v); S = loadSettings(); }
-/* ================= Thai (ภาษาไทย) ================= */
-const LANG = prefs.lang === 'en' ? 'en' : 'th';
-const TH_EXACT = {
-  'My Drive': 'ไดรฟ์ของฉัน', 'Recent': 'ล่าสุด', 'Starred': 'ติดดาว', 'Records': 'บันทึก', 'Staff': 'พนักงาน', 'Database': 'ฐานข้อมูล', 'Notion archive': 'คลัง Notion', 'Trash': 'ถังขยะ',
-  'Storage': 'พื้นที่จัดเก็บ', 'Apps': 'แอป', 'New': 'สร้างใหม่', 'Add an HTML file or a link.': 'เพิ่มไฟล์ HTML หรือลิงก์', 'Couldn’t load apps.': 'โหลดแอปไม่ได้',
-  'Calculating storage…': 'กำลังคำนวณพื้นที่…', 'Search results': 'ผลการค้นหา', 'Best match': 'ตรงที่สุด', 'Name': 'ชื่อ', 'Last modified': 'แก้ไขล่าสุด', 'File size': 'ขนาดไฟล์', 'Type': 'ประเภท',
-  'Ascending': 'น้อยไปมาก', 'Descending': 'มากไปน้อย', 'Sort': 'เรียงลำดับ', 'Empty trash': 'ล้างถังขยะ', 'Get link': 'รับลิงก์', 'Download': 'ดาวน์โหลด', 'Attach to record': 'แนบกับบันทึก',
-  'Move': 'ย้าย', 'Move to Trash': 'ย้ายไปถังขยะ', 'Clear selection': 'ล้างการเลือก', 'More actions': 'การทำงานเพิ่มเติม', 'Preview': 'ดูตัวอย่าง', 'Open': 'เปิด',
-  'Attach to ql_kb record…': 'แนบกับบันทึก ql_kb…', 'Rename': 'เปลี่ยนชื่อ', 'Move to…': 'ย้ายไปที่…', 'Copy to…': 'คัดลอกไปที่…', 'Make a copy': 'สร้างสำเนา',
-  'Add to Starred': 'เพิ่มในรายการติดดาว', 'Remove from Starred': 'นำออกจากรายการติดดาว', 'Show in folder': 'แสดงในโฟลเดอร์', 'Older versions': 'เวอร์ชันเก่า', 'Details': 'รายละเอียด',
-  'Restore': 'กู้คืน', 'Delete forever': 'ลบถาวร', 'New folder': 'โฟลเดอร์ใหม่', 'Upload files': 'อัปโหลดไฟล์', 'Upload folder': 'อัปโหลดโฟลเดอร์', 'New ql_kb record': 'บันทึก ql_kb ใหม่',
-  'Location': 'ตำแหน่ง', 'Original location': 'ตำแหน่งเดิม', 'Deleted': 'ลบเมื่อ', 'Folders': 'โฟลเดอร์', 'Files': 'ไฟล์', 'Folder': 'โฟลเดอร์',
-  'This folder is empty': 'โฟลเดอร์นี้ว่างเปล่า', 'Nothing here yet': 'ยังไม่มีอะไรที่นี่', 'Drop files here, paste a screenshot, or use New.': 'ลากไฟล์มาวางที่นี่ วางภาพหน้าจอ หรือใช้ปุ่ม “สร้างใหม่”',
-  'No recent files': 'ไม่มีไฟล์ล่าสุด', 'Nothing starred': 'ยังไม่มีรายการติดดาว', 'Star the files and folders you use often to find them here.': 'ติดดาวไฟล์และโฟลเดอร์ที่ใช้บ่อย แล้วจะพบได้ที่นี่',
-  'Trash is empty': 'ถังขยะว่างเปล่า', 'Deleted items stay here until you delete them forever.': 'รายการที่ลบจะอยู่ที่นี่จนกว่าจะลบถาวร', 'No matches': 'ไม่พบรายการ',
-  'Couldn’t load this view': 'โหลดหน้านี้ไม่ได้', 'Try again': 'ลองอีกครั้ง', 'Settings': 'ตั้งค่า',
-  'All': 'ทั้งหมด', 'PDF': 'PDF', 'Images': 'รูปภาพ', 'Sheets': 'ตาราง', 'Docs': 'เอกสาร', 'Mail': 'อีเมล', 'Other': 'อื่น ๆ', 'Modified': 'แก้ไขเมื่อ',
-  'Any time': 'ทุกช่วงเวลา', 'Past 7 days': '7 วันที่ผ่านมา', 'Past 30 days': '30 วันที่ผ่านมา', 'Past year': '1 ปีที่ผ่านมา', 'Everywhere': 'ทุกที่',
-  'click a grey location to open its folder': 'คลิกตำแหน่งสีเทาเพื่อเปิดโฟลเดอร์', 'Clear filters': 'ล้างตัวกรอง', 'Nothing matches these filters': 'ไม่มีรายการที่ตรงกับตัวกรอง',
-  'Recent searches': 'การค้นหาล่าสุด', 'Clear': 'ล้าง', 'Type a file or folder name, e.g. ': 'พิมพ์ชื่อไฟล์หรือโฟลเดอร์ เช่น ', '. Several words = all must match.': ' พิมพ์หลายคำได้ ต้องตรงทุกคำ',
-  'How to use (?)': 'วิธีใช้ (?)', 'How to use': 'วิธีใช้', 'How to use QL Drive': 'วิธีใช้ QL Drive', 'Refresh': 'รีเฟรช', 'List layout': 'มุมมองรายการ', 'Grid layout': 'มุมมองตาราง', 'Full screen': 'เต็มจอ',
-  'Clear search': 'ล้างการค้นหา', 'Search files': 'ค้นหาไฟล์', 'Open navigation': 'เปิดเมนู', 'Folder path': 'เส้นทางโฟลเดอร์', 'Select': 'เลือก', 'Starred ': 'ติดดาว ',
-  'Cancel': 'ยกเลิก', 'Close': 'ปิด', 'Create': 'สร้าง', 'Delete': 'ลบ', 'Got it': 'เข้าใจแล้ว', 'OK': 'ตกลง', 'Skip': 'ข้าม', 'Replace': 'แทนที่', 'Keep both': 'เก็บทั้งสองไฟล์',
-  'File already exists': 'ไฟล์นี้มีอยู่แล้ว', 'Move here': 'ย้ายมาที่นี่', 'Copy here': 'คัดลอกมาที่นี่', 'Delete forever?': 'ลบถาวรหรือไม่?', 'Empty trash?': 'ล้างถังขยะหรือไม่?',
-  'Create link': 'สร้างลิงก์', 'Create links': 'สร้างลิงก์', 'Copy link': 'คัดลอกลิงก์', 'Copy links': 'คัดลอกลิงก์', '1 hour': '1 ชั่วโมง', '1 day': '1 วัน', '7 days': '7 วัน', '30 days': '30 วัน', '1 year': '1 ปี',
-  'Never expires (public bucket)': 'ไม่หมดอายุ (พื้นที่สาธารณะ)', 'Anyone with the link can open the file until it expires. No login needed.': 'ทุกคนที่มีลิงก์เปิดไฟล์ได้จนกว่าลิงก์จะหมดอายุ ไม่ต้องเข้าสู่ระบบ',
-  'Untitled folder': 'โฟลเดอร์ไม่มีชื่อ', 'Size': 'ขนาด', 'Created': 'สร้างเมื่อ', 'Yes': 'ใช่', 'Storage key': 'คีย์จัดเก็บ', 'Not attached': 'ยังไม่ได้แนบ', 'Loading…': 'กำลังโหลด…', 'Counting…': 'กำลังนับ…',
-  'Undo': 'เลิกทำ', 'Link copied': 'คัดลอกลิงก์แล้ว', 'Links copied': 'คัดลอกลิงก์แล้ว', 'Added to Starred': 'เพิ่มในรายการติดดาวแล้ว', 'Removed from Starred': 'นำออกจากรายการติดดาวแล้ว',
-  'Restored': 'กู้คืนแล้ว', 'Trash emptied': 'ล้างถังขยะแล้ว', 'Trash is already empty': 'ถังขยะว่างเปล่าอยู่แล้ว', 'Moving to Trash…': 'กำลังย้ายไปถังขยะ…', 'Moving…': 'กำลังย้าย…', 'Copying…': 'กำลังคัดลอก…',
-  'Renaming…': 'กำลังเปลี่ยนชื่อ…', 'Restoring…': 'กำลังกู้คืน…', 'Undoing…': 'กำลังเลิกทำ…', 'Deleting…': 'กำลังลบ…', 'Emptying trash…': 'กำลังล้างถังขยะ…', 'Deleted forever': 'ลบถาวรแล้ว', 'Copy created': 'สร้างสำเนาแล้ว',
-  'Open folder': 'เปิดโฟลเดอร์', 'Show': 'แสดง', 'Retry': 'ลองใหม่', 'Press Ctrl+C (⌘C on Mac) to copy': 'กด Ctrl+C (Mac: ⌘C) เพื่อคัดลอก',
-  'Open a folder first, then drop files into it.': 'เปิดโฟลเดอร์ก่อน แล้วค่อยลากไฟล์มาวาง', 'Open a folder first, then paste.': 'เปิดโฟลเดอร์ก่อน แล้วค่อยวาง',
-  'Tip: press / to search. Tap ? for a quick guide.': 'เคล็ดลับ: กด / เพื่อค้นหา และกดปุ่ม ? เพื่อดูวิธีใช้',
-  'A folder can’t go inside itself.': 'ย้ายโฟลเดอร์เข้าไปในตัวเองไม่ได้', 'Already in this folder. Pick another one.': 'อยู่ในโฟลเดอร์นี้แล้ว เลือกโฟลเดอร์อื่น',
-  'Drop to upload to': 'ปล่อยเพื่ออัปโหลดไปที่', 'Upload files…': 'อัปโหลดไฟล์…', 'Transfers': 'การโอนไฟล์', 'Folders ': 'โฟลเดอร์ ', 'Select all': 'เลือกทั้งหมด',
-  'Today': 'วันนี้', 'Yesterday': 'เมื่อวาน',
-  'Navigation': 'เมนูนำทาง', 'Add app': 'เพิ่มแอป', 'Where': 'ที่ไหน', 'Dismiss': 'ปิด', 'File preview': 'ตัวอย่างไฟล์', 'Close preview': 'ปิดตัวอย่าง', 'Open in new tab': 'เปิดในแท็บใหม่', 'Previous file': 'ไฟล์ก่อนหน้า', 'Next file': 'ไฟล์ถัดไป',
-  'used by other QL apps': 'ใช้โดยแอป QL อื่น', 'Pages moved from Notion': 'หน้าที่ย้ายมาจาก Notion', 'ql_kb record': 'บันทึก ql_kb', 'Notion page': 'หน้า Notion'
-};
-const TH_PAT = [
-  [/^Search in (.+) \(file and folder names\)$/, 'ค้นหาใน $1 (ชื่อไฟล์และโฟลเดอร์)'],
-  [/^Search in (.+)$/, 'ค้นหาใน $1'],
-  [/^Only in “(.+)”$/, 'เฉพาะใน “$1”'], [/^Whole (.+)$/, 'ทั้งหมดใน $1'],
-  [/^(\d+) results?$/, 'พบ $1 รายการ'], [/^ for “(.*)”$/, ' สำหรับ “$1”'],
-  [/^(\d+) selected$/, 'เลือกแล้ว $1 รายการ'],
-  [/^(\d+) items? hidden by the Type \/ Modified filters\.$/, 'ซ่อนอยู่ $1 รายการจากตัวกรองประเภท / แก้ไขเมื่อ'],
-  [/^Files you add or change in (.+) show up here\.$/, 'ไฟล์ที่เพิ่มหรือแก้ไขใน $1 จะแสดงที่นี่'],
-  [/^Nothing in (.+) matches “(.*)”\. Try fewer words or another storage\.$/, 'ไม่พบ “$2” ใน $1 ลองใช้คำให้น้อยลงหรือเลือกพื้นที่อื่น'],
-  [/^Deleted (.+)$/, 'ลบเมื่อ $1'], [/^Get link for “(.+)”$/, 'รับลิงก์ของ “$1”'], [/^Get links for (\d+) .+$/, 'รับลิงก์ $1 รายการ'],
-  [/^Created “(.+)”$/, 'สร้าง “$1” แล้ว'], [/^Renamed to “(.+)”$/, 'เปลี่ยนชื่อเป็น “$1” แล้ว'], [/^“(.+)” moved to Trash$/, 'ย้าย “$1” ไปถังขยะแล้ว'], [/^(\d+) items? moved to Trash$/, 'ย้าย $1 รายการไปถังขยะแล้ว'],
-  [/^Moving (\d+) items? to Trash…$/, 'กำลังย้าย $1 รายการไปถังขยะ…'], [/^Restored (.+)$/, 'กู้คืน $1 แล้ว'], [/^(.+) deleted forever$/, 'ลบ $1 ถาวรแล้ว'], [/^(.+) added to Starred$/, 'เพิ่ม $1 ในรายการติดดาวแล้ว'],
-  [/^Moved (.+)$/, 'ย้ายแล้ว: $1'], [/^Copied (.+)$/, 'คัดลอกแล้ว: $1'], [/^Uploaded (\d+) files? to (.+)$/, 'อัปโหลด $1 ไฟล์ไปที่ $2 แล้ว'], [/^(\d+) files?$/, '$1 ไฟล์'], [/^(\d+) items?$/, '$1 รายการ'],
-  [/^(\d+) folders?$/, '$1 โฟลเดอร์'], [/^(\d+) buckets?$/, '$1 พื้นที่จัดเก็บ'], [/^of (\d+) GB used$/, 'จาก $1 GB ที่ใช้แล้ว'], [/^for “(.*)”$/, 'สำหรับ “$1”'], [/^Open folder: (.+)$/, 'เปิดโฟลเดอร์: $1'], [/^Supabase table (.+)$/, 'ตาราง Supabase $1'], [/^Supabase Pro includes (\d+) GB.*$/, 'Supabase Pro มีพื้นที่ $1 GB สำหรับทั้งโปรเจกต์'], [/^Move (.+)$/, 'ย้าย $1'], [/^Copy (.+)$/, 'คัดลอก $1'],
-  [/^(.+) will be deleted forever\. This can’t be undone\.$/, 'จะลบ $1 ถาวร ไม่สามารถย้อนกลับได้'], [/^Choose where to (.+)$/, 'เลือกที่จะ$1'],
-  [/^Folder, (.+)$/, 'โฟลเดอร์, $1']
-];
-
-const TH_EXACT2 = {
-  'List': 'รายชื่อ', 'Org chart': 'ผังองค์กร', 'Roster': 'ตารางเวร', 'Public holidays': 'วันหยุดนักขัตฤกษ์', 'Sundays': 'วันอาทิตย์', 'Add staff': 'เพิ่มพนักงาน', 'All staff': 'พนักงานทั้งหมด', 'All positions': 'ทุกตำแหน่ง',
-  'Active': 'ใช้งาน', 'Inactive': 'ไม่ใช้งาน', 'Filter by position': 'กรองตามตำแหน่ง', 'No staff yet': 'ยังไม่มีพนักงาน', 'Add your first staff member.': 'เพิ่มพนักงานคนแรกของคุณ', 'No matching staff': 'ไม่พบพนักงาน',
-  'Try fewer words, or clear the filters.': 'ลองใช้คำให้น้อยลง หรือล้างตัวกรอง', 'Edit staff': 'แก้ไขพนักงาน', 'Full name': 'ชื่อ-นามสกุล', 'Nickname': 'ชื่อเล่น', 'Nickname (unique)': 'ชื่อเล่น (ไม่ซ้ำ)', 'Position': 'ตำแหน่ง',
-  'Phone': 'โทรศัพท์', 'Role': 'บทบาท', 'Role (short, used by other apps)': 'บทบาท (สั้น ๆ ใช้ในแอปอื่น)', 'Reports to': 'รายงานต่อ', 'Save': 'บันทึก', 'Saved': 'บันทึกแล้ว', 'Added': 'เพิ่มแล้ว', 'Delete staff': 'ลบพนักงาน',
-  'Edit / photo': 'แก้ไข / รูป', 'Choose photo': 'เลือกรูป', 'Remove photo': 'ลบรูป', 'Show in org chart': 'แสดงในผังองค์กร', 'Staff #': 'ลำดับ', 'No. (list order)': 'ลำดับที่ (เรียงในรายการ)', 'Note': 'หมายเหตุ', 'Title': 'คำนำหน้า',
-  'None': 'ไม่มี', 'No one (top level)': 'ไม่มี (ระดับบนสุด)', 'Hide photos': 'ซ่อนรูป', 'Show photos': 'แสดงรูป', 'Photos': 'รูป', 'Show or hide photos': 'แสดงหรือซ่อนรูป', 'Expand all': 'ขยายทั้งหมด', 'Fit': 'พอดี',
-  'Fit to screen': 'พอดีหน้าจอ', 'Print': 'พิมพ์', 'Print or save as PDF': 'พิมพ์หรือบันทึกเป็น PDF', 'Tree': 'แผนผังต้นไม้', 'Switch layout': 'สลับรูปแบบ', 'Stack team in a column': 'เรียงทีมเป็นคอลัมน์', 'Spread team side by side': 'เรียงทีมเคียงข้างกัน',
-  'Add holiday': 'เพิ่มวันหยุด', 'Add public holiday': 'เพิ่มวันหยุดนักขัตฤกษ์', 'Add a public holiday date': 'เพิ่มวันหยุดนักขัตฤกษ์', 'Edit holiday': 'แก้ไขวันหยุด', 'Delete holiday and its duties': 'ลบวันหยุดและเวรของวันนั้น',
-  'Whole year': 'ทั้งปี', 'Choose month': 'เลือกเดือน', 'On duty': 'เข้าเวร', 'Rostered only': 'เฉพาะผู้มีเวร', 'Show everyone, or only staff with duty': 'แสดงทุกคน หรือเฉพาะคนที่มีเวร', 'No one rostered yet': 'ยังไม่มีใครในตารางเวร',
-  'Click a box to put someone on duty or take them off. Saves straight away.': 'คลิกช่องเพื่อใส่หรือเอาคนออกจากเวร บันทึกทันที', 'Holiday added': 'เพิ่มวันหยุดแล้ว', 'Holiday saved': 'บันทึกวันหยุดแล้ว', 'Holiday deleted': 'ลบวันหยุดแล้ว',
-  'Jan': 'ม.ค.', 'Feb': 'ก.พ.', 'Mar': 'มี.ค.', 'Apr': 'เม.ย.', 'May': 'พ.ค.', 'Jun': 'มิ.ย.', 'Jul': 'ก.ค.', 'Aug': 'ส.ค.', 'Sep': 'ก.ย.', 'Oct': 'ต.ค.', 'Nov': 'พ.ย.', 'Dec': 'ธ.ค.',
-  'All databases': 'ฐานข้อมูลทั้งหมด', 'No tables found': 'ไม่พบตาราง', 'No tables match': 'ไม่มีตารางที่ตรงกัน', 'Try part of the table name.': 'ลองพิมพ์บางส่วนของชื่อตาราง', 'This project has no tables in the public schema.': 'โปรเจกต์นี้ไม่มีตารางใน public schema',
-  'Back to Drive': 'กลับไปไดรฟ์', 'Rows': 'แถว', 'Fields': 'ฟิลด์', 'Add field': 'เพิ่มฟิลด์', 'New row': 'แถวใหม่', 'New record': 'บันทึกใหม่', 'Show deleted': 'แสดงที่ลบแล้ว', 'Showing deleted': 'กำลังแสดงที่ลบแล้ว', 'Rows per page': 'แถวต่อหน้า',
-  'Next page': 'หน้าถัดไป', 'Previous page': 'หน้าก่อนหน้า', 'Access': 'สิทธิ์', 'Read only': 'อ่านอย่างเดียว', 'Sort ascending': 'เรียงน้อยไปมาก', 'Sort descending': 'เรียงมากไปน้อย', 'Hide field': 'ซ่อนฟิลด์', 'Show field': 'แสดงฟิลด์',
-  'Copy field name': 'คัดลอกชื่อฟิลด์', 'Move left / up': 'เลื่อนไปซ้าย / ขึ้น', 'Move right / down': 'เลื่อนไปขวา / ลง', 'Open record': 'เปิดบันทึก', 'Add files': 'เพิ่มไฟล์', 'Add link': 'เพิ่มลิงก์', 'Updated': 'อัปเดตแล้ว',
-  'Last edited': 'แก้ไขล่าสุด', 'Date': 'วันที่', 'Edited': 'แก้ไขแล้ว', 'Empty': 'ว่าง', '(empty)': '(ว่าง)', 'Status': 'สถานะ', 'Label': 'ป้ายชื่อ', 'Version history': 'ประวัติเวอร์ชัน', 'Remove': 'ลบออก', 'Remove attachment?': 'ลบไฟล์แนบหรือไม่?',
-  'Copy file link': 'คัดลอกลิงก์ไฟล์', 'Copy permanent link': 'คัดลอกลิงก์ถาวร', 'Open in new tab': 'เปิดในแท็บใหม่', 'Show in QL Drive': 'แสดงใน QL Drive', 'Show file in QL Drive': 'แสดงไฟล์ใน QL Drive', 'Open link': 'เปิดลิงก์', 'Copy address': 'คัดลอกที่อยู่',
-  'Pick a record, or switch to New record.': 'เลือกบันทึก หรือสลับไปที่บันทึกใหม่', 'Existing record': 'บันทึกที่มีอยู่', 'Attach': 'แนบ', 'to a record': 'กับบันทึก', 'Nothing to attach. The folder is empty.': 'ไม่มีอะไรให้แนบ โฟลเดอร์ว่างเปล่า',
-  'No records match. Switch to New record to create one.': 'ไม่พบบันทึก สลับไปที่บันทึกใหม่เพื่อสร้าง', 'Attaching…': 'กำลังแนบ…', 'Attached': 'แนบแล้ว', 'Done': 'เสร็จ',
-  'All pages': 'ทุกหน้า', 'With files': 'มีไฟล์', 'With comments': 'มีความคิดเห็น', 'Notion database': 'ฐานข้อมูล Notion', 'Untitled database': 'ฐานข้อมูลไม่มีชื่อ', 'Untitled': 'ไม่มีชื่อ', 'Page content': 'เนื้อหาหน้า', 'Properties': 'คุณสมบัติ', 'Comments': 'ความคิดเห็น',
-  'No comments on this page.': 'หน้านี้ยังไม่มีความคิดเห็น', 'Sub-pages': 'หน้าย่อย', 'No matching pages': 'ไม่พบหน้า', 'Open in Notion': 'เปิดใน Notion', 'Top-level page': 'หน้าระดับบนสุด', 'Page': 'หน้า', 'Sub-page': 'หน้าย่อย', 'No files.': 'ไม่มีไฟล์', 'No links.': 'ไม่มีลิงก์',
-  'Search looks at page titles. Try fewer words, paste a Notion link, or clear the filters.': 'ค้นหาจากชื่อหน้า ลองใช้คำให้น้อยลง วางลิงก์ Notion หรือล้างตัวกรอง',
-  'App link': 'ลิงก์แอป', 'HTML file': 'ไฟล์ HTML', 'App': 'แอป', 'Edit app': 'แก้ไขแอป', 'Remove app': 'ลบแอป', 'Remove from Apps': 'ลบออกจากแอป', 'Close the app': 'ปิดแอป', 'Close (stop running)': 'ปิด (หยุดทำงาน)', 'Reload': 'โหลดใหม่', 'Reload (gets the latest file)': 'โหลดใหม่ (ใช้ไฟล์ล่าสุด)',
-  'Web link': 'ลิงก์เว็บ', 'Address': 'ที่อยู่เว็บ', 'Always open in a new tab (for sites that block embedding)': 'เปิดในแท็บใหม่เสมอ (สำหรับเว็บที่ไม่ให้ฝัง)', 'Saved in QL Drive storage, so it runs on every device.': 'เก็บใน QL Drive จึงใช้ได้ทุกอุปกรณ์',
-  'Adding app…': 'กำลังเพิ่มแอป…', 'Saving app…': 'กำลังบันทึกแอป…', 'Saving…': 'กำลังบันทึก…', 'Hide or show the sidebar': 'ซ่อนหรือแสดงแถบด้านข้าง', 'App actions': 'การทำงานของแอป', 'Link added': 'เพิ่มลิงก์แล้ว', 'e.g. Office Tools': 'เช่น เครื่องมือสำนักงาน',
-  'Supabase project URL': 'URL โปรเจกต์ Supabase', 'Anon / publishable key': 'คีย์ Anon / publishable', 'Never use the service_role key here. Anyone who opens this page can read it.': 'ห้ามใช้คีย์ service_role ที่นี่ ใครเปิดหน้านี้ก็อ่านได้', 'Admin key (optional)': 'คีย์ผู้ดูแล (ไม่บังคับ)', 'Buckets': 'พื้นที่จัดเก็บ',
-  'Plan storage (GB)': 'พื้นที่ตามแพ็กเกจ (GB)', 'Theme': 'ธีม', 'Match device': 'ตามอุปกรณ์', 'Light': 'สว่าง', 'Dark': 'มืด', 'Test connection': 'ทดสอบการเชื่อมต่อ', 'Reset to defaults': 'รีเซ็ตเป็นค่าเริ่มต้น', 'Reset settings?': 'รีเซ็ตการตั้งค่าหรือไม่?', 'Reset': 'รีเซ็ต',
-  'Connection, bucket list and theme go back to the built-in defaults.': 'การเชื่อมต่อ รายการพื้นที่จัดเก็บ และธีมจะกลับเป็นค่าเริ่มต้น', 'Hide': 'ซ่อน', 'Testing…': 'กำลังทดสอบ…', 'Connected.': 'เชื่อมต่อแล้ว', 'Settings saved': 'บันทึกการตั้งค่าแล้ว', 'Legacy service_role key': 'คีย์ service_role แบบเก่า',
-  'Older versions': 'เวอร์ชันเก่า', 'No older versions yet. When you upload a file with the same name and choose Replace, the old one is kept here.': 'ยังไม่มีเวอร์ชันเก่า เมื่ออัปโหลดไฟล์ชื่อเดียวกันแล้วเลือก แทนที่ ไฟล์เก่าจะเก็บไว้ที่นี่',
-  'Replacing a file keeps the old one here. Restore puts a version back and keeps the current file as a version too.': 'เมื่อแทนที่ไฟล์ ไฟล์เก่าจะเก็บไว้ที่นี่ การกู้คืนจะนำเวอร์ชันนั้นกลับมาและเก็บไฟล์ปัจจุบันเป็นเวอร์ชันด้วย', 'Restoring version…': 'กำลังกู้คืนเวอร์ชัน…',
-  'Field name': 'ชื่อฟิลด์', 'Lowercase English letters, numbers and _': 'ตัวอักษรอังกฤษพิมพ์เล็ก ตัวเลข และ _', 'Hidden fields stay in the database.': 'ฟิลด์ที่ซ่อนยังอยู่ในฐานข้อมูล',
-  'Close': 'ปิด', 'Cancel': 'ยกเลิก', 'Delete': 'ลบ', 'Edit': 'แก้ไข', 'Add': 'เพิ่ม', 'Show all': 'แสดงทั้งหมด', 'Show all databases': 'แสดงฐานข้อมูลทั้งหมด', 'All pages ': 'ทุกหน้า ', 'Dismiss': 'ปิด', 'Reload ': 'โหลดใหม่ ',
-  'Choose an HTML file.': 'เลือกไฟล์ HTML', 'Choose an .html file.': 'เลือกไฟล์ .html', 'Enter a name.': 'กรุณากรอกชื่อ', 'Enter a full name.': 'กรุณากรอกชื่อ-นามสกุล', 'Choose an image file.': 'เลือกไฟล์รูปภาพ', 'Choose a date.': 'เลือกวันที่',
-  'Enter a full address starting with https://': 'กรอกที่อยู่เต็ม ขึ้นต้นด้วย https://', 'Photo uploaded': 'อัปโหลดรูปแล้ว', 'Uploading photo…': 'กำลังอัปโหลดรูป…', 'Removed': 'ลบออกแล้ว', 'Not saved': 'ยังไม่ได้บันทึก', 'Copied': 'คัดลอกแล้ว'
-};
-Object.assign(TH_EXACT, TH_EXACT2);
-Object.assign(TH_EXACT, {
-  'Tables and views': 'ตารางและวิว', 'Reload the table list': 'โหลดรายการตารางใหม่', 'Zoom out': 'ซูมออก', 'Zoom in': 'ซูมเข้า', 'Previous year': 'ปีก่อนหน้า', 'Next year': 'ปีถัดไป', 'Filter pages': 'กรองหน้า',
-  'in chart': 'ในผังองค์กร', 'No one in the chart': 'ยังไม่มีใครในผังองค์กร', 'Add staff, or tick “Show in org chart” on a staff member.': 'เพิ่มพนักงาน หรือติ๊ก “แสดงในผังองค์กร” ที่พนักงาน',
-  'Add the holiday dates the workshop opens on, then tick who works.': 'เพิ่มวันหยุดที่อู่เปิดทำการ แล้วติ๊กว่าใครทำงาน', 'above, then tick the dates each person works.': 'ด้านบน แล้วติ๊กวันที่แต่ละคนทำงาน', 'Click': 'คลิก',
-  'Notion archive is locked for the app’s key': 'คลัง Notion ถูกล็อกสำหรับคีย์ของแอป', 'Add the admin key in Settings to open them on this computer.': 'ใส่คีย์ผู้ดูแลในตั้งค่าเพื่อเปิดบนเครื่องนี้', 'Add the admin key in Settings to open it.': 'ใส่คีย์ผู้ดูแลในตั้งค่าเพื่อเปิด', 'Add the admin key in Settings to see them.': 'ใส่คีย์ผู้ดูแลในตั้งค่าเพื่อดู',
-  'The moved Notion pages, comments and files are in Supabase (tables nt_pages, nt_comments, nt_files), but their row-level security only lets the admin key read them.': 'หน้า ความคิดเห็น และไฟล์ที่ย้ายมาจาก Notion อยู่ใน Supabase (ตาราง nt_pages, nt_comments, nt_files) แต่ความปลอดภัยระดับแถวอนุญาตให้เฉพาะคีย์ผู้ดูแลอ่านได้',
-  'Opens the locked tables and buckets and allows every change. Saved only in this browser, never in the file. Use it only on your own computer, not on a shared PC or inside the Google Sites page. Supabase stops legacy keys at the end of 2026.': 'ใช้เปิดตารางและพื้นที่จัดเก็บที่ล็อกไว้ และอนุญาตทุกการเปลี่ยนแปลง เก็บในเบราว์เซอร์นี้เท่านั้น ไม่เก็บในไฟล์ ใช้บนคอมพิวเตอร์ส่วนตัวเท่านั้น ไม่ใช้บนเครื่องที่ใช้ร่วมกันหรือในหน้า Google Sites Supabase จะหยุดรองรับคีย์แบบเก่าปลายปี 2026',
-  'One per line: bucket id | label | flags. Flags: home (My Drive), public (allows never-expiring links), linked (used by other apps, so it asks before rename, move or delete). Other buckets in the project show up on their own.': 'หนึ่งบรรทัดต่อหนึ่งพื้นที่: id | ชื่อ | แฟลก แฟลก: home (ไดรฟ์ของฉัน), public (อนุญาตลิงก์ไม่หมดอายุ), linked (ใช้โดยแอปอื่น จึงถามก่อนเปลี่ยนชื่อ ย้าย หรือลบ) พื้นที่อื่นในโปรเจกต์จะแสดงเอง',
-  'Mr': 'นาย', 'Mrs': 'นาง', 'Miss': 'นางสาว'
-});
-TH_PAT.push([/^(Active|Inactive|All) (\d+)$/, (m, k, n) => ({ Active: 'ใช้งาน', Inactive: 'ไม่ใช้งาน', All: 'ทั้งหมด' }[k]) + ' ' + n], [/^Search ql_kb — words, #id or field:word$/, 'ค้นหา ql_kb — คำ, #id หรือ ฟิลด์:คำ'], [/^Search (.+) — words, #id or field:word$/, 'ค้นหา $1 — คำ, #id หรือ ฟิลด์:คำ'], [/^No public holidays for (\d+) yet$/, 'ปี $1 ยังไม่มีวันหยุดนักขัตฤกษ์']);
-
-TH_PAT.push(
-  [/^(\d+) tables? and views$/, '$1 ตารางและวิว'], [/^Fields in (.+)$/, 'ฟิลด์ใน $1'], [/^New row in (.+)$/, 'แถวใหม่ใน $1'], [/^Add field to (.+)$/, 'เพิ่มฟิลด์ใน $1'], [/^Older versions of “(.+)”$/, 'เวอร์ชันเก่าของ “$1”'],
-  [/^Version history · (.+)$/, 'ประวัติเวอร์ชัน · $1'], [/^Filter by (.+)$/, 'กรองตาม $1'], [/^Add staff under (.+)$/, 'เพิ่มพนักงานใต้ $1'], [/^Search (tables|staff.*|Notion.*)$/, 'ค้นหา$1'],
-  [/^Files \((\d+)\)$/, 'ไฟล์ ($1)'], [/^Comments \((\d+)\)$/, 'ความคิดเห็น ($1)'], [/^Sub-pages \((\d+)\)$/, 'หน้าย่อย ($1)'], [/^Remove “(.+)”\?$/, 'ลบ “$1” หรือไม่?'], [/^Removed (.+)$/, 'ลบ $1 แล้ว'], [/^Added (.+)$/, 'เพิ่ม $1 แล้ว'],
-  [/^Saved (.+)$/, 'บันทึก $1 แล้ว'], [/^Deleted (.+)$/, 'ลบ $1 แล้ว'], [/^Created (.+)$/, 'สร้าง $1 แล้ว']
-);
-const thCache = new Map();
-function thText(str) {
-  const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(str); if (!m || !m[2]) return str;
-  const core = m[2];
-  let out = thCache.get(core);
-  if (out === undefined) {
-    out = TH_EXACT[core] || null;
-    if (!out && TH_EXACT[core + ' ']) out = TH_EXACT[core + ' '];
-    if (!out) for (const p of TH_PAT) if (p[0].test(core)) { out = core.replace(p[0], p[1]).replace(/\bMy Drive\b/g, 'ไดรฟ์ของฉัน'); break; }
-    if (!out && /^My Drive \/ /.test(core)) out = core.replace(/^My Drive/, 'ไดรฟ์ของฉัน');
-    if (out == null) out = core;
-    thCache.set(core, out);
-  }
-  return m[1] + out + m[3];
-}
-function thSkip(n) {
-  const el = n.nodeType === 1 ? n : n.parentElement; if (!el) return true;
-  if (/^(SCRIPT|STYLE|CODE|TEXTAREA|PRE)$/.test(el.tagName)) return true;
-  return !!el.closest('.nm,.oc-t,.c-name .nm,button.crumb[data-crumb]:not([data-crumb=""]) .ct,mark,.sname,.v-name,.dtv,.rrow,.srow,[data-nothai]');
-}
-function thNode(n) {
-  if (n.nodeType === 3) { if (thSkip(n)) return; const v = thText(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; return; }
-  if (n.nodeType !== 1 || /^(SCRIPT|STYLE)$/.test(n.tagName)) return;
-  ['placeholder', 'title', 'aria-label'].forEach((a) => { if (n.hasAttribute(a) && !thSkip(n)) { const o = n.getAttribute(a), v = thText(o); if (v !== o) n.setAttribute(a, v); } });
-  for (let c = n.firstChild; c; c = c.nextSibling) thNode(c);
-}
-function startThai() {
-  if (LANG !== 'th') return;
-  document.documentElement.lang = 'th';
-  thNode(document.body); document.title = 'QL Drive';
-  new MutationObserver((ms) => {
-    for (const m of ms) {
-      if (m.type === 'characterData') thNode(m.target);
-      else if (m.type === 'attributes') thNode(m.target);
-      else m.addedNodes.forEach(thNode);
-    }
-  }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['placeholder', 'title', 'aria-label'] });
-}
 // Admin (service_role) key: optional, kept only in this browser, never written into the file or the settings.
 const ADMIN_LS = 'qldrive.admin';
 let ADMIN = (() => { try { return localStorage.getItem(ADMIN_LS) || ''; } catch (e) { return ''; } })();
@@ -5804,19 +5652,6 @@ function bindNotion() {
 
 /* ================= Events ================= */
 function showHelp() {
-  if (LANG === 'th') {
-    dialog({ title: 'วิธีใช้ QL Drive', width: 560, body:
-      '<div class="help" data-nothai><h3>ค้นหาไฟล์</h3><ul><li>กด <kbd>/</kbd> หรือคลิกช่องค้นหา แล้วพิมพ์คำจากชื่อไฟล์หรือชื่อโฟลเดอร์ เช่น <b>avis report</b></li>' +
-      '<li>ผลที่ตรงที่สุดอยู่ก่อน ใช้ปุ่มกรอง <b>ประเภท</b> และ <b>แก้ไขเมื่อ</b> เพื่อลดผลลัพธ์</li><li>ค้นหาตอนอยู่ในโฟลเดอร์ เลือก <b>เฉพาะใน “โฟลเดอร์”</b> เพื่อค้นเฉพาะโฟลเดอร์นั้น</li>' +
-      '<li>คลิกตำแหน่งสีเทาใต้ผลลัพธ์เพื่อเปิดโฟลเดอร์ของไฟล์นั้น</li></ul>' +
-      '<h3>จัดเรียงไฟล์</h3><ul><li>ลากไฟล์หรือโฟลเดอร์ไปวางบนโฟลเดอร์อื่นเพื่อย้าย</li><li>ปุ่ม <b>สร้างใหม่</b>: อัปโหลดไฟล์ อัปโหลดโฟลเดอร์ หรือสร้างโฟลเดอร์ใหม่</li>' +
-      '<li>เรียงลำดับด้วยปุ่มมุมขวาบนของรายการ (ชื่อ แก้ไขล่าสุด ขนาดไฟล์ ประเภท)</li><li>ติดดาวไฟล์สำคัญ แล้วเปิดดูได้ที่ <b>ติดดาว</b> ในเมนูซ้าย</li></ul>' +
-      '<h3>ทำงานกับไฟล์</h3><ul><li>ดับเบิลคลิกเพื่อเปิดไฟล์หรือโฟลเดอร์ คลิกครั้งเดียวเพื่อเลือก กด <kbd>Shift</kbd>/<kbd>Ctrl</kbd> เพื่อเลือกหลายรายการ</li>' +
-      '<li>แถบด้านบนมีรับลิงก์ ดาวน์โหลด ย้าย และย้ายไปถังขยะ ปุ่มจุดสามจุดที่แต่ละไฟล์มีเมนูเพิ่มเติม</li><li>ลบผิด? เปิด <b>ถังขยะ</b> แล้วเลือก กู้คืน</li></ul>' +
-      '<h3>แป้นลัด</h3><ul><li><kbd>/</kbd> ค้นหา · <kbd>Esc</kbd> ล้างการค้นหา · <kbd>F2</kbd> เปลี่ยนชื่อ · <kbd>Del</kbd> ย้ายไปถังขยะ</li></ul></div>',
-      buttons: [{ label: 'Got it', kind: 'primary', primary: true, value: true }] });
-    return;
-  }
   dialog({ title: 'How to use QL Drive', width: 560, body:
     '<div class="help"><h3>Find a file</h3><ul><li>Press <kbd>/</kbd> or click the search box, then type words from the name or folder, e.g. <b>avis report</b>.</li>' +
     '<li>Best matches are first. Use the <b>Type</b> and <b>Modified</b> chips to narrow down.</li><li>Started searching inside a folder? Choose <b>Only in “folder”</b> to stay there.</li>' +
@@ -5912,9 +5747,6 @@ function bindEvents() {
   $('#layoutBtn').onclick = () => { prefs.layout = prefs.layout === 'grid' ? 'list' : 'grid'; savePrefs(); renderChrome(); renderList(); };
   $('#setBtn').onclick = doSettings;
   $('#helpBtn').onclick = showHelp;
-  $('#langBtn').textContent = LANG === 'th' ? 'EN' : 'ไทย';
-  $('#langBtn').title = LANG === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย';
-  $('#langBtn').onclick = () => { prefs.lang = LANG === 'th' ? 'en' : 'th'; savePrefs(); location.reload(); };
   if (!prefs.tipSeen) { prefs.tipSeen = 1; savePrefs(); setTimeout(() => toast('Tip: press / to search. Tap ? for a quick guide.'), 1500); }
   $('#fsBtn').onclick = toggleFullscreen;
   document.addEventListener('fullscreenchange', () => { $('#fsBtn').innerHTML = ico(document.fullscreenElement ? 'shrink' : 'expand'); });
@@ -6321,7 +6153,6 @@ function boot() {
     }).catch(() => {});
   }, 1200);
 }
-startThai();
 boot();
 })();
 </script>
