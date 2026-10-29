@@ -790,6 +790,18 @@ button.nt-ca:hover,.nt-cimg:hover,.nt-flink:hover,.nt-img:hover{border-color:var
 mark{background:rgba(229,160,26,.32);color:inherit;border-radius:3px;padding:0 1px}
 .c-loc[data-loc],.card .loc[data-loc]{cursor:pointer}
 .c-loc[data-loc]:hover,.card .loc[data-loc]:hover{color:var(--accent);text-decoration:underline}
+.search{position:relative}
+.qrec{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:60;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;box-shadow:var(--shadow);padding:6px;max-height:340px;overflow:auto}
+.qrec[hidden]{display:none}
+.qrec .qh{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-3);padding:6px 10px 4px;text-transform:uppercase;letter-spacing:.04em}
+.qrec .qh button{font-size:12px;color:var(--accent);text-transform:none;letter-spacing:0}
+.qrec .qi{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;border-radius:9px;color:var(--ink)}
+.qrec .qi:hover,.qrec .qi.on{background:var(--hover)}
+.qrec .qi svg{width:16px;height:16px;color:var(--ink-3)}
+.qrec .qtip{padding:8px 10px 6px;font-size:13px;color:var(--ink-3)}
+.help h3{margin:16px 0 6px;font-size:15px}.help h3:first-child{margin-top:0}
+.help ul{margin:0;padding-left:20px;color:var(--ink-2)}.help li{margin:4px 0}
+.help kbd{font:600 12px var(--font);padding:1px 7px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:6px;background:var(--surface-2);color:var(--ink)}
 @media (max-width:700px){.fbar{padding:0 8px 8px}.fgrp .fl{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
@@ -842,6 +854,7 @@ mark{background:rgba(229,160,26,.32);color:inherit;border-radius:3px;padding:0 1
 <symbol id="i-columns" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M9.5 4.5v15M14.5 4.5v15"/></symbol>
 <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15.5" r="3.8"/><path d="M10.8 12.8L19.5 4.5M16 8l2.5 2.5M13.8 10.2l2 2"/></symbol>
 <symbol id="i-table" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.2 1-1.2 1.8M12 16.6h.01"/></symbol>
 <symbol id="i-clip" viewBox="0 0 24 24"><path d="M19.5 11.6l-7.4 7.4a4.6 4.6 0 0 1-6.5-6.5l7.8-7.8a3.1 3.1 0 0 1 4.4 4.4l-7.8 7.8a1.5 1.5 0 0 1-2.2-2.2l7.1-7.1"/></symbol>
 </defs></svg>
 
@@ -858,8 +871,9 @@ mark{background:rgba(229,160,26,.32);color:inherit;border-radius:3px;padding:0 1
   <main class="main">
     <header class="top">
       <button class="icon-btn only-m" id="menuBtn" type="button" aria-label="Open navigation"><svg class="i"><use href="#i-menu"/></svg></button>
-      <label class="search"><svg class="i"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Search" autocomplete="off" spellcheck="false" aria-label="Search files"><button class="icon-btn" id="qClear" type="button" aria-label="Clear search" hidden><svg class="i"><use href="#i-x"/></svg></button></label>
+      <label class="search"><svg class="i"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Search" autocomplete="off" spellcheck="false" aria-label="Search files"><button class="icon-btn" id="qClear" type="button" aria-label="Clear search" hidden><svg class="i"><use href="#i-x"/></svg></button><div class="qrec" id="qrec" hidden></div></label>
       <div class="top-actions">
+        <button class="icon-btn" id="helpBtn" type="button" title="How to use (?)" aria-label="How to use"><svg class="i"><use href="#i-help"/></svg></button>
         <button class="icon-btn" id="refreshBtn" type="button" title="Refresh" aria-label="Refresh"><svg class="i"><use href="#i-refresh"/></svg></button>
         <button class="icon-btn" id="layoutBtn" type="button"></button>
         <button class="icon-btn" id="fsBtn" type="button" title="Full screen" aria-label="Full screen"><svg class="i"><use href="#i-expand"/></svg></button>
@@ -1081,6 +1095,10 @@ function loadSettings() {
 }
 let S = loadSettings();
 const prefs = Object.assign({ layout: 'grid', sort: { by: 'name', dir: 1 } }, LS.get().prefs || {});
+function rememberQ(q) {
+  q = (q || '').trim(); if (q.length < 2) return;
+  prefs.recentQ = [q].concat((prefs.recentQ || []).filter((x) => x.toLowerCase() !== q.toLowerCase())).slice(0, 6); savePrefs();
+}
 function savePrefs() { const v = LS.get(); v.prefs = prefs; LS.set(v); }
 function saveSettings(ns) { const v = LS.get(); if (ns) v.settings = ns; else delete v.settings; LS.set(v); S = loadSettings(); }
 // Admin (service_role) key: optional, kept only in this browser, never written into the file or the settings.
@@ -1554,7 +1572,7 @@ function loadLib(name) {
 }
 
 /* ================= UI state ================= */
-const st = { view: 'folder', bucket: homeBucket(), prefix: '', q: '', items: [], order: [], byId: new Map(), sel: new Set(), anchor: null, loading: false, error: null, loadedAt: 0, keep: false, token: 0, lastFolder: null, crumbMore: [], all: [], rel: true, sf: { kind: 'all', when: 'any' } };
+const st = { view: 'folder', bucket: homeBucket(), prefix: '', q: '', items: [], order: [], byId: new Map(), sel: new Set(), anchor: null, loading: false, error: null, loadedAt: 0, keep: false, token: 0, lastFolder: null, crumbMore: [], all: [], rel: true, here: '', scope: 'all', sf: { kind: 'all', when: 'any' } };
 const isTouch = !!(window.matchMedia && matchMedia('(hover: none)').matches);
 
 function selItems() { return st.order.filter((id) => st.sel.has(id)).map((id) => st.byId.get(id)).filter(Boolean); }
@@ -1569,12 +1587,14 @@ function fgroup(it) {
 function applyFilters(items) {
   if (st.view !== 'folder' && st.view !== 'search') { st.dateItems = items; return items; }
   const f = st.sf; let r = items;
+  if (st.view === 'search' && st.here && st.scope === 'here') r = r.filter((i) => (i.key !== st.here && i.key.indexOf(st.here) === 0));
   if (f.when !== 'any') { const cut = Date.now() - (+f.when) * 864e5; r = r.filter((i) => i.folder || i.updated >= cut); }
   st.dateItems = r;
   if (f.kind !== 'all') r = r.filter((i) => fgroup(i) === f.kind);
   return r;
 }
 const filtersOn = () => st.sf.kind !== 'all' || st.sf.when !== 'any';
+const hereName = () => decName(segOf(st.here));
 function sortItems(items) {
   const by = prefs.sort.by, dir = prefs.sort.dir;
   const byName = (a, b) => collator.compare(a.name, b.name);
@@ -1673,8 +1693,10 @@ function renderFbar() {
   const whens = FWHEN.map((w) => '<button type="button" class="chip" data-fw="' + w[0] + '" aria-pressed="' + (st.sf.when === w[0]) + '">' + w[1] + '</button>').join('');
   let sum = '';
   if (st.view === 'search') {
-    sum = '<div class="fsum"><span><b>' + plural(st.items.length, 'result') + '</b> for “' + esc(st.q) + '”</span><span class="scope">Whole ' + esc(bucketLabel(st.bucket)) + '</span>' +
-      '<span>names and folder paths · click a location to open its folder</span>' + (filtersOn() ? '<button type="button" class="fclear" data-fclear>Clear filters</button>' : '') + '</div>';
+    const inHere = st.here ? st.all.filter((i) => (i.key !== st.here && i.key.indexOf(st.here) === 0)).length : 0;
+    const scopeChips = st.here ? '<span class="fgrp" role="group" aria-label="Where"><button type="button" class="chip" data-fs="all" aria-pressed="' + (st.scope === 'all') + '">Everywhere<span class="n">' + st.all.length + '</span></button><button type="button" class="chip" data-fs="here" aria-pressed="' + (st.scope === 'here') + '">Only in “' + esc(hereName()) + '”<span class="n">' + inHere + '</span></button></span>' : '<span class="scope">Whole ' + esc(bucketLabel(st.bucket)) + '</span>';
+    sum = '<div class="fsum"><span><b>' + plural(st.items.length, 'result') + '</b> for “' + esc(st.q) + '”</span>' + scopeChips +
+      '<span>click a grey location to open its folder</span>' + (filtersOn() ? '<button type="button" class="fclear" data-fclear>Clear filters</button>' : '') + '</div>';
   }
   fb.innerHTML = sum + '<div class="fgrp" role="group" aria-label="Type"><span class="fl">Type</span>' + chips + '</div><div class="fgrp" role="group" aria-label="Modified"><span class="fl">Modified</span>' + whens + '</div>' +
     (st.view !== 'search' && filtersOn() ? '<button type="button" class="fclear" data-fclear>Clear filters</button>' : '');
@@ -2075,6 +2097,7 @@ function applyRoute(s) {
   const bucketChanged = s.bucket !== st.bucket;
   if (!(st.view === 'search' && s.view === 'search')) st.sf = { kind: 'all', when: 'any' };
   if (s.view === 'search' && s.q !== st.q) st.rel = true;
+  if (s.view === 'search' && st.view !== 'search') { st.here = st.view === 'folder' && st.bucket === s.bucket ? st.prefix : ''; st.scope = 'all'; }
   if (st.view === 'folder') st.lastFolder = { bucket: st.bucket, prefix: st.prefix };
   st.view = s.view; st.bucket = s.bucket; st.app = s.view === 'app' ? (+s.app || 0) : 0;
   st.prefix = s.view === 'folder' ? s.prefix : ''; st.q = s.view === 'search' ? s.q : '';
@@ -2133,6 +2156,7 @@ async function refreshAfter(buckets, select) {
 }
 function curTarget() { return st.view === 'folder' ? { bucket: st.bucket, prefix: st.prefix } : { bucket: st.bucket, prefix: '' }; }
 function openItem(it) {
+  if (st.view === 'search') rememberQ(st.q);
   if (!it || it.trash) return;
   if (it.folder) { go({ view: 'folder', bucket: it.bucket, prefix: it.key }); return; }
   openViewer(it, st.items.filter((i) => !i.folder && !i.trash));
@@ -5627,6 +5651,18 @@ function bindNotion() {
 }
 
 /* ================= Events ================= */
+function showHelp() {
+  dialog({ title: 'How to use QL Drive', width: 560, body:
+    '<div class="help"><h3>Find a file</h3><ul><li>Press <kbd>/</kbd> or click the search box, then type words from the name or folder, e.g. <b>avis report</b>.</li>' +
+    '<li>Best matches are first. Use the <b>Type</b> and <b>Modified</b> chips to narrow down.</li><li>Started searching inside a folder? Choose <b>Only in “folder”</b> to stay there.</li>' +
+    '<li>Click the grey location under a result to open its folder.</li></ul>' +
+    '<h3>Arrange files</h3><ul><li>Drag a file or folder onto another folder to move it.</li><li><b>New</b> button: upload files, upload a folder, or make a new folder.</li>' +
+    '<li>Sort with the button at the top right of the list (Name, Last modified, File size, Type).</li><li>Star important files, then open <b>Starred</b> in the left menu.</li></ul>' +
+    '<h3>Work with files</h3><ul><li>Double-click opens a file or folder. Click once to select; <kbd>Shift</kbd>/<kbd>Ctrl</kbd> to select many.</li>' +
+    '<li>Use the bar on top for Get link, Download, Move or Trash. The three-dot button on each file has more.</li><li>Deleted by mistake? Open <b>Trash</b> and choose Restore.</li></ul>' +
+    '<h3>Shortcuts</h3><ul><li><kbd>/</kbd> search · <kbd>Esc</kbd> clear search · <kbd>F2</kbd> rename · <kbd>Del</kbd> move to Trash</li></ul></div>',
+    buttons: [{ label: 'Got it', kind: 'primary', primary: true, value: true }] });
+}
 function closeDrawer() { $('#app').classList.remove('drawer'); }
 async function toggleFullscreen() {
   try {
@@ -5710,6 +5746,8 @@ function bindEvents() {
   };
   $('#layoutBtn').onclick = () => { prefs.layout = prefs.layout === 'grid' ? 'list' : 'grid'; savePrefs(); renderChrome(); renderList(); };
   $('#setBtn').onclick = doSettings;
+  $('#helpBtn').onclick = showHelp;
+  if (!prefs.tipSeen) { prefs.tipSeen = 1; savePrefs(); setTimeout(() => toast('Tip: press / to search. Tap ? for a quick guide.'), 1500); }
   $('#fsBtn').onclick = toggleFullscreen;
   document.addEventListener('fullscreenchange', () => { $('#fsBtn').innerHTML = ico(document.fullscreenElement ? 'shrink' : 'expand'); });
 
@@ -5728,17 +5766,36 @@ function bindEvents() {
     else if (st.view === 'search') { const lf = st.lastFolder || { bucket: st.bucket, prefix: '' }; go({ view: 'folder', bucket: lf.bucket, prefix: lf.prefix }, true); }
   };
   qi.addEventListener('input', () => { $('#qClear').hidden = !qi.value; clearTimeout(qt); qt = setTimeout(runSearch, st.view === 'db' ? 80 : st.view === 'table' ? 450 : 350); });
+  const qrec = $('#qrec');
+  const showRecent = () => {
+    const fileView = ['folder', 'recent', 'starred', 'trash', 'search'].indexOf(st.view) >= 0;
+    const list = prefs.recentQ || [];
+    if (!fileView || qi.value.trim()) { qrec.hidden = true; return; }
+    qrec.innerHTML = list.length
+      ? '<div class="qh"><span>Recent searches</span><button type="button" data-qclear>Clear</button></div>' + list.map((q) => '<button type="button" class="qi" data-q="' + esc(q) + '">' + ico('clock') + '<span>' + esc(q) + '</span></button>').join('')
+      : '<div class="qtip">Type a file or folder name, e.g. <b>avis report</b>. Several words = all must match.</div>';
+    qrec.hidden = false;
+  };
+  qi.addEventListener('focus', showRecent);
+  qi.addEventListener('blur', () => setTimeout(() => { qrec.hidden = true; }, 120));
+  qi.addEventListener('input', () => { if (qi.value.trim()) qrec.hidden = true; else showRecent(); });
+  qrec.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    if (e.target.closest('[data-qclear]')) { prefs.recentQ = []; savePrefs(); showRecent(); return; }
+    const b = e.target.closest('[data-q]'); if (!b) return;
+    qi.value = b.dataset.q; $('#qClear').hidden = false; qrec.hidden = true; clearTimeout(qt); runSearch();
+  });
   qi.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.isComposing) { clearTimeout(qt); runSearch(); }
+    if (e.key === 'Enter' && !e.isComposing) { rememberQ(qi.value); clearTimeout(qt); runSearch(); qrec.hidden = true; }
     else if (e.key === 'Escape') { qi.value = ''; $('#qClear').hidden = true; clearTimeout(qt); runSearch(); qi.blur(); }
   });
   $('#qClear').onclick = () => { qi.value = ''; $('#qClear').hidden = true; clearTimeout(qt); runSearch(); qi.focus(); };
 
   // Type / Modified filter strip
   $('#fbar').addEventListener('click', (e) => {
-    const k = e.target.closest('[data-fk]'), w = e.target.closest('[data-fw]'), c = e.target.closest('[data-fclear]');
-    if (!k && !w && !c) return;
-    if (k) st.sf.kind = k.dataset.fk; else if (w) st.sf.when = w.dataset.fw; else st.sf = { kind: 'all', when: 'any' };
+    const k = e.target.closest('[data-fk]'), w = e.target.closest('[data-fw]'), c = e.target.closest('[data-fclear]'), sc = e.target.closest('[data-fs]');
+    if (!k && !w && !c && !sc) return;
+    if (sc) st.scope = sc.dataset.fs; else if (k) st.sf.kind = k.dataset.fk; else if (w) st.sf.when = w.dataset.fw; else st.sf = { kind: 'all', when: 'any' };
     st.sel.clear(); setItems(st.all); renderBar(); renderList();
   });
 
