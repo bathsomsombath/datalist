@@ -1159,6 +1159,62 @@ const TH_PAT = [
   [/^(.+) will be deleted forever\. This can’t be undone\.$/, 'จะลบ $1 ถาวร ไม่สามารถย้อนกลับได้'], [/^Choose where to (.+)$/, 'เลือกที่จะ$1'],
   [/^Folder, (.+)$/, 'โฟลเดอร์, $1']
 ];
+
+const TH_EXACT2 = {
+  'List': 'รายชื่อ', 'Org chart': 'ผังองค์กร', 'Roster': 'ตารางเวร', 'Public holidays': 'วันหยุดนักขัตฤกษ์', 'Sundays': 'วันอาทิตย์', 'Add staff': 'เพิ่มพนักงาน', 'All staff': 'พนักงานทั้งหมด', 'All positions': 'ทุกตำแหน่ง',
+  'Active': 'ใช้งาน', 'Inactive': 'ไม่ใช้งาน', 'Filter by position': 'กรองตามตำแหน่ง', 'No staff yet': 'ยังไม่มีพนักงาน', 'Add your first staff member.': 'เพิ่มพนักงานคนแรกของคุณ', 'No matching staff': 'ไม่พบพนักงาน',
+  'Try fewer words, or clear the filters.': 'ลองใช้คำให้น้อยลง หรือล้างตัวกรอง', 'Edit staff': 'แก้ไขพนักงาน', 'Full name': 'ชื่อ-นามสกุล', 'Nickname': 'ชื่อเล่น', 'Nickname (unique)': 'ชื่อเล่น (ไม่ซ้ำ)', 'Position': 'ตำแหน่ง',
+  'Phone': 'โทรศัพท์', 'Role': 'บทบาท', 'Role (short, used by other apps)': 'บทบาท (สั้น ๆ ใช้ในแอปอื่น)', 'Reports to': 'รายงานต่อ', 'Save': 'บันทึก', 'Saved': 'บันทึกแล้ว', 'Added': 'เพิ่มแล้ว', 'Delete staff': 'ลบพนักงาน',
+  'Edit / photo': 'แก้ไข / รูป', 'Choose photo': 'เลือกรูป', 'Remove photo': 'ลบรูป', 'Show in org chart': 'แสดงในผังองค์กร', 'Staff #': 'ลำดับ', 'No. (list order)': 'ลำดับที่ (เรียงในรายการ)', 'Note': 'หมายเหตุ', 'Title': 'คำนำหน้า',
+  'None': 'ไม่มี', 'No one (top level)': 'ไม่มี (ระดับบนสุด)', 'Hide photos': 'ซ่อนรูป', 'Show photos': 'แสดงรูป', 'Photos': 'รูป', 'Show or hide photos': 'แสดงหรือซ่อนรูป', 'Expand all': 'ขยายทั้งหมด', 'Fit': 'พอดี',
+  'Fit to screen': 'พอดีหน้าจอ', 'Print': 'พิมพ์', 'Print or save as PDF': 'พิมพ์หรือบันทึกเป็น PDF', 'Tree': 'แผนผังต้นไม้', 'Switch layout': 'สลับรูปแบบ', 'Stack team in a column': 'เรียงทีมเป็นคอลัมน์', 'Spread team side by side': 'เรียงทีมเคียงข้างกัน',
+  'Add holiday': 'เพิ่มวันหยุด', 'Add public holiday': 'เพิ่มวันหยุดนักขัตฤกษ์', 'Add a public holiday date': 'เพิ่มวันหยุดนักขัตฤกษ์', 'Edit holiday': 'แก้ไขวันหยุด', 'Delete holiday and its duties': 'ลบวันหยุดและเวรของวันนั้น',
+  'Whole year': 'ทั้งปี', 'Choose month': 'เลือกเดือน', 'On duty': 'เข้าเวร', 'Rostered only': 'เฉพาะผู้มีเวร', 'Show everyone, or only staff with duty': 'แสดงทุกคน หรือเฉพาะคนที่มีเวร', 'No one rostered yet': 'ยังไม่มีใครในตารางเวร',
+  'Click a box to put someone on duty or take them off. Saves straight away.': 'คลิกช่องเพื่อใส่หรือเอาคนออกจากเวร บันทึกทันที', 'Holiday added': 'เพิ่มวันหยุดแล้ว', 'Holiday saved': 'บันทึกวันหยุดแล้ว', 'Holiday deleted': 'ลบวันหยุดแล้ว',
+  'Jan': 'ม.ค.', 'Feb': 'ก.พ.', 'Mar': 'มี.ค.', 'Apr': 'เม.ย.', 'May': 'พ.ค.', 'Jun': 'มิ.ย.', 'Jul': 'ก.ค.', 'Aug': 'ส.ค.', 'Sep': 'ก.ย.', 'Oct': 'ต.ค.', 'Nov': 'พ.ย.', 'Dec': 'ธ.ค.',
+  'All databases': 'ฐานข้อมูลทั้งหมด', 'No tables found': 'ไม่พบตาราง', 'No tables match': 'ไม่มีตารางที่ตรงกัน', 'Try part of the table name.': 'ลองพิมพ์บางส่วนของชื่อตาราง', 'This project has no tables in the public schema.': 'โปรเจกต์นี้ไม่มีตารางใน public schema',
+  'Back to Drive': 'กลับไปไดรฟ์', 'Rows': 'แถว', 'Fields': 'ฟิลด์', 'Add field': 'เพิ่มฟิลด์', 'New row': 'แถวใหม่', 'New record': 'บันทึกใหม่', 'Show deleted': 'แสดงที่ลบแล้ว', 'Showing deleted': 'กำลังแสดงที่ลบแล้ว', 'Rows per page': 'แถวต่อหน้า',
+  'Next page': 'หน้าถัดไป', 'Previous page': 'หน้าก่อนหน้า', 'Access': 'สิทธิ์', 'Read only': 'อ่านอย่างเดียว', 'Sort ascending': 'เรียงน้อยไปมาก', 'Sort descending': 'เรียงมากไปน้อย', 'Hide field': 'ซ่อนฟิลด์', 'Show field': 'แสดงฟิลด์',
+  'Copy field name': 'คัดลอกชื่อฟิลด์', 'Move left / up': 'เลื่อนไปซ้าย / ขึ้น', 'Move right / down': 'เลื่อนไปขวา / ลง', 'Open record': 'เปิดบันทึก', 'Add files': 'เพิ่มไฟล์', 'Add link': 'เพิ่มลิงก์', 'Updated': 'อัปเดตแล้ว',
+  'Last edited': 'แก้ไขล่าสุด', 'Date': 'วันที่', 'Edited': 'แก้ไขแล้ว', 'Empty': 'ว่าง', '(empty)': '(ว่าง)', 'Status': 'สถานะ', 'Label': 'ป้ายชื่อ', 'Version history': 'ประวัติเวอร์ชัน', 'Remove': 'ลบออก', 'Remove attachment?': 'ลบไฟล์แนบหรือไม่?',
+  'Copy file link': 'คัดลอกลิงก์ไฟล์', 'Copy permanent link': 'คัดลอกลิงก์ถาวร', 'Open in new tab': 'เปิดในแท็บใหม่', 'Show in QL Drive': 'แสดงใน QL Drive', 'Show file in QL Drive': 'แสดงไฟล์ใน QL Drive', 'Open link': 'เปิดลิงก์', 'Copy address': 'คัดลอกที่อยู่',
+  'Pick a record, or switch to New record.': 'เลือกบันทึก หรือสลับไปที่บันทึกใหม่', 'Existing record': 'บันทึกที่มีอยู่', 'Attach': 'แนบ', 'to a record': 'กับบันทึก', 'Nothing to attach. The folder is empty.': 'ไม่มีอะไรให้แนบ โฟลเดอร์ว่างเปล่า',
+  'No records match. Switch to New record to create one.': 'ไม่พบบันทึก สลับไปที่บันทึกใหม่เพื่อสร้าง', 'Attaching…': 'กำลังแนบ…', 'Attached': 'แนบแล้ว', 'Done': 'เสร็จ',
+  'All pages': 'ทุกหน้า', 'With files': 'มีไฟล์', 'With comments': 'มีความคิดเห็น', 'Notion database': 'ฐานข้อมูล Notion', 'Untitled database': 'ฐานข้อมูลไม่มีชื่อ', 'Untitled': 'ไม่มีชื่อ', 'Page content': 'เนื้อหาหน้า', 'Properties': 'คุณสมบัติ', 'Comments': 'ความคิดเห็น',
+  'No comments on this page.': 'หน้านี้ยังไม่มีความคิดเห็น', 'Sub-pages': 'หน้าย่อย', 'No matching pages': 'ไม่พบหน้า', 'Open in Notion': 'เปิดใน Notion', 'Top-level page': 'หน้าระดับบนสุด', 'Page': 'หน้า', 'Sub-page': 'หน้าย่อย', 'No files.': 'ไม่มีไฟล์', 'No links.': 'ไม่มีลิงก์',
+  'Search looks at page titles. Try fewer words, paste a Notion link, or clear the filters.': 'ค้นหาจากชื่อหน้า ลองใช้คำให้น้อยลง วางลิงก์ Notion หรือล้างตัวกรอง',
+  'App link': 'ลิงก์แอป', 'HTML file': 'ไฟล์ HTML', 'App': 'แอป', 'Edit app': 'แก้ไขแอป', 'Remove app': 'ลบแอป', 'Remove from Apps': 'ลบออกจากแอป', 'Close the app': 'ปิดแอป', 'Close (stop running)': 'ปิด (หยุดทำงาน)', 'Reload': 'โหลดใหม่', 'Reload (gets the latest file)': 'โหลดใหม่ (ใช้ไฟล์ล่าสุด)',
+  'Web link': 'ลิงก์เว็บ', 'Address': 'ที่อยู่เว็บ', 'Always open in a new tab (for sites that block embedding)': 'เปิดในแท็บใหม่เสมอ (สำหรับเว็บที่ไม่ให้ฝัง)', 'Saved in QL Drive storage, so it runs on every device.': 'เก็บใน QL Drive จึงใช้ได้ทุกอุปกรณ์',
+  'Adding app…': 'กำลังเพิ่มแอป…', 'Saving app…': 'กำลังบันทึกแอป…', 'Saving…': 'กำลังบันทึก…', 'Hide or show the sidebar': 'ซ่อนหรือแสดงแถบด้านข้าง', 'App actions': 'การทำงานของแอป', 'Link added': 'เพิ่มลิงก์แล้ว', 'e.g. Office Tools': 'เช่น เครื่องมือสำนักงาน',
+  'Supabase project URL': 'URL โปรเจกต์ Supabase', 'Anon / publishable key': 'คีย์ Anon / publishable', 'Never use the service_role key here. Anyone who opens this page can read it.': 'ห้ามใช้คีย์ service_role ที่นี่ ใครเปิดหน้านี้ก็อ่านได้', 'Admin key (optional)': 'คีย์ผู้ดูแล (ไม่บังคับ)', 'Buckets': 'พื้นที่จัดเก็บ',
+  'Plan storage (GB)': 'พื้นที่ตามแพ็กเกจ (GB)', 'Theme': 'ธีม', 'Match device': 'ตามอุปกรณ์', 'Light': 'สว่าง', 'Dark': 'มืด', 'Test connection': 'ทดสอบการเชื่อมต่อ', 'Reset to defaults': 'รีเซ็ตเป็นค่าเริ่มต้น', 'Reset settings?': 'รีเซ็ตการตั้งค่าหรือไม่?', 'Reset': 'รีเซ็ต',
+  'Connection, bucket list and theme go back to the built-in defaults.': 'การเชื่อมต่อ รายการพื้นที่จัดเก็บ และธีมจะกลับเป็นค่าเริ่มต้น', 'Hide': 'ซ่อน', 'Testing…': 'กำลังทดสอบ…', 'Connected.': 'เชื่อมต่อแล้ว', 'Settings saved': 'บันทึกการตั้งค่าแล้ว', 'Legacy service_role key': 'คีย์ service_role แบบเก่า',
+  'Older versions': 'เวอร์ชันเก่า', 'No older versions yet. When you upload a file with the same name and choose Replace, the old one is kept here.': 'ยังไม่มีเวอร์ชันเก่า เมื่ออัปโหลดไฟล์ชื่อเดียวกันแล้วเลือก แทนที่ ไฟล์เก่าจะเก็บไว้ที่นี่',
+  'Replacing a file keeps the old one here. Restore puts a version back and keeps the current file as a version too.': 'เมื่อแทนที่ไฟล์ ไฟล์เก่าจะเก็บไว้ที่นี่ การกู้คืนจะนำเวอร์ชันนั้นกลับมาและเก็บไฟล์ปัจจุบันเป็นเวอร์ชันด้วย', 'Restoring version…': 'กำลังกู้คืนเวอร์ชัน…',
+  'Field name': 'ชื่อฟิลด์', 'Lowercase English letters, numbers and _': 'ตัวอักษรอังกฤษพิมพ์เล็ก ตัวเลข และ _', 'Hidden fields stay in the database.': 'ฟิลด์ที่ซ่อนยังอยู่ในฐานข้อมูล',
+  'Close': 'ปิด', 'Cancel': 'ยกเลิก', 'Delete': 'ลบ', 'Edit': 'แก้ไข', 'Add': 'เพิ่ม', 'Show all': 'แสดงทั้งหมด', 'Show all databases': 'แสดงฐานข้อมูลทั้งหมด', 'All pages ': 'ทุกหน้า ', 'Dismiss': 'ปิด', 'Reload ': 'โหลดใหม่ ',
+  'Choose an HTML file.': 'เลือกไฟล์ HTML', 'Choose an .html file.': 'เลือกไฟล์ .html', 'Enter a name.': 'กรุณากรอกชื่อ', 'Enter a full name.': 'กรุณากรอกชื่อ-นามสกุล', 'Choose an image file.': 'เลือกไฟล์รูปภาพ', 'Choose a date.': 'เลือกวันที่',
+  'Enter a full address starting with https://': 'กรอกที่อยู่เต็ม ขึ้นต้นด้วย https://', 'Photo uploaded': 'อัปโหลดรูปแล้ว', 'Uploading photo…': 'กำลังอัปโหลดรูป…', 'Removed': 'ลบออกแล้ว', 'Not saved': 'ยังไม่ได้บันทึก', 'Copied': 'คัดลอกแล้ว'
+};
+Object.assign(TH_EXACT, TH_EXACT2);
+Object.assign(TH_EXACT, {
+  'Tables and views': 'ตารางและวิว', 'Reload the table list': 'โหลดรายการตารางใหม่', 'Zoom out': 'ซูมออก', 'Zoom in': 'ซูมเข้า', 'Previous year': 'ปีก่อนหน้า', 'Next year': 'ปีถัดไป', 'Filter pages': 'กรองหน้า',
+  'in chart': 'ในผังองค์กร', 'No one in the chart': 'ยังไม่มีใครในผังองค์กร', 'Add staff, or tick “Show in org chart” on a staff member.': 'เพิ่มพนักงาน หรือติ๊ก “แสดงในผังองค์กร” ที่พนักงาน',
+  'Add the holiday dates the workshop opens on, then tick who works.': 'เพิ่มวันหยุดที่อู่เปิดทำการ แล้วติ๊กว่าใครทำงาน', 'above, then tick the dates each person works.': 'ด้านบน แล้วติ๊กวันที่แต่ละคนทำงาน', 'Click': 'คลิก',
+  'Notion archive is locked for the app’s key': 'คลัง Notion ถูกล็อกสำหรับคีย์ของแอป', 'Add the admin key in Settings to open them on this computer.': 'ใส่คีย์ผู้ดูแลในตั้งค่าเพื่อเปิดบนเครื่องนี้', 'Add the admin key in Settings to open it.': 'ใส่คีย์ผู้ดูแลในตั้งค่าเพื่อเปิด', 'Add the admin key in Settings to see them.': 'ใส่คีย์ผู้ดูแลในตั้งค่าเพื่อดู',
+  'The moved Notion pages, comments and files are in Supabase (tables nt_pages, nt_comments, nt_files), but their row-level security only lets the admin key read them.': 'หน้า ความคิดเห็น และไฟล์ที่ย้ายมาจาก Notion อยู่ใน Supabase (ตาราง nt_pages, nt_comments, nt_files) แต่ความปลอดภัยระดับแถวอนุญาตให้เฉพาะคีย์ผู้ดูแลอ่านได้',
+  'Opens the locked tables and buckets and allows every change. Saved only in this browser, never in the file. Use it only on your own computer, not on a shared PC or inside the Google Sites page. Supabase stops legacy keys at the end of 2026.': 'ใช้เปิดตารางและพื้นที่จัดเก็บที่ล็อกไว้ และอนุญาตทุกการเปลี่ยนแปลง เก็บในเบราว์เซอร์นี้เท่านั้น ไม่เก็บในไฟล์ ใช้บนคอมพิวเตอร์ส่วนตัวเท่านั้น ไม่ใช้บนเครื่องที่ใช้ร่วมกันหรือในหน้า Google Sites Supabase จะหยุดรองรับคีย์แบบเก่าปลายปี 2026',
+  'One per line: bucket id | label | flags. Flags: home (My Drive), public (allows never-expiring links), linked (used by other apps, so it asks before rename, move or delete). Other buckets in the project show up on their own.': 'หนึ่งบรรทัดต่อหนึ่งพื้นที่: id | ชื่อ | แฟลก แฟลก: home (ไดรฟ์ของฉัน), public (อนุญาตลิงก์ไม่หมดอายุ), linked (ใช้โดยแอปอื่น จึงถามก่อนเปลี่ยนชื่อ ย้าย หรือลบ) พื้นที่อื่นในโปรเจกต์จะแสดงเอง',
+  'Mr': 'นาย', 'Mrs': 'นาง', 'Miss': 'นางสาว'
+});
+TH_PAT.push([/^(Active|Inactive|All) (\d+)$/, (m, k, n) => ({ Active: 'ใช้งาน', Inactive: 'ไม่ใช้งาน', All: 'ทั้งหมด' }[k]) + ' ' + n], [/^Search ql_kb — words, #id or field:word$/, 'ค้นหา ql_kb — คำ, #id หรือ ฟิลด์:คำ'], [/^Search (.+) — words, #id or field:word$/, 'ค้นหา $1 — คำ, #id หรือ ฟิลด์:คำ'], [/^No public holidays for (\d+) yet$/, 'ปี $1 ยังไม่มีวันหยุดนักขัตฤกษ์']);
+
+TH_PAT.push(
+  [/^(\d+) tables? and views$/, '$1 ตารางและวิว'], [/^Fields in (.+)$/, 'ฟิลด์ใน $1'], [/^New row in (.+)$/, 'แถวใหม่ใน $1'], [/^Add field to (.+)$/, 'เพิ่มฟิลด์ใน $1'], [/^Older versions of “(.+)”$/, 'เวอร์ชันเก่าของ “$1”'],
+  [/^Version history · (.+)$/, 'ประวัติเวอร์ชัน · $1'], [/^Filter by (.+)$/, 'กรองตาม $1'], [/^Add staff under (.+)$/, 'เพิ่มพนักงานใต้ $1'], [/^Search (tables|staff.*|Notion.*)$/, 'ค้นหา$1'],
+  [/^Files \((\d+)\)$/, 'ไฟล์ ($1)'], [/^Comments \((\d+)\)$/, 'ความคิดเห็น ($1)'], [/^Sub-pages \((\d+)\)$/, 'หน้าย่อย ($1)'], [/^Remove “(.+)”\?$/, 'ลบ “$1” หรือไม่?'], [/^Removed (.+)$/, 'ลบ $1 แล้ว'], [/^Added (.+)$/, 'เพิ่ม $1 แล้ว'],
+  [/^Saved (.+)$/, 'บันทึก $1 แล้ว'], [/^Deleted (.+)$/, 'ลบ $1 แล้ว'], [/^Created (.+)$/, 'สร้าง $1 แล้ว']
+);
 const thCache = new Map();
 function thText(str) {
   const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(str); if (!m || !m[2]) return str;
