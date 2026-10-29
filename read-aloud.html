@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quick Lane Read Aloud</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;background:#e9edf1;margin:0;padding:20px;}
+  .panel{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.15);max-width:640px;margin:0 auto;}
+  h2{font-size:16px;margin:0 0 12px;color:#003876;}
+  textarea{width:100%;min-height:140px;padding:8px;border:1px solid #ccc;border-radius:5px;font-size:15px;box-sizing:border-box;}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;}
+  button,select{padding:8px 14px;border-radius:5px;border:1px solid #ccc;font-size:14px;}
+  button{background:#003876;color:#fff;border-color:#003876;cursor:pointer;}
+  button.alt{background:#f47b20;border-color:#f47b20;}
+  button.stop{background:#fff;color:#333;}
+  #status{margin-top:10px;font-size:13px;color:#555;min-height:18px;}
+</style>
+</head>
+<body>
+<div class="panel">
+  <h2>🔊 Read aloud (Google Thai voice)</h2>
+  <textarea id="txt" placeholder="วางข้อความที่นี่ / paste text here"></textarea>
+  <div class="row">
+    <select id="voice">
+      <option value="th-TH-Neural2-C">Thai female (Neural2-C)</option>
+      <option value="th-TH-Standard-A">Thai female (Standard-A)</option>
+      <option value="en-US-Neural2-F">English female</option>
+    </select>
+    <select id="rate">
+      <option value="0.9">Slow</option>
+      <option value="1" selected>Normal</option>
+      <option value="1.15">Fast</option>
+    </select>
+    <button id="play">▶ Read</button>
+    <button id="urgent" class="alt">Read urgent list</button>
+    <button id="stop" class="stop">■ Stop</button>
+  </div>
+  <div id="status"></div>
+</div>
+<script>
+const SB_URL = 'https://tbwkbtslmtxvwnqcqljx.supabase.co';
+const SB_KEY = 'sb_publishable_G30ExD8MuYHXOF9I-Qs4-w_Dao4H7zD';
+const $ = id => document.getElementById(id);
+let token = 0, audio = null;
+
+function chunks(text, max = 400){
+  const parts = text.replace(/\s+/g,' ').match(/[^.!?。\n]+[.!?。]?|\S+/g) || [];
+  const out = []; let cur = '';
+  for (const p of parts){
+    if ((cur + p).length > max && cur){ out.push(cur); cur = ''; }
+    cur += (cur ? ' ' : '') + p.trim();
+    while (cur.length > max){ out.push(cur.slice(0,max)); cur = cur.slice(max); }
+  }
+  if (cur.trim()) out.push(cur);
+  return out;
+}
+
+async function synth(text, voice, rate){
+  const lang = voice.split('-').slice(0,2).join('-');
+  const r = await fetch(SB_URL + '/functions/v1/tts', {
+    method:'POST',
+    headers:{'Content-Type':'application/json', apikey:SB_KEY, Authorization:'Bearer '+SB_KEY},
+    body: JSON.stringify({text, voice, lang, rate})
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || r.status);
+  return 'data:audio/mp3;base64,' + j.audio;
+}
+
+function browserSpeak(text, voice, rate){
+  return new Promise(res => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = voice.startsWith('en') ? 'en-US' : 'th-TH'; u.rate = rate; u.onend = res; u.onerror = res;
+    speechSynthesis.speak(u);
+  });
+}
+
+async function speak(text){
+  stop();
+  const my = ++token;
+  const voice = $('voice').value, rate = parseFloat($('rate').value);
+  const list = chunks(text);
+  let useBrowser = false;
+  for (let i = 0; i < list.length; i++){
+    if (my !== token) return;
+    $('status').textContent = `Reading ${i+1}/${list.length}` + (useBrowser ? ' (browser voice)' : '');
+    if (!useBrowser){
+      try {
+        const src = await synth(list[i], voice, rate);
+        if (my !== token) return;
+        await new Promise((res, rej) => { audio = new Audio(src); audio.onended = res; audio.onerror = rej; audio.play().catch(rej); });
+        continue;
+      } catch(e){ useBrowser = true; $('status').textContent = 'Google voice unavailable (' + e.message + ') - using browser voice'; }
+    }
+    await browserSpeak(list[i], voice, rate);
+  }
+  if (my === token) $('status').textContent = 'Done';
+}
+
+function stop(){
+  token++;
+  if (audio){ audio.pause(); audio = null; }
+  speechSynthesis.cancel();
+  $('status').textContent = '';
+}
+
+async function urgentText(){
+  const H = {apikey:SB_KEY, Authorization:'Bearer '+SB_KEY};
+  const q = SB_URL + '/rest/v1/ql_kb?select=owner,content&deleted_at=is.null&priority=in.(Urgent,urgent)&status=in.(pending,open,due)&order=created_at.desc&limit=8';
+  const r = await fetch(q, {headers:H});
+  if (!r.ok) throw new Error('cannot read ql_kb (' + r.status + ')');
+  const rows = await r.json();
+  if (!rows.length) return 'ไม่มีรายการเร่งด่วน';
+  return 'รายการเร่งด่วน ' + rows.length + ' เรื่อง. ' +
+    rows.map((x,i) => `เรื่องที่ ${i+1}. ${x.owner ? 'ผู้รับผิดชอบ ' + x.owner + '. ' : ''}${(x.content||'').slice(0,220)}`).join(' ');
+}
+
+$('play').onclick = () => { const t = $('txt').value.trim(); if (t) speak(t); };
+$('stop').onclick = stop;
+$('urgent').onclick = async () => {
+  try { $('status').textContent = 'Loading urgent list...'; const t = await urgentText(); $('txt').value = t; speak(t); }
+  catch(e){ $('status').textContent = 'Error: ' + e.message; }
+};
+</script>
+</body>
+</html>
