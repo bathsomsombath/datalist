@@ -148,6 +148,7 @@ table { border-collapse: collapse; }
 .sheet img { width: 100%; height: 100%; display: block; object-fit: contain; -webkit-touch-callout: default; }
 .weblink { font-size: 13.5px; font-weight: 600; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 .weblink:hover { filter: brightness(1.1); }
+.note.bad .weblink { color: var(--bad); }
 details.hdr { padding: 0; }
 details.hdr summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 14px; list-style: none; display: flex; justify-content: space-between; gap: 10px; }
 details.hdr summary::-webkit-details-marker { display: none; }
@@ -175,6 +176,8 @@ details.hdr[open] summary::after { content: "ซ่อน"; }
       <button id="sbBtn" class="btn" type="button" hidden>เชื่อม Supabase</button>
     </div>
   </header>
+
+  <div id="sbBanner" class="note bad" role="alert" hidden><b>ลิงก์นี้เชื่อม Supabase ไม่ได้</b><span>คลังคำลาวล่าสุดและการบันทึกเอกสารใช้ไม่ได้ในหน้านี้ ให้ใช้เวอร์ชันเว็บแทน</span><a class="weblink" href="https://bathsomsombath.github.io/datalist/ql-invoice-lao-excel.html" target="_blank" rel="noopener">เปิดเวอร์ชันเว็บ (Supabase ✓ · โหลดไฟล์ได้) ↗</a></div>
 
   <label class="drop" id="drop" for="pdfIn">
     <input type="file" id="pdfIn" accept="application/pdf,.pdf" hidden>
@@ -930,8 +933,11 @@ details.hdr[open] summary::after { content: "ซ่อน"; }
   const SEED = {"COMPLETE SERVICE CHECK":"ກວດເຊັກທົ່ວໄປ","PERFORM SUSPENSION CHECK":"ກວດເຊັກຊ່ວງລ່າງ","CHECK AIR":"ກວດເຊັກແອ","WHEEL ALIGNMENT":"ຕັ້ງສູນລໍ້","REPLACE BELT TIMING":"ປ່ຽນສາຍພານລາວລິ້ນ","REPLACE COUPLING ASSY,FLUID":"ປ່ຽນຟຣີພັດລົມ","REPLACE ELEMENT ASSY,FUEL":"ປ່ຽນກອງນ້ຳມັນເຊື້ອໄຟ","REPLACE JOINT ASSY, FRONT UPPER":"ປ່ຽນລູກໝາກປີກນົກເທິງ","REPLACE JOINT ASSY, LOWER BALL":"ປ່ຽນລູກໝາກປີກນົກລຸ່ມ","REPLACE BUSH, FRONT LOWER ARM":"ປ່ຽນບູດປີກນົກລຸ່ມ","REPLACE TIE ROD OUTER (VIGO)":"ປ່ຽນລູກໝາກຄັນຊັກນອກ","REPLACE END SUB-ASSY, STEERING":"ປ່ຽນລູກໝາກແຮັກ","REPLACE OIL":"ປ່ຽນນ້ຳມັນ","REPLACE STABILIZER LINK":"ປ່ຽນລູກໝາກກັນໂຄງ","REPLACE HORN L AND H":"ປ່ຽນແກ ຊ-ຂ","REPLACE CABLE SUB-ASSY, SPIRAL":"ປ່ຽນສາຍແພແກພວງມາໄລ","REPLACE WHEEL BOLT":"ປ່ຽນນັອດລໍ້","REPLACE BUSH SPRING REAR":"ປ່ຽນບູດແໜບຫຼັງ","AC FILTER VIGO, FOTUNER":"ກອງແອ","AIR FILTER COMMON":"ກອງອາກາດ","BRAKE BULB":"ດອກໄຟເບຣກ","BELT TIMING":"ສາຍພານລາວລິ້ນ","TENSIONER BELT":"ລູກກິ້ງສາຍພານ","TENSIONER ASSY, TIMING BELT":"ລູກກິ້ງຕັ້ງສາຍພານລາວລິ້ນ","COUPLING ASSY, FLUID":"ຟຣີພັດລົມ","ELEMENT ASSY,FUEL":"ກອງນ້ຳມັນເຊື້ອໄຟ","JOINT ASSY, FRONT UPPER BALL, RH":"ລູກໝາກປີກນົກເທິງ ຊ-ຂ","JOINT ASSY, LOWER BALL, FRONT":"ລູກໝາກປີກນົກລຸ່ມ ຊ-ຂ","BUSH, FRONT LOWER ARM, NO.1, RH":"ບູດປີກນົກລຸ່ມ ຕົວທີ 1 ຊ-ຂ","BUSH, FRONT LOWER ARM, NO.2, RH":"ບູດປີກນົກລຸ່ມ ຕົວທີ 2 ຊ-ຂ","BOOT SHAFT KIT":"ຢາງຫຸ້ມເພົາ","GREASE SHAFT KIT":"ຈາລະບີເພົາ","BRAKE PARTS CLEANER 600L":"ສະເປລ້າງເບຣກ","TIE ROD OUTER (VIGO)":"ລູກໝາກຄັນຊັກນອກ ຊ-ຂ","END SUB-ASSY, STEERING RACK":"ລູກໝາກແຮັກ ຊ-ຂ","SEAL, OIL (TRANSFER EXTENSION)":"ຊີນທ້າຍເກຍ","OIL DIFFERENTIAL REAR":"ນ້ຳມັນເຟືອງທ້າຍ","OIL MANUAL TRANSMISSION":"ນ້ຳມັນເກຍ","STABILIZER LINK":"ລູກໝາກກັນໂຄງ ຊ-ຂ","LINK ASSY, FR STAB":"ລູກໝາກກັນໂຄງ ຊ-ຂ","HORN L AND H":"ແກ ຊ-ຂ","CABLE SUB-ASSY, SPIRAL":"ສາຍແພແກພວງມາໄລ","TO90385-19006/BUSH":"ບູດແໜບ ຊ-ຂ","ANTI-FREEZE 3.78L":"ນ້ຳຢາໝໍ້ນ້ຳ","WHEEL BOLT":"ນັອດລໍ້","BUSH SPRING REAR":"ບູດແໜບຫຼັງ ຊ-ຂ","COIL CLEANER":"ນ້ຳຢາລ້າງຄອຍແອ","REPLACE ENGINE OIL AND OIL FILTER":"ປ່ຽນນ້ຳມັນເຄື່ອງ ແລະ ກອງ","WIPER BLADE 16'' INC":"ໃບປັດນ້ຳຝົນ 16 ນິ້ວ","WIPER BLADE 19'' INC":"ໃບປັດນ້ຳຝົນ 19 ນິ້ວ","SAE 10W40 CK4 - GA":"ນ້ຳມັນເຄື່ອງ 10W40","OIL FILTER":"ກອງນ້ຳມັນເຄື່ອງ"};
   const SAMPLE = {"title": "ACCOUNT INVOICE", "docNo": "SAMPLE", "copy": "For Customer", "wip": "00000", "date": "21/10/2026", "account": "X0000", "currency": "USD", "orderNo": "", "terms": "MN", "due": "30/11/2026", "invName": "SAMPLE CUSTOMER CO.,LTD", "invAddr": ["Sample Road,", "Sample Village,", "Sample District", "Vientiane Capital, Lao Pdr"], "custName": "SAMPLE CUSTOMER CO.,LTD", "custAddr": ["Sample Road,", "Sample Village,", "Sample District", "Vientiane Capital, Lao Pdr"], "jobNo": "00000", "time": "09:00", "repairDate": "18/09/2026", "sa": "Service Advisor", "regDate": "01/01/2020", "regNo": "0000", "model": "Kia Picanto", "vin": "SAMPLE00000000000", "mileage": "100000", "year": "2014", "contact": "Mr. Sample", "lines": [{"type": "L", "no": "1", "code": "SER", "desc": "REPLACE ENGINE OIL AND OIL FILTER", "qty": 1, "price": 15, "unit": "HOUR", "disc": 0, "net": 15, "vatFlag": "", "lo": "ປ່ຽນນ້ຳມັນເຄື່ອງ ແລະ ກອງ", "src": "gloss"}, {"type": "P", "no": "1", "code": "ZZNN1 16'' INCH", "desc": "WIPER BLADE 16'' INC", "qty": 1, "price": 12, "unit": "EACH", "disc": 10, "net": 10.8, "vatFlag": "X", "lo": "ໃບປັດນ້ຳຝົນ 16 ນິ້ວ", "src": "gloss"}, {"type": "P", "no": "2", "code": "ZZNN1 19'' INCH", "desc": "WIPER BLADE 19'' INC", "qty": 1, "price": 12, "unit": "EACH", "disc": 10, "net": 10.8, "vatFlag": "X", "lo": "ໃບປັດນ້ຳຝົນ 19 ນິ້ວ", "src": "gloss"}, {"type": "P", "no": "3", "code": "FUXO10W40Q1P", "desc": "SAE 10W40 CK4 - Ga", "qty": 4, "price": 5.5, "unit": "EACH", "disc": 10, "net": 19.8, "vatFlag": "X", "lo": "ນ້ຳມັນເຄື່ອງ 10W40", "src": "gloss"}, {"type": "P", "no": "4", "code": "ZZMAB6Y114302", "desc": "OIL FILTER", "qty": 1, "price": 6, "unit": "EACH", "disc": 10, "net": 5.4, "vatFlag": "X", "lo": "ກອງນ້ຳມັນເຄື່ອງ", "src": "gloss"}], "totals": {"parts": 46.8, "net": 61.8, "surcharge": 0, "vat": 6.18, "labour": 15, "total": 67.98, "sublet": 0, "paid": 0, "menus": 0, "owing": 67.98}, "warnings": [], "pages": 3, "pagesUsed": 1, "engineNo": "", "driver": "", "phone": ""};
   const SB = { server: 'Supabase', tool: 'execute_sql', project: 'tbwkbtslmtxvwnqcqljx' };
-  // web version (GitHub Pages): plain browser downloads + Supabase REST; inside claude.ai: viewer capabilities
-  const WEB_MODE = /(^|\.)github\.io$/i.test(location.hostname) || (location.protocol === 'file:' && !window.claude);
+  // Inside a Claude artifact view window.claude exists before this script runs; anywhere else (GitHub Pages,
+  // a Google Sites embed, a saved copy) it does not → plain browser downloads + Supabase REST.
+  const IN_CLAUDE = !!(window.claude && typeof window.claude.use === 'function');
+  const WEB_MODE = !IN_CLAUDE;
+  const FRAMED = (() => { try { return window.self !== window.top; } catch (x) { return true; } })();
   const SB_URL = 'https://tbwkbtslmtxvwnqcqljx.supabase.co';
   const SB_KEY = 'sb_publishable_G30ExD8MuYHXOF9I-Qs4-w_Dao4H7zD';
   const LIBS = {
@@ -1133,7 +1139,7 @@ details.hdr[open] summary::after { content: "ซ่อน"; }
     if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') { setNote('<b>ไม่ใช่ไฟล์ PDF</b> — เลือกไฟล์ .pdf จาก Autoline', 'bad'); return; }
     $('fileName').textContent = f.name;
     setNote('กำลังอ่าน PDF…');
-    if (sb.state === 'prompt') loadGlossary();
+    if (sb.state === 'prompt' || sb.state === 'error') loadGlossary();
     try {
       const pdfjsLib = await ensurePdf();
       const pages = await C.pdfToPages(pdfjsLib, new Uint8Array(await f.arrayBuffer()));
@@ -1150,20 +1156,30 @@ details.hdr[open] summary::after { content: "ซ่อน"; }
     }
   }
 
-  // ---------- Supabase (via the viewer's Supabase connector) ----------
+  // ---------- Supabase: the viewer's connector inside Claude when this view has one, otherwise direct REST ----------
   function sbChip(kind, text) { const c = $('sbChip'); c.className = 'chip ' + kind; c.textContent = text; }
+  const SB_DOWN = ['blocked', 'missing', 'denied', 'reauth', 'off'];
   function sbView() {
-    const btn = $('sbBtn'); btn.hidden = true;
+    const btn = $('sbBtn'); btn.hidden = true; btn.textContent = 'เชื่อม Supabase';
+    $('sbBanner').hidden = !(IN_CLAUDE && SB_DOWN.includes(sb.state));
     switch (sb.state) {
       case 'live': sbChip('ok', `Supabase ✓ · คลังคำ ${sb.count} คำ`); break;
+      case 'checking': sbChip('', 'Supabase: กำลังตรวจ…'); break;
       case 'loading': sbChip('info', 'Supabase: กำลังโหลดคลังคำ…'); break;
       case 'prompt': sbChip('warn', 'Supabase: ยังไม่ได้อนุญาต'); btn.hidden = false; break;
       case 'reauth': sbChip('bad', 'Supabase: ต่อใหม่ที่ Settings → Connectors'); break;
       case 'missing': sbChip('bad', 'Supabase: ยังไม่ได้เพิ่ม connector'); break;
-      case 'denied': sbChip('bad', 'Supabase: ไม่ได้รับอนุญาตในหน้านี้'); break;
+      case 'denied': sbChip('bad', 'Supabase: ไม่ได้รับอนุญาตในหน้านี้'); btn.hidden = false; btn.textContent = 'ขออนุญาตอีกครั้ง'; break;
       case 'error': sbChip('bad', 'Supabase: เชื่อมไม่ได้ชั่วคราว'); btn.hidden = false; btn.textContent = 'ลองอีกครั้ง'; break;
-      default: sbChip('', 'Supabase: ใช้ไม่ได้ในมุมมองนี้ (ใช้คลังคำในหน้า)');
+      default: sbChip('bad', 'Supabase: ลิงก์นี้เชื่อมไม่ได้'); btn.hidden = false; btn.textContent = 'ลองอีกครั้ง';
     }
+  }
+  function notSavedNote() {
+    const s = sb.state;
+    const how = (s === 'loading' || s === 'checking') ? 'กำลังเชื่อม รอสักครู่แล้วโหลดใหม่'
+      : (s === 'prompt' || s === 'denied' || !IN_CLAUDE || !SB_DOWN.includes(s)) ? `กด "${$('sbBtn').textContent}" มุมบนแล้วโหลดใหม่`
+      : 'ลิงก์นี้เชื่อมไม่ได้ ใช้เวอร์ชันเว็บ';
+    return 'ยังไม่ได้บันทึกลง Supabase — ' + how;
   }
   function sbErr(e) {
     const code = e && e.code;
@@ -1234,8 +1250,10 @@ where not exists (select 1 from ql_kb where ref = ${dq(rec.ref)} and deleted_at 
     }
   };
 
+  function useRest() { sb.mode = 'rest'; sb.state = 'prompt'; return loadGlossary(); }
   async function loadGlossary() {
-    if (sb.state === 'loading' || (sb.mode === 'mcp' && !sb.mcp)) return;
+    if (sb.state === 'loading') return;
+    if (sb.mode === 'mcp' && !sb.mcp) sb.mode = 'rest';
     sb.state = 'loading'; sbView();
     try {
       const row = await store.glossary();
@@ -1244,13 +1262,20 @@ where not exists (select 1 from ql_kb where ref = ${dq(rec.ref)} and deleted_at 
       gloss = Object.assign({}, SEED, remote);
       sb.count = Object.keys(gloss).length; sb.state = 'live';
       if (doc) { applyGloss(); renderLines(); renderChecks(); }
-    } catch (e) { sb.state = sb.mode === 'rest' ? 'error' : sbErr(e); }
+    } catch (e) {
+      if (sb.mode === 'mcp') {
+        const st = sbErr(e);
+        if (st === 'missing' || st === 'off' || st === 'reauth') return useRest();   // connector unusable here → same data via REST
+        sb.state = st;
+      } else sb.state = IN_CLAUDE ? 'blocked' : 'error';   // inside Claude a failed REST call means this view blocks it
+    }
     sbView();
   }
-  $('sbBtn').addEventListener('click', () => { sb.state = 'prompt'; loadGlossary(); });
+  $('sbBtn').addEventListener('click', () => { sb.mode = sb.mcp ? 'mcp' : 'rest'; sb.state = 'prompt'; loadGlossary(); });
 
   async function saveToSupabase() {
-    if (sb.state !== 'live' || isSample) return '';
+    if (isSample) return '';
+    if (sb.state !== 'live') return notSavedNote();
     const notes = [];
     const pairs = {};
     doc.lines.forEach(l => { const k = C.normKey(l.desc), v = String(l.lo || '').trim(); if (k && v && gloss[k] !== v) pairs[k] = v; });
@@ -1350,19 +1375,16 @@ Excel: ${$('fname').value} (QL Invoice Lao Excel tool) | ເຮັດ Excel ພ�
         if (kind === 'png') { if (!lastPng) throw new Error('สร้างรูปไม่ได้'); name = baseName() + '.png'; data = lastPng.blob; }
         else { name = baseName() + '.pdf'; data = pdfR.blob; }
       }
-      if (WEB_MODE) {
-        browserSave(name, data);
-        say('ok', 'บันทึกแล้ว: ' + name);
-        const s0 = await saveToSupabase();
-        if (s0) msg.textContent += ' · ' + s0;
-        return;
+      if (WEB_MODE) browserSave(name, data);
+      else {
+        const dl = await getDl();
+        if (!dl) throw { code: 'unavailable', message: 'downloads not available in this view' };
+        await dl.save({ filename: name, data });
       }
-      const dl = await getDl();
-      if (!dl) throw { code: 'unavailable', message: 'downloads not available in this view' };
-      await dl.save({ filename: name, data });
       say('ok', 'บันทึกแล้ว: ' + name);
       const s = await saveToSupabase();
       if (s) msg.textContent += ' · ' + s;
+      if (!isSample && sb.state !== 'live') msg.className = 'msg warn';
     } catch (e) {
       const code = (e && e.code) || '';
       if (code === 'declined') say('warn', 'ยกเลิกการบันทึกไฟล์');
@@ -1389,19 +1411,20 @@ Excel: ${$('fname').value} (QL Invoice Lao Excel tool) | ເຮັດ Excel ພ�
   setNote('<b>ตัวอย่าง (ข้อมูลสมมติ):</b> แนบ PDF จริงจาก Autoline ด้านบนเพื่อเริ่มงาน');
   if (document.fonts && document.fonts.load) document.fonts.load('16px Phetsarath', 'ກ').then(() => { if (doc) { renderLines(); renderChecks(); } }).catch(() => {});
 
-  $('webLink').hidden = WEB_MODE;
+  $('webLink').hidden = !(IN_CLAUDE || FRAMED);   // inside Claude or an embed (e.g. Google Sites) downloads can be blocked
   if (WEB_MODE && /\bLine\/|FBAN|FBAV|Instagram|WhatsApp|Messenger/i.test(navigator.userAgent || '')) {
     setNote('<b>เปิดในแอปแชต:</b> ถ้ากดดาวน์โหลดแล้วไม่ได้ไฟล์ ให้กดเมนู ⋯ แล้วเลือก "เปิดใน Chrome/Safari"', 'bad');
   }
   (async () => {
-    if (WEB_MODE) { sb.state = 'prompt'; loadGlossary(); return; }
+    if (WEB_MODE) { useRest(); return; }
     const cl = window.claude;
-    sb.mcp = cl && cl.use ? await cl.use('mcp').catch(() => null) : null;
-    if (!sb.mcp) { sb.state = 'off'; sbView(); return; }
+    sb.mcp = await cl.use('mcp').catch(() => null);
+    if (!sb.mcp) { useRest(); return; }             // this view has no connector bridge → direct REST
     let st = 'prompt';
     try { const perms = await cl.use('permissions'); if (perms) st = await perms.state('mcp:' + SB.server).catch(() => 'prompt'); } catch (x) { st = 'prompt'; }
+    if (st === 'unavailable') { useRest(); return; }   // no Supabase connector for this viewer → direct REST
     if (st === 'granted') { sb.state = 'prompt'; loadGlossary(); }
-    else { sb.state = st === 'denied' ? 'denied' : (st === 'unavailable' ? 'off' : 'prompt'); sbView(); }
+    else { sb.state = st === 'denied' ? 'denied' : 'prompt'; sbView(); }
   })();
 })();
 </script>
